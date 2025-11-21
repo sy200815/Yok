@@ -1,0 +1,4237 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yok Chat</title>
+    <style>
+        :root {
+            --bg-color: #DCE9F5;       /* 雾霾蓝背景 */
+            --card-bg: rgba(255, 255, 255, 0.85); /* 半透明白 */
+            --text-main: #5A6A7E;      /* 深灰蓝字体 */
+            --text-light: #8B9BB4;     /* 浅灰蓝字体 */
+            --accent: #7FA6C8;         /* 强调色 */
+            --shadow: 0 8px 20px rgba(127, 166, 200, 0.15);
+        }
+
+        body {
+            font-family: 'Helvetica Neue', 'Microsoft YaHei', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 0;
+            height: 100vh; /* 占满全屏 */
+            width: 100vw;
+            overflow: hidden; /* 禁止滚动 */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-main);
+            user-select: none; /* 禁止选中文字，像App一样 */
+        }
+
+        /* --- 背景与头像区域 --- */
+        #wallpaper-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            background-size: cover;
+            background-position: center;
+            background-color: var(--bg-color);
+        }
+        
+        /* 头像框 */
+        #avatar-box {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background-color: white;
+            margin-top: 120px; /* 距离顶部距离 */
+            box-shadow: var(--shadow);
+            border: 3px solid white;
+            background-size: cover;
+            background-position: center;
+            cursor: pointer;
+            position: relative;
+            z-index: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 12px;
+            color: var(--text-light);
+            overflow: hidden;
+        }
+
+        /* --- 状态栏 --- */
+        #status-bar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            font-size: 12px;
+            font-weight: bold;
+            color: var(--text-main);
+            z-index: 100;
+        }
+        .battery-icon {
+            width: 24px; height: 12px;
+            border: 1.5px solid var(--text-main);
+            border-radius: 3px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            padding: 1px;
+        }
+        .battery-icon::after { /* 电池头 */
+            content: '';
+            position: absolute; right: -4px; top: 2px;
+            width: 2px; height: 4px;
+            background: var(--text-main);
+            border-radius: 0 1px 1px 0;
+        }
+        .battery-level {
+            height: 100%;
+            background-color: var(--text-main);
+            border-radius: 1px;
+            width: 50%; /* 默认电量 */
+        }
+
+        /* --- 主屏幕时间 --- */
+        #main-clock {
+            margin-top: 20px;
+            font-size: 48px;
+            font-weight: 300;
+            color: var(--text-main);
+            text-shadow: 0 2px 10px rgba(255,255,255,0.5);
+            z-index: 1;
+        }
+
+        /* --- 应用网格 --- */
+        #app-grid {
+            margin-top: 40px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            width: 90%;
+            z-index: 1;
+        }
+
+        .app-icon {
+            width: 60px; height: 60px;
+            background: white;
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        .app-icon:active { transform: scale(0.95); }
+        .app-img { width: 30px; height: 30px; margin-bottom: 4px; }
+        .app-name { font-size: 10px; color: var(--text-main); margin-top: 5px;}
+
+        /* --- API 设置窗口 (模态框) --- */
+        .modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.95);
+            z-index: 200;
+            display: none; /* 默认隐藏 */
+            flex-direction: column;
+            padding: 20px;
+            box-sizing: border-box;
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+        .modal-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 30px;
+        }
+        .close-btn { font-size: 24px; cursor: pointer; padding: 10px; }
+        
+        /* 表单样式 */
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-size: 14px; font-weight: bold; }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #E0E0E0;
+            border-radius: 12px;
+            background: #F9F9F9;
+            font-size: 14px;
+            box-sizing: border-box;
+            outline: none;
+            color: var(--text-main);
+        }
+        input:focus { border-color: var(--accent); background: white; }
+        
+        .btn {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 12px;
+            width: 100%;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .btn:active { opacity: 0.8; }
+        .btn-secondary { background-color: #E0E0E0; color: #666; margin-top: 0; width: auto; padding: 8px 15px;}
+
+        /* 隐藏的文件上传Input */
+        .hidden-input { display: none; }
+        
+        /* --- Chat 应用特有样式 --- */
+        
+        /* 聊天应用的容器修正，让它铺满但留出状态栏位置 */
+        #chat-app {
+            background-color: #F2F6FC; /* 更浅的蓝白色背景 */
+            padding: 0; /* 清除默认内边距 */
+            display: none;
+            flex-direction: column;
+        }
+
+        /* 顶部标题栏 */
+        .chat-header-bar {
+            height: 60px;
+            padding-top: 30px; /* 避开状态栏 */
+            padding-left: 20px;
+            padding-right: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: transparent;
+            flex-shrink: 0;
+        }
+        .chat-title { font-size: 24px; font-weight: 800; color: #4A5A6E; }
+        .chat-search-icon { color: #4A5A6E; }
+
+        /* 中间内容滚动区 */
+        .chat-content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px 20px;
+            padding-bottom: 80px; /* 给底部导航留位置 */
+        }
+
+        /* 聊天列表卡片 (仿参考图) */
+        .chat-item-card {
+            background: white;
+            border-radius: 24px; /* 超大圆角 */
+            padding: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(127, 166, 200, 0.08);
+            transition: transform 0.1s;
+            position: relative;
+        }
+        .chat-item-card:active { transform: scale(0.98); }
+        
+        .chat-avatar {
+            width: 56px; height: 56px;
+            border-radius: 18px; /* 方形圆角头像 */
+            background-color: #eee;
+            background-size: cover;
+            background-position: center;
+            margin-right: 15px;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            flex-shrink: 0;
+        }
+        
+        .chat-info { flex: 1; overflow: hidden; }
+        .chat-name { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 4px; }
+        .chat-preview { font-size: 13px; color: #999; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .chat-time { font-size: 12px; color: #bbb; position: absolute; top: 18px; right: 20px; }
+
+        /* 底部导航栏 */
+        .bottom-nav {
+            position: absolute;
+            bottom: 20px; left: 20px; right: 20px;
+            height: 70px;
+            background: white;
+            border-radius: 35px;
+            display: flex;
+            justify-content: space-around; /* 等距分布 */
+            align-items: center;
+            box-shadow: 0 10px 30px rgba(127, 166, 200, 0.15);
+            z-index: 10;
+        }
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #C0C8D3;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .nav-item.active { color: var(--accent); }
+        .nav-label { font-size: 10px; margin-top: 4px; font-weight: bold;}
+
+        /* --- 新版 API 设置页面美化 (仿参考图风格) --- */
+        
+        /* 覆盖原本的模态框背景，让它更像一个APP页面 */
+        #api-settings {
+            background-color: #F7F9FC; /* 极浅的灰蓝色背景 */
+            padding: 0;
+        }
+
+        /* 顶部的导航条 */
+        .api-header {
+            background: white;
+            padding: 20px;
+            padding-top: 50px; /* 避开状态栏 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+            z-index: 10;
+        }
+        .api-header h2 {
+            font-size: 18px;
+            margin: 0;
+            color: #333;
+        }
+        .api-back-btn {
+            position: absolute;
+            left: 20px;
+            top: 50px;
+            font-size: 24px;
+            color: #333;
+            cursor: pointer;
+        }
+
+        /* 设置内容的滚动容器 */
+        .api-content-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        /* 白色大卡片容器 */
+        .settings-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(127, 166, 200, 0.08);
+            margin-bottom: 20px;
+        }
+
+        /* 标题样式 */
+        .setting-label {
+            font-size: 15px;
+            font-weight: 700;
+            color: #444;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        /* 输入框美化：浅灰色圆角矩形 */
+        .cute-input {
+            width: 100%;
+            background-color: #F5F7FA;
+            border: 1px solid transparent;
+            border-radius: 12px;
+            padding: 14px 16px;
+            font-size: 14px;
+            color: #555;
+            outline: none;
+            transition: all 0.3s;
+            box-sizing: border-box;
+            font-family: inherit; /* 继承字体 */
+        }
+        .cute-input:focus {
+            background-color: white;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(127, 166, 200, 0.2);
+        }
+
+        /* 辅助说明文字 */
+        .helper-text {
+            font-size: 12px;
+            color: #999;
+            margin-top: 8px;
+            line-height: 1.5;
+        }
+
+        /* 模型选择区域布局 */
+        .model-row {
+            display: flex;
+            gap: 10px;
+        }
+        .model-select-wrapper {
+            flex: 1;
+            position: relative;
+        }
+        /* 自定义下拉箭头 */
+        .model-select-wrapper::after {
+            content: '▼';
+            font-size: 10px;
+            color: #999;
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+
+        /* 按钮美化 */
+        .btn-refresh {
+            background-color: white;
+            border: 1px solid #E0E0E0;
+            color: #666;
+            border-radius: 12px;
+            padding: 0 20px;
+            font-weight: bold;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: 0.2s;
+        }
+        .btn-refresh:active { background-color: #f0f0f0; }
+
+        .btn-save {
+            background: linear-gradient(135deg, #7FA6C8, #6C8DAF);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 16px;
+            width: 100%;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 10px;
+            box-shadow: 0 8px 20px rgba(127, 166, 200, 0.3);
+            cursor: pointer;
+        }
+        .btn-save:active { transform: scale(0.98); }
+
+        /* 温度输入框特殊处理 */
+        .temp-wrapper {
+            display: flex;
+            align-items: center;
+            background: #F5F7FA;
+            border-radius: 12px;
+            padding: 5px 15px;
+        }
+        .temp-input-clean {
+            background: transparent;
+            border: none;
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--accent);
+            width: 60px;
+            text-align: center;
+            outline: none;
+        }
+        
+        /* --- 联系人列表样式 --- */
+        .contact-item {
+            background: white;
+            border-radius: 20px;
+            padding: 12px 15px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            transition: transform 0.1s;
+        }
+        .contact-item:active { transform: scale(0.98); background-color: #fafafa; }
+        
+        .contact-avatar {
+            width: 48px; height: 48px;
+            border-radius: 16px;
+            background-size: cover;
+            background-position: center;
+            margin-right: 15px;
+            border: 1px solid #eee;
+        }
+        .contact-name { font-size: 15px; font-weight: bold; color: #333; }
+        .contact-tag { 
+            font-size: 10px; color: #7FA6C8; background: #E3F2FD; 
+            padding: 2px 8px; border-radius: 10px; margin-left: 8px; 
+        }
+
+        /* --- 顶部指纹按钮 --- */
+        #add-contact-btn {
+            display: none; /* 默认隐藏，只有切到联系人tab才显示 */
+            cursor: pointer;
+            color: #7FA6C8;
+            padding: 5px;
+            border-radius: 50%;
+            transition: background 0.2s;
+        }
+        #add-contact-btn:active { background: rgba(127, 166, 200, 0.1); }
+
+        /* --- 新版创建角色页面 (覆盖层) --- */
+        #create-role-page {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #F2F6FC;
+            z-index: 50; /* 在底部导航之上 */
+            display: none;
+            flex-direction: column;
+            animation: slideUp 0.3s ease;
+        }
+
+        .create-header {
+            padding: 20px; padding-top: 50px;
+            display: flex; align-items: center;
+            color: #333; font-size: 18px; font-weight: bold;
+        }
+        .back-icon { margin-right: 15px; cursor: pointer; }
+
+        /* 美化后的表单卡片 */
+        .create-card {
+            background: white;
+            margin: 20px;
+            border-radius: 30px;
+            padding: 30px 20px;
+            box-shadow: 0 10px 30px rgba(127, 166, 200, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* 更有层次感的头像上传 */
+        .avatar-uploader {
+            width: 90px; height: 90px;
+            border-radius: 30px;
+            background: #F7F9FC;
+            border: 2px dashed #DCE9F5;
+            display: flex; justify-content: center; align-items: center;
+            color: #A0B0C0; font-size: 12px;
+            cursor: pointer;
+            margin-bottom: 25px;
+            background-size: cover; background-position: center;
+            transition: all 0.3s;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.02);
+        }
+        .avatar-uploader:active { transform: scale(0.95); border-color: var(--accent); }
+
+        /* 清爽的输入行 */
+        .input-row {
+            width: 100%; margin-bottom: 20px;
+        }
+        .input-label {
+            font-size: 12px; color: #8B9BB4; margin-bottom: 8px; margin-left: 5px; font-weight: bold;
+        }
+        .clean-input {
+            width: 100%;
+            background: #F7F9FC;
+            border: none;
+            padding: 15px;
+            border-radius: 15px;
+            font-size: 14px;
+            color: #333;
+            outline: none;
+            box-sizing: border-box;
+            transition: background 0.2s;
+        }
+        .clean-input:focus { background: #fff; box-shadow: 0 0 0 2px #DCE9F5; }
+
+        /* 性别选择胶囊 */
+        .gender-capsule {
+            display: flex; background: #F7F9FC; border-radius: 15px; padding: 4px;
+        }
+        .gender-opt {
+            flex: 1; text-align: center; padding: 10px 0;
+            font-size: 13px; color: #8B9BB4; border-radius: 12px; cursor: pointer; transition: 0.2s;
+        }
+        .gender-opt.active {
+            background: white; color: var(--accent); font-weight: bold;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .create-btn-float {
+            margin-top: 10px;
+            width: 100%;
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 18px;
+            font-size: 16px;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(127, 166, 200, 0.3);
+            cursor: pointer;
+        }
+        
+        /* --- 5. 聊天室页面 (沉浸式) --- */
+        #chat-room-page {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #F9F9F9; /* 默认更白的背景 */
+            z-index: 60; /* 比创建页更高 */
+            display: none;
+            flex-direction: column;
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* 聊天室顶部 */
+        .room-header {
+            height: 50px;
+            padding-top: 30px; /* 避开状态栏 */
+            padding-left: 15px; padding-right: 15px;
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255,255,255,0.9); /* 毛玻璃表头 */
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            z-index: 10;
+        }
+        .room-info { text-align: center; flex: 1; }
+        .room-name { font-size: 16px; font-weight: bold; color: #333; }
+        .room-status { font-size: 10px; color: var(--accent); height: 14px; opacity: 0; transition: opacity 0.3s; }
+        .room-status.typing { opacity: 1; }
+
+        /* 聊天消息区域 */
+        #message-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            padding-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* 消息行 */
+        .msg-row { display: flex; width: 100%; margin-bottom: 5px; }
+        .msg-row.left { justify-content: flex-start; }
+        .msg-row.right { justify-content: flex-end; }
+
+        /* 气泡基础样式 */
+        .msg-bubble {
+            max-width: 70%;
+            padding: 10px 14px;
+            font-size: var(--chat-font-size, 14px); /* 动态字体大小 */
+            line-height: 1.5;
+            position: relative;
+            word-wrap: break-word;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        /* 气泡形状变体 */
+        .bubble-round { border-radius: 20px; } /* 圆滚滚 */
+        .bubble-sharp { border-radius: 4px; }  /* 仿微信小尖角 (简化版) */
+        .bubble-default { border-radius: 12px; } /* 默认 */
+
+        /* 底部输入栏 (精致小巧) */
+        /* --- ▼▼▼ 请替换成这个 ▼▼▼ --- */
+.room-footer {
+    background: white;
+    padding: 8px 12px; /* 上下左右的边距都改小了 */
+    padding-bottom: 30px; /* 适配全面屏底部 */
+    display: flex; align-items: flex-end; gap: 8px; /* 元素间距也改小 */
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.02);
+}
+        
+        /* --- ▼▼▼ 请替换成这个 ▼▼▼ --- */
+.chat-input-box {
+    flex: 1;
+    background: #F2F2F2;
+    border-radius: 18px; /* 圆角改小一点 */
+    padding: 8px 15px; /* 上下内边距改小 */
+    max-height: 100px;
+    overflow-y: auto;
+    font-size: 14px;
+    border: none; outline: none;
+    resize: none; /* 禁止拖拽 */
+}
+
+        /* --- ▼▼▼ 请替换成这个 ▼▼▼ --- */
+.action-btn {
+    width: 36px; height: 36px; /* 按钮整体变小 */
+    border-radius: 50%;
+    display: flex; justify-content: center; align-items: center;
+    cursor: pointer;
+    transition: transform 0.1s;
+    flex-shrink: 0;
+}
+        .action-btn:active { transform: scale(0.9); }
+        
+        /* 接收按钮 (左侧) */
+        .btn-receive { background: #F0F2F5; color: #5A6A7E; }
+        /* 发送按钮 (右侧) */
+        .btn-send { background: var(--accent); color: white; }
+
+
+        /* --- 6. 聊天设置页面 (独立页面) --- */
+        #chat-settings-page {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #F2F6FC;
+            z-index: 70;
+            display: none;
+            flex-direction: column;
+            animation: slideUp 0.3s ease;
+        }
+        
+        .setting-section {
+            background: white;
+            margin: 15px 20px;
+            border-radius: 16px;
+            padding: 5px 0; /* 内部列表 */
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        }
+        
+        .setting-item {
+            padding: 15px 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #f5f5f5;
+        }
+        .setting-item:last-child { border-bottom: none; }
+        .setting-title { font-size: 14px; color: #333; font-weight: 500; }
+        
+        /* 颜色选择器圆点 */
+        .color-dot {
+            width: 24px; height: 24px; border-radius: 50%;
+            border: 2px solid #eee; cursor: pointer;
+            display: inline-block;
+        }
+        
+        /* 形状选择器 */
+        .shape-selector { display: flex; gap: 10px; }
+        .shape-opt {
+            width: 30px; height: 30px; background: #eee; cursor: pointer;
+            border: 2px solid transparent;
+        }
+        .shape-opt.active { border-color: var(--accent); background: #DCE9F5; }
+        
+        /* --- “我”页面的样式 --- */
+.me-section {
+    background: white;
+    border-radius: 20px;
+    margin: 15px 0;
+    padding: 5px 20px;
+    box-shadow: 0 4px 15px rgba(127, 166, 200, 0.08);
+}
+.me-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 0;
+    border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
+}
+.me-item:last-child {
+    border-bottom: none;
+}
+.me-item-title {
+    font-size: 15px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 12px; /* 图标和文字的间距 */
+}
+.me-item .arrow {
+    color: #ccc;
+}
+
+    /* --- “我”的子页面通用样式 --- */
+    .me-page {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background-color: #F2F6FC;
+        z-index: 80; /* 比聊天室高，但可以被其他模态框覆盖 */
+        display: none;
+        flex-direction: column;
+        animation: slideUp 0.3s ease;
+    }
+    .me-page-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px;
+    }
+    
+    /* --- 纪念日列表项样式 --- */
+    .anniversary-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 5px;
+        border-bottom: 1px solid #f5f5f5;
+    }
+     .anniversary-item:last-child { border-bottom: none; }
+    .anniversary-info span { display: block; }
+    .anniversary-info .name { font-size: 14px; font-weight: bold; color: #333; }
+    .anniversary-info .date { font-size: 12px; color: #888; }
+    
+    .delete-btn {
+        background: #FFEEEE; color: #F56C6C;
+        border: none; border-radius: 50%;
+        width: 30px; height: 30px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    
+    /* --- 钱包记录样式 --- */
+    .bill-item {
+        display: flex; justify-content: space-between; align-items: center;
+        background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+    }
+    .bill-info { font-size: 14px; color: #333; }
+    .bill-time { font-size: 12px; color: #999; margin-top: 4px; }
+    .bill-amount { font-weight: bold; font-size: 16px; }
+    .bill-amount.plus { color: #67C23A; } /* 绿色加钱 */
+    .bill-amount.minus { color: #F56C6C; } /* 红色扣钱 */
+
+    /* --- 表情包格子样式 --- */
+    .sticker-item {
+        width: 100%; aspect-ratio: 1; /* 正方形 */
+        background-color: #fff;
+        border-radius: 12px;
+        background-size: cover; background-position: center;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        position: relative;
+    }
+    .sticker-delete {
+        position: absolute; top: -5px; right: -5px;
+        width: 20px; height: 20px; background: #ff4d4f; color: white;
+        border-radius: 50%; text-align: center; line-height: 20px; font-size: 12px;
+    }
+    
+    /* --- 聊天消息里的图片样式 (重要) --- */
+    .msg-bubble img {
+        max-width: 100%;
+        border-radius: 8px;
+        display: block;
+    }
+    
+    /* --- 海龟汤样式 --- */
+    .soup-player-tag {
+        padding: 8px 15px;
+        background: rgba(0,0,0,0.3);
+        border: 1px solid #555;
+        border-radius: 20px;
+        font-size: 12px;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    .soup-player-tag.selected {
+        background: #E67E22;
+        border-color: #E67E22;
+        color: white;
+        font-weight: bold;
+    }
+    
+    /* 游戏气泡稍微不同，区分于普通聊天 */
+    .soup-bubble {
+        padding: 10px 14px;
+        border-radius: 12px;
+        font-size: 14px;
+        max-width: 80%;
+        line-height: 1.5;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    .soup-dm { background: #2C3E50; color: #E67E22; border: 1px solid #E67E22; align-self: flex-start; }
+    .soup-user { background: #E67E22; color: white; align-self: flex-end; }
+    .soup-teammate { background: #34495E; color: #AED6F1; align-self: flex-start; }
+    
+    /* --- 聊天室头像与时间戳样式 --- */
+    .msg-row {
+        align-items: flex-start; /* 顶部对齐 */
+    }
+    
+    /* 头像容器 (包含图片和时间) */
+    .msg-avatar-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 0 8px;
+        flex-shrink: 0;
+    }
+    
+  /* --- 缩小的聊天布局 (80% size) - 修复版 --- */
+    
+    /* 1. 修复头像显示 */
+    .msg-avatar-img {
+        width: 32px; height: 32px; /* 保持缩小 */
+        border-radius: 10px;
+        margin-bottom: 2px;
+        
+        /* 核心修复代码：强制图片填满 */
+        background-size: cover !important;
+        background-position: center !important;
+        background-color: #e0e0e0; /* 灰色底色，防图片加载失败 */
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .msg-timestamp {
+        font-size: 9px;
+        margin-top: 2px;
+        transform: scale(0.85);
+        opacity: 0.6;
+    }
+
+    /* 2. 修复气泡基础样式 */
+    .msg-bubble {
+        max-width: 75%;
+        padding: 8px 12px;
+        font-size: 13px !important;
+        line-height: 1.4;
+        /* 注意：这里删掉了 border-radius，防止覆盖用户的选择 */
+    }
+
+    /* 3. 强制生效的气泡形状 (加了 !important) */
+    .bubble-round { border-radius: 20px !important; }  /* 圆滚滚 */
+    .bubble-sharp { border-radius: 2px !important; }   /* 小尖角 */
+    .bubble-default { border-radius: 10px !important; } /* 默认 */
+
+    /* 调整左右间距 */
+    .msg-row.left .msg-bubble { margin-left: 6px; margin-top: 2px; }
+    .msg-row.right .msg-bubble { margin-right: 6px; margin-top: 2px; }
+
+    /* --- 透明气泡模式 (用于图片/转账) --- */
+    .bubble-transparent {
+        background-color: transparent !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        border: none !important;
+    }
+    .bubble-transparent img {
+        display: block;
+        border-radius: 8px;
+        max-width: 140px !important; 
+    }
+    
+    /* --- 多功能面板样式 --- */
+    .panel-btn {
+        display: flex; flex-direction: column; align-items: center;
+        cursor: pointer; font-size: 12px; color: #666;
+    }
+    
+    /* --- 功能面板图标美化 --- */
+    .panel-btn .p-icon {
+        width: 44px; height: 44px; 
+        background: white;
+        border-radius: 14px; 
+        display: flex; justify-content: center; align-items: center;
+        margin-bottom: 6px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+        transition: transform 0.1s;
+        color: #5A6A7E;
+    }
+    .panel-btn:nth-child(1) .p-icon { color: #FFC107; background: #FFFDF5; }
+    .panel-btn:nth-child(2) .p-icon { color: #FA9D3B; background: #FFF8F0; }
+    .panel-btn:nth-child(3) .p-icon { color: #F56C6C; background: #FFF5F5; }
+    .panel-btn:nth-child(4) .p-icon { color: #409EFF; background: #F0F7FF; }
+    
+    /* --- 新版转账卡片样式 --- */
+    .transfer-card {
+        background-color: #FA9D3B;
+        width: 200px;
+        border-radius: 12px;
+        overflow: hidden;
+        color: white;
+        position: relative;
+        box-shadow: 0 2px 8px rgba(250, 157, 59, 0.3);
+    }
+    .transfer-top {
+        padding: 12px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .transfer-icon-circle {
+        width: 36px; height: 36px;
+        border-radius: 50%;
+        border: 2px solid white;
+        display: flex; justify-content: center; align-items: center;
+    }
+    .transfer-info { display: flex; flex-direction: column; }
+    .transfer-amount { font-size: 15px; font-weight: bold; }
+    .transfer-desc { font-size: 11px; opacity: 0.9; }
+    .transfer-bottom {
+        background-color: rgba(255,255,255,0.15);
+        padding: 6px 12px;
+        font-size: 10px;
+        color: rgba(255,255,255,0.9);
+    }
+    
+    /* --- 🎵 音乐播放器样式 --- */
+    
+    /* 播放器模态框 (居中悬浮) */
+    #music-player-modal {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.85); /* 深色沉浸背景 */
+        backdrop-filter: blur(10px);
+        z-index: 150;
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        animation: fadeIn 0.3s ease;
+    }
+
+    /* 顶部歌名区 */
+    .music-info-top {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+    .music-title { font-size: 22px; font-weight: bold; margin-bottom: 5px; }
+    .music-artist { font-size: 14px; color: #aaa; }
+
+    /* 黑胶唱片区 */
+    .vinyl-wrapper {
+        width: 280px; height: 280px;
+        border-radius: 50%;
+        background: #1a1a1a;
+        background-image: radial-gradient(circle, #111 30%, #333 31%, #111 32%, #333 60%, #111 61%);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        display: flex; justify-content: center; align-items: center;
+        position: relative;
+        border: 4px solid #333;
+    }
+    /* 唱片封面 */
+    .vinyl-cover {
+        width: 180px; height: 180px;
+        border-radius: 50%;
+        background-size: cover; background-position: center;
+        border: 5px solid #111;
+    }
+    /* 旋转动画 */
+    .rotating { animation: rotate 20s linear infinite; }
+    .paused { animation-play-state: paused; }
+    
+    @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+    /* 播放控制栏 */
+    .player-controls {
+        margin-top: 50px;
+        display: flex; align-items: center; gap: 30px;
+    }
+    .ctrl-btn {
+        cursor: pointer; color: white; transition: transform 0.1s;
+        display: flex; justify-content: center; align-items: center;
+    }
+    .ctrl-btn:active { transform: scale(0.9); color: var(--accent); }
+    .ctrl-btn-big {
+        width: 60px; height: 60px; border-radius: 50%;
+        background: white; color: #333;
+    }
+
+    /* 歌单列表模态框 */
+    #music-list-modal {
+        position: fixed; bottom: 0; left: 0; width: 100%; height: 60%;
+        background: white;
+        border-radius: 20px 20px 0 0;
+        z-index: 160;
+        display: none;
+        flex-direction: column;
+        box-shadow: 0 -5px 20px rgba(0,0,0,0.2);
+        animation: slideUp 0.3s ease;
+    }
+    .music-list-item {
+        padding: 15px 20px;
+        border-bottom: 1px solid #f5f5f5;
+        display: flex; justify-content: space-between; align-items: center;
+    }
+    .music-list-item.playing { color: var(--accent); font-weight: bold; }
+    
+    /* --- 长按菜单样式 --- */
+    #msg-context-menu {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 200;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        animation: fadeIn 0.2s;
+    }
+    .menu-content {
+        background: white;
+        border-radius: 12px;
+        width: 70%;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    .menu-item {
+        padding: 15px;
+        text-align: center;
+        border-bottom: 1px solid #eee;
+        font-size: 16px;
+        color: #333;
+        cursor: pointer;
+    }
+    .menu-item:last-child { border-bottom: none; }
+    .menu-item:active { background: #f5f5f5; }
+    .menu-item.danger { color: #ff4d4f; }
+
+    /* --- 查看更多历史记录按钮 --- */
+    .load-more-btn {
+        text-align: center;
+        font-size: 12px;
+        color: #7FA6C8;
+        padding: 10px 0;
+        cursor: pointer;
+    }
+    
+    /* --- INS 风加号面板样式 --- */
+    
+    /* 面板容器：平时藏在屏幕最底下 */
+    #chat-action-panel {
+        position: absolute; 
+        bottom: 0; left: 0; right: 0;
+        background: white;
+        border-radius: 30px 30px 0 0; /* 只有上面是圆角 */
+        box-shadow: 0 -10px 40px rgba(0,0,0,0.08); /* 唯美的大阴影 */
+        padding: 25px 20px 40px 20px; /* 增加底部留白 */
+        z-index: 100;
+        transform: translateY(110%); /* 默认向下藏起来 */
+        transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); /* 顺滑的动画曲线 */
+        display: block !important; /* 强制显示，通过 transform 控制开关 */
+    }
+
+    /* 激活状态：滑上来 */
+    #chat-action-panel.active {
+        transform: translateY(0);
+    }
+
+    /* 顶部的小横条 (装饰用，像iPhone底部抽屉) */
+    .panel-handle {
+        width: 40px; height: 5px;
+        background: #E0E0E0;
+        border-radius: 10px;
+        margin: 0 auto 25px auto; /* 居中 */
+    }
+
+    /* 功能图标网格 */
+    .ins-grid {
+        display: flex;
+        justify-content: space-between;
+        padding: 0 10px;
+        margin-bottom: 20px;
+    }
+
+    /* 单个图标按钮 */
+    .ins-btn {
+        display: flex; flex-direction: column; align-items: center;
+        gap: 8px; cursor: pointer; transition: transform 0.1s;
+    }
+    .ins-btn:active { transform: scale(0.95); }
+
+    /* 图标圆圈背景 */
+    .ins-icon-circle {
+        width: 56px; height: 56px;
+        border-radius: 20px; /* 方圆形 */
+        display: flex; justify-content: center; align-items: center;
+        font-size: 24px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+        color: white;
+    }
+
+    /* 不同功能的颜色 */
+    .bg-yellow { background: linear-gradient(135deg, #FFD54F, #FFC107); box-shadow: 0 8px 20px rgba(255, 193, 7, 0.25); }
+    .bg-green  { background: linear-gradient(135deg, #81C784, #66BB6A); box-shadow: 0 8px 20px rgba(102, 187, 106, 0.25); }
+    .bg-pink   { background: linear-gradient(135deg, #FF8A65, #FF7043); box-shadow: 0 8px 20px rgba(255, 112, 67, 0.25); }
+    .bg-blue   { background: linear-gradient(135deg, #64B5F6, #42A5F5); box-shadow: 0 8px 20px rgba(66, 165, 245, 0.25); }
+    .bg-purple { background: linear-gradient(135deg, #BA68C8, #AB47BC); box-shadow: 0 8px 20px rgba(171, 71, 188, 0.25); }
+
+    .ins-label { font-size: 12px; color: #666; font-weight: 500; }
+
+    /* 内容展示区 (表情包网格等) */
+    #panel-content-area {
+        background: #F7F9FC; /* 浅灰色底，区分层次 */
+        border-radius: 20px;
+        padding: 15px;
+        max-height: 200px;
+        overflow-y: auto;
+        margin-top: 10px;
+        display: none; /* 默认隐藏，点击图标才显示 */
+    }
+    
+    /* --- 信息展示弹窗 (偷看隐私专用) --- */
+    #info-modal {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.6); z-index: 300;
+        display: none; justify-content: center; align-items: center;
+        animation: fadeIn 0.3s;
+    }
+    .info-card {
+        background: white; width: 80%; max-height: 70%;
+        border-radius: 24px; padding: 25px;
+        overflow-y: auto; position: relative;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        display: flex; flex-direction: column;
+    }
+    .info-header {
+        font-size: 18px; font-weight: bold; margin-bottom: 15px;
+        display: flex; align-items: center; gap: 10px; color: #333;
+    }
+    .info-content {
+        font-size: 14px; line-height: 1.6; color: #555; white-space: pre-wrap;
+    }
+    /* 加载动画 */
+    .loading-dots::after {
+        content: ' .'; animation: dots 1.5s infinite;
+    }
+    @keyframes dots { 0%{content:'.'} 33%{content:'..'} 66%{content:'...'} }
+    </style>
+</head>
+<body>
+    <!-- 背景壁纸层 (点击更换) -->
+    <div id="wallpaper-layer" onclick="document.getElementById('bg-upload').click()" title="点击更换壁纸"></div>
+    <input type="file" id="bg-upload" class="hidden-input" accept="image/*">
+
+    <!-- 顶部状态栏 -->
+    <div id="status-bar">
+        <span id="status-time">00:00</span>
+        <div style="display: flex; align-items: center; gap: 5px;">
+            <span id="battery-percent">--%</span>
+            <div class="battery-icon">
+                <div class="battery-level" id="battery-fill"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 头像区域 (点击更换) -->
+    <div id="avatar-box" onclick="document.getElementById('avatar-upload').click()">
+        <span>点此上传</span>
+    </div>
+    <input type="file" id="avatar-upload" class="hidden-input" accept="image/*">
+
+    <!-- 主屏幕时间 -->
+    <div id="main-clock">00:00</div>
+
+    <!-- 应用图标区域 -->
+    <div id="app-grid">
+        <!-- API 设置应用图标 -->
+        <div class="app-icon" onclick="openApp('api-settings')">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7FA6C8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+            <div class="app-name">API设置</div>
+        </div>
+        
+        <!-- Chat 应用图标 -->
+        <div class="app-icon" onclick="openChatApp()">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#7FA6C8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+            </svg>
+            <div class="app-name">Chat</div>
+        </div>
+    </div>
+
+    <!-- === API 设置应用界面 (新版 UI) === -->
+    <div id="api-settings" class="modal">
+        <div class="api-header">
+            <div class="api-back-btn" onclick="closeApp('api-settings')">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            </div>
+            <h2>API 设置</h2>
+        </div>
+
+        <div class="api-content-scroll">
+            <div class="settings-card">
+                <div class="form-group">
+                    <div class="setting-label">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7FA6C8" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                        API 地址 (Base URL)
+                    </div>
+                    <input type="text" id="api-url" class="cute-input" placeholder="https://api.openai.com/v1">
+                    <div class="helper-text">支持 OpenAI 格式接口。如使用第三方代理，请确保填写完整的 /v1 后缀。</div>
+                </div>
+
+                <div class="form-group">
+                    <div class="setting-label">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7FA6C8" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>
+                        API 密钥 (Key)
+                    </div>
+                    <input type="password" id="api-key" class="cute-input" placeholder="sk-........................">
+                </div>
+
+                <div class="form-group">
+                    <div class="setting-label">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7FA6C8" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                        模型选择
+                    </div>
+                    <div class="model-row">
+                        <div class="model-select-wrapper">
+                            <select id="model-select" class="cute-input" style="appearance: none; background-color: #F5F7FA;">
+                                <option value="" disabled selected>请先拉取列表</option>
+                            </select>
+                        </div>
+                        <button class="btn-refresh" onclick="fetchModels()">拉取模型</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="setting-label">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7FA6C8" stroke-width="2"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"></path></svg>
+                        温度参数 (Temperature)
+                    </div>
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <div class="helper-text" style="margin-top:0; max-width: 70%;">
+                            数值越大越有创意 (0 - 2.0)<br>
+                            <span style="color: #bbb;">建议值: 0.7</span>
+                        </div>
+                        <div class="temp-wrapper">
+                            <input type="number" id="api-temp" class="temp-input-clean" value="0.7" min="0" max="2.0" step="0.1">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button class="btn-save" onclick="saveSettings()">保存所有配置</button>
+            <div style="height: 50px;"></div>
+        </div>
+    </div>
+    
+    <!-- === Chat 应用界面 === -->
+    <div id="chat-app" class="modal">
+        <div class="chat-header-bar">
+            <div class="chat-title" id="chat-page-title">Chats</div>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div id="add-contact-btn" onclick="showCreatePage()" title="添加联系人">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M2 12C2 6.48 6.48 2 12 2s10 4.48 10 10v.5c0 1.38-1.12 2.5-2.5 2.5S17 13.88 17 12.5V12a5 5 0 0 0-5-5 5 5 0 0 0-5 5v6c0 3.87 3.13 7 7 7s7-3.13 7-7"></path>
+                        <path d="M12 12v.01"></path>
+                    </svg>
+                </div>
+                <div class="close-btn" onclick="closeApp('chat-app')" style="font-size: 20px; padding:0;">×</div>
+            </div>
+        </div>
+
+        <div id="tab-chats" class="chat-content-area"></div>
+        <div id="tab-contacts" class="chat-content-area" style="display: none;">
+            <div id="contact-list"></div>
+        </div>
+
+    <!-- ▼▼▼▼▼ 在这里添加新的页面容器 ▼▼▼▼▼ -->
+    <div id="tab-me" class="chat-content-area" style="display: none; padding-top: 20px;">
+
+<div class="me-section">
+    <!-- ▼▼▼ 修改 onclick ▼▼▼ -->
+    <div class="me-item" onclick="openMeSubPage('me-persona-page')">
+        <div class="me-item-title">
+            <span>🎭</span>
+            <span>我的人设</span>
+        </div>
+        <div class="arrow">&gt;</div>
+    </div>
+     <!-- ▼▼▼ 修改 onclick ▼▼▼ -->
+    <div class="me-item" onclick="openMeSubPage('me-anniversary-page')">
+        <div class="me-item-title">
+            <span>💖</span>
+            <span>我们的纪念日</span>
+        </div>
+        <div class="arrow">&gt;</div>
+    </div>
+</div>
+
+<div class="me-section">
+            <!-- 修改钱包入口 -->
+            <div class="me-item" onclick="openMeSubPage('me-wallet-page')">
+                <div class="me-item-title">
+                    <span>💰</span>
+                    <span>我的钱包</span>
+                </div>
+                 <div class="arrow">&gt;</div>
+            </div>
+            <!-- 修改表情包入口 -->
+            <div class="me-item" onclick="openMeSubPage('me-sticker-page')">
+                <div class="me-item-title">
+                    <span>😂</span>
+                    <span>表情包库</span>
+                </div>
+                 <div class="arrow">&gt;</div>
+            </div>
+        </div>
+
+    <div class="me-section">
+         <div class="me-item" onclick="openSoupLobby()">
+            <div class="me-item-title">
+                <span>🐢</span>
+                <span>海龟汤游戏</span>
+            </div>
+             <div class="arrow">&gt;</div>
+        </div>
+    </div>
+
+</div>
+    <!-- ▲▲▲▲▲ 添加完毕 ▲▲▲▲▲ -->
+    
+    <!-- ▼▼▼▼▼ 从这里开始添加 ▼▼▼▼▼ -->
+
+    <!-- === “我的人设”列表页面 === -->
+    <div id="me-persona-page" class="me-page">
+        <div class="api-header">
+            <div class="api-back-btn" onclick="closeMeSubPage('me-persona-page')">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            </div>
+            <h2>人设库</h2>
+            <div style="position: absolute; right: 20px; color: var(--accent); font-weight: bold; cursor: pointer;" onclick="openPersonaCreate()">
+                新建
+            </div>
+        </div>
+        <div class="me-page-content">
+            <div class="helper-text" style="margin-bottom: 10px;">点击选中当前要使用的人设：</div>
+            <div id="persona-list-container">
+                <!-- 人设列表会在这里生成 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- === 新建/编辑人设页面 (覆盖层) === -->
+    <div id="persona-create-page" class="me-page" style="z-index: 85;">
+        <div class="api-header">
+            <div class="api-back-btn" onclick="document.getElementById('persona-create-page').style.display='none'">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            </div>
+            <h2>编辑人设</h2>
+        </div>
+        <div class="me-page-content">
+            <div class="create-card">
+                <!-- 人设头像上传 -->
+                <div class="avatar-uploader" id="persona-avatar-preview" onclick="document.getElementById('persona-file-input').click()">
+                    <div style="text-align:center;">
+                         <div style="font-size: 24px;">📷</div>
+                        <div style="margin-top:4px;">人设头像</div>
+                    </div>
+                </div>
+                <input type="file" id="persona-file-input" class="hidden-input" accept="image/*">
+                
+                <div class="input-row">
+                    <div class="input-label">人设名称 (如：撒娇怪)</div>
+                    <input type="text" id="persona-name-input" class="clean-input">
+                </div>
+
+                <div class="input-row">
+                    <div class="input-label">人设详情 (AI会根据这个认识你)</div>
+                    <textarea id="persona-desc-input" class="clean-input" rows="6" placeholder="我是谁？我叫什么？我现在的状态是？"></textarea>
+                </div>
+
+                <button class="btn-save" onclick="saveNewPersona()">保存并使用</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- === “我们的纪念日”设置页面 === -->
+    <div id="me-anniversary-page" class="me-page">
+        <div class="api-header">
+            <div class="api-back-btn" onclick="closeMeSubPage('me-anniversary-page')">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            </div>
+            <h2>我们的纪念日</h2>
+        </div>
+        <div class="me-page-content">
+            <!-- 已有纪念日列表 -->
+            <div id="anniversary-list" class="settings-card">
+                <!-- 纪念日会动态生成在这里 -->
+                <div class="helper-text" style="text-align: center;">还没有纪念日，快添加一个吧！</div>
+            </div>
+
+            <!-- 添加新纪念日表单 -->
+            
+            <div class="settings-card">
+                <div class="setting-label">添加新的纪念日</div>
+                
+                <!-- ▼▼▼ 新增：角色选择器 ▼▼▼ -->
+                <div class="input-row" style="margin-bottom: 15px;">
+                    <div class="input-label">关联角色</div>
+                    <select id="anniversary-role-select" class="clean-input" style="background: #F7F9FC;">
+                        <option value="all">不绑定 (所有人都知道)</option>
+                    </select>
+                </div>
+                <!-- ▲▲▲ 新增结束 ▲▲▲ -->
+
+                <div class="input-row" style="margin-bottom: 15px;">
+                    <input type="text" id="anniversary-name" class="clean-input" placeholder="纪念日名称 (例如：第一次聊天)">
+                </div>
+                <div class="input-row">
+                    <input type="date" id="anniversary-date" class="clean-input">
+                </div>
+                <button class="btn" onclick="addAnniversary()" style="margin-top: 20px;">添加</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ▲▲▲▲▲ 添加到这里结束 ▲▲▲▲▲ -->
+    
+    <!-- === “我的钱包”页面 === -->
+    <div id="me-wallet-page" class="me-page">
+        <div class="api-header" style="background: #5B7C99; color: white;">
+            <div class="api-back-btn" onclick="closeMeSubPage('me-wallet-page')" style="color: white;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            </div>
+            <h2 style="color: white;">我的小金库</h2>
+        </div>
+        <div class="me-page-content" style="padding: 0;">
+            <!-- 余额卡片 -->
+            <div style="background: #5B7C99; color: white; padding: 20px 30px 40px 30px; border-radius: 0 0 30px 30px; text-align: center; box-shadow: 0 10px 20px rgba(91, 124, 153, 0.3);">
+                <div style="font-size: 14px; opacity: 0.8;">当前余额 (虚拟币)</div>
+                <div style="font-size: 48px; font-weight: bold; margin: 10px 0;" id="wallet-balance">0</div>
+                <div style="display: flex; gap: 15px; justify-content: center; margin-top: 20px;">
+                    <button class="btn" style="background: rgba(255,255,255,0.2); width: auto; padding: 8px 20px; backdrop-filter: blur(5px);" onclick="addBalance(100)">+ 签到领币</button>
+                    <button class="btn" style="background: rgba(255,255,255,0.2); width: auto; padding: 8px 20px; backdrop-filter: blur(5px);" onclick="resetBalance()">↺ 重置</button>
+                </div>
+            </div>
+            
+            <!-- 交易记录 -->
+            <div style="padding: 20px;">
+                <div style="font-weight: bold; color: #555; margin-bottom: 15px;">近期账单</div>
+                <div id="wallet-history">
+                    <!-- 动态生成 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- === “表情包库”页面 === -->
+    <div id="me-sticker-page" class="me-page">
+        <div class="api-header">
+            <div class="api-back-btn" onclick="closeMeSubPage('me-sticker-page')">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            </div>
+            <h2>表情包仓库</h2>
+            
+            <!-- ▼▼▼ 新增：上传目标选择 ▼▼▼ -->
+            <select id="sticker-role-select" class="clean-input" style="width: 100px; padding: 5px; margin-right: 10px; font-size: 12px;">
+                <option value="all">通用</option>
+                <!-- 角色列表会动态加载到这里 -->
+            </select>
+            
+            <!-- 添加按钮 -->
+            <div style="color: var(--accent); font-weight: bold; cursor: pointer;" onclick="document.getElementById('sticker-upload').click()">
+                + 添加
+            </div>
+            <input type="file" id="sticker-upload" class="hidden-input" accept="image/*" multiple>
+        </div>
+            
+        <div class="me-page-content">
+            <div class="helper-text" style="text-align: center; margin-bottom: 20px;">点击表情包即可发送给当前聊天的角色</div>
+            <div id="sticker-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                <!-- 表情包图片会在这里 -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- === 海龟汤：组局大厅 === -->
+    <div id="soup-lobby-page" class="me-page">
+        <div class="api-header" style="background: #2C3E50; color: white;">
+            <div class="api-back-btn" onclick="closeMeSubPage('soup-lobby-page')" style="color: white;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            </div>
+            <h2 style="color: white;">海龟汤组局</h2>
+        </div>
+        <div class="me-page-content" style="background: #34495E; color: white;">
+            
+            <!-- ▼▼▼ 修改后的剧本生成卡片 ▼▼▼ -->
+            <div class="settings-card" style="background: rgba(255,255,255,0.1); color: white; border: none;">
+                <div class="setting-label" style="color: #AAB7B8;">1. AI 现煮海龟汤</div>
+                
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <input type="text" id="soup-topic-input" class="clean-input" placeholder="输入关键词(如:恐怖/校园/科幻)..." style="background: rgba(0,0,0,0.2); color: white; border: 1px solid #555;">
+                    <button class="btn" onclick="generateSoupScript()" style="width: auto; white-space: nowrap; background: #E67E22;">生成</button>
+                </div>
+
+                <!-- 加载动画/提示 -->
+                <div id="soup-loading" style="display: none; color: #E67E22; font-size: 12px; text-align: center; margin-bottom: 10px;">
+                    AI 正在熬汤中，请稍候... 🍲
+                </div>
+
+                <div id="soup-script-preview" style="font-size: 13px; color: #ccc; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 8px; line-height: 1.6; min-height: 60px;">
+                    <span style="color: #777;">(点击生成按钮，获取一个全新的故事)</span>
+                </div>
+            </div>
+            <!-- ▲▲▲ 修改结束 ▲▲▲ -->
+
+            <div class="settings-card" style="background: rgba(255,255,255,0.1); color: white; border: none;">
+                <div class="setting-label" style="color: #AAB7B8;">2. 谁是主持人 (DM)?</div>
+                <select id="soup-dm-select" class="clean-input" style="background: rgba(0,0,0,0.2); color: white; border: 1px solid #555;">
+                    <!-- 角色列表 -->
+                </select>
+                <div class="helper-text" style="color: #777;">主持人知道真相，负责回答“是”或“否”。</div>
+            </div>
+
+            <div class="settings-card" style="background: rgba(255,255,255,0.1); color: white; border: none;">
+                <div class="setting-label" style="color: #AAB7B8;">3. 邀请谁一起玩? (多选)</div>
+                <div id="soup-player-list" style="display: flex; flex-wrap: wrap; gap: 10px;">
+                    <!-- 队友选择列表 -->
+                </div>
+            </div>
+
+            <button class="btn-save" onclick="startSoupGame()" style="background: #E67E22; margin-top: 20px;">开始发汤</button>
+        </div>
+    </div>
+
+    <!-- === 海龟汤：游戏房间 === -->
+    <div id="soup-game-room" class="me-page" style="background: #2C3E50; z-index: 90;">
+        <!-- 顶部 -->
+        <div class="room-header" style="background: #34495E; border-bottom: 1px solid #444;">
+            <div onclick="quitSoupGame()" style="padding: 10px; cursor: pointer; color: white;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+            </div>
+            <div class="room-info" style="color: white;">
+                <div class="room-name">海龟汤进行中</div>
+                <div class="room-status" style="color: #E67E22;" id="soup-status">主持人准备中...</div>
+            </div>
+            <div onclick="endSoupGameAndSave()" style="padding: 10px; cursor: pointer; color: #E67E22; font-size: 12px; font-weight: bold;">
+                结束并存档
+            </div>
+        </div>
+
+        <!-- 汤面展示区 -->
+        <div style="padding: 15px; background: rgba(0,0,0,0.2); margin: 10px; border-radius: 10px; color: #ddd; font-size: 13px; line-height: 1.5;">
+            <span style="color: #E67E22; font-weight: bold;">汤面：</span>
+            <span id="current-soup-text">...</span>
+        </div>
+
+        <!-- 游戏记录 -->
+        <div id="soup-chat-container" style="flex: 1; overflow-y: auto; padding: 10px 20px; display: flex; flex-direction: column; gap: 15px;">
+            <!-- 消息流 -->
+        </div>
+
+        <!-- 底部操作栏 -->
+        <div class="room-footer" style="background: #34495E; border-top: 1px solid #444;">
+            <!-- 队友提问按钮 -->
+            <div class="action-btn" style="width: auto; padding: 0 10px; border-radius: 15px; background: #E67E22; color: white; font-size: 12px; margin-right: 5px;" onclick="triggerTeammateAsk()">
+                让队友猜
+            </div>
+            
+            <textarea id="soup-input" class="chat-input-box" rows="1" placeholder="提问 (是/否题目)..." style="background: #2C3E50; color: white;"></textarea>
+            
+            <div class="action-btn btn-send" onclick="sendSoupUserMsg()" style="background: #E67E22;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            </div>
+        </div>
+    </div>
+
+        <div class="bottom-nav">
+    <div class="nav-item active" onclick="switchChatTab('chats', this)">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"></path></svg>
+        <span class="nav-label">聊天</span>
+    </div>
+    <div class="nav-item" onclick="switchChatTab('contacts', this)">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path></svg>
+        <span class="nav-label">联系人</span>
+    </div>
+    <!-- ▼▼▼▼▼ 添加下面这个 DIV ▼▼▼▼▼ -->
+    <div class="nav-item" onclick="switchChatTab('me', this)">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"></path></svg>
+        <span class="nav-label">我</span>
+    </div>
+    <!-- ▲▲▲▲▲ 添加上面这个 DIV ▲▲▲▲▲ -->
+</div>
+
+        <!-- === 独立的创建角色页面 (默认隐藏) === -->
+        <div id="create-role-page">
+            <div class="create-header">
+                <div class="back-icon" onclick="hideCreatePage()">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                </div>
+                <div>创建新角色</div>
+            </div>
+
+            <div class="create-card">
+                <div class="avatar-uploader" id="new-role-avatar" onclick="document.getElementById('role-file').click()">
+                    <div style="text-align:center;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                        <div style="margin-top:4px;">上传头像</div>
+                    </div>
+                </div>
+                <!-- 补回丢失的 input -->
+                <input type="file" id="role-file" class="hidden-input" accept="image/*">
+                
+                <div class="input-row">
+                    <div class="input-label">角色名称</div>
+                    <input type="text" id="role-name" class="clean-input" placeholder="例如：小猫咪">
+                </div>
+
+                <div class="input-row">
+                    <div class="input-label">性别 / 设定</div>
+                    <div class="gender-capsule" id="gender-select-box">
+                        <div class="gender-opt active" onclick="selectGender(this, '男生')">男生</div>
+                        <div class="gender-opt" onclick="selectGender(this, '女生')">女生</div>
+                        <div class="gender-opt" onclick="selectGender(this, '宠物')">宠物</div>
+                    </div>
+                </div>
+
+                <div class="input-row">
+                    <div class="input-label">人设与性格</div>
+                    <textarea id="role-prompt" class="clean-input" rows="3" placeholder="TA是什么样的性格？说话有什么口癖？" style="resize: none;"></textarea>
+                </div>
+
+                <button class="create-btn-float" onclick="createNewRole()">确认创建</button>
+            </div>
+        </div>
+        
+        <!-- === 5. 聊天室页面 === -->
+    <div id="chat-room-page">
+        <!-- 顶部 -->
+        <div class="room-header">
+            <div onclick="closeChatRoom()" style="padding: 10px; cursor: pointer;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            </div>
+            <div class="room-info">
+                <div class="room-name" id="current-chat-name">角色名</div>
+                <div class="room-status" id="typing-status">对方正在输入...</div>
+            </div>
+            <!-- 设置按钮 (非齿轮，更优雅的菜单图标) -->
+            <div onclick="openChatSettings()" style="padding: 10px; cursor: pointer;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="1"></circle>
+                    <circle cx="19" cy="12" r="1"></circle>
+                    <circle cx="5" cy="12" r="1"></circle>
+                </svg>
+            </div>
+        </div>
+
+        <!-- 消息列表 -->
+        <div id="message-container">
+            <!-- 消息会动态生成在这里 -->
+            <div class="msg-row left">
+                <div class="msg-bubble bubble-default" style="background: white; color: #333;">
+                    你好呀，我是你的专属 AI 伙伴。
+                </div>
+            </div>
+            <div class="msg-row right">
+                <div class="msg-bubble bubble-default" style="background: #FFE6E6; color: #333;">
+                    你好！
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部输入栏 -->
+        <!-- ▼▼▼▼▼ 插入这个缺失的面板 ▼▼▼▼▼ -->
+        <!-- ▼▼▼▼▼ 多功能面板 ▼▼▼▼▼ -->
+        
+            
+            <!-- ▼▼▼ 新版 INS 风多功能面板 ▼▼▼ -->
+        <div id="chat-action-panel">
+            <!-- 顶部小横条 -->
+            <div class="panel-handle"></div>
+
+            <!-- 图标按钮区 -->
+            <div class="ins-grid">
+                <!-- 1. 表情 -->
+                <div class="ins-btn" onclick="switchPanelTab('sticker')">
+                    <div class="ins-icon-circle bg-yellow">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>
+                    </div>
+                    <span class="ins-label">表情</span>
+                </div>
+
+                <!-- 2. 转账 -->
+                <div class="ins-btn" onclick="switchPanelTab('transfer')">
+                    <div class="ins-icon-circle bg-green">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+                    </div>
+                    <span class="ins-label">转账</span>
+                </div>
+
+                <!-- 3. 状态 -->
+                <div class="ins-btn" onclick="checkRoleStatus()">
+                    <div class="ins-icon-circle bg-pink">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                    </div>
+                    <span class="ins-label">读心</span>
+                </div>
+
+                <!-- 4. 文字图 -->
+                <div class="ins-btn" onclick="sendTextImg()">
+                    <div class="ins-icon-circle bg-blue">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    </div>
+                    <span class="ins-label">便签</span>
+                </div>
+
+                <!-- 5. 一起听 -->
+                <div class="ins-btn" onclick="openMusicPlayer()">
+                    <div class="ins-icon-circle bg-purple">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+                    </div>
+                    <span class="ins-label">一起听</span>
+                </div>
+            </div>
+
+            <!-- 内容展示区 (默认隐藏，点了图标才出来) -->
+            <div id="panel-content-area">
+                <div id="panel-sticker-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;"></div>
+                
+                <div id="panel-transfer-box" style="display: none; text-align: center; padding: 10px;">
+                    <div style="margin-bottom:10px; color:#888; font-size:13px;">请输入金额</div>
+                    <input type="number" id="transfer-amount" class="cute-input" style="text-align: center; font-size: 20px; font-weight: bold; color: #333; margin-bottom: 15px;" placeholder="¥">
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn" onclick="doTransfer('to_ai')" style="background: #67C23A; border:none;">给TA转账</button>
+                        <button class="btn" onclick="doTransfer('from_ai')" style="background: white; color: #67C23A; border: 1px solid #67C23A;">向TA收款</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+
+
+        
+        <!-- === 🎵 音乐播放器界面 === -->
+    <div id="music-player-modal">
+        <!-- 顶部最小化按钮 -->
+        <div style="position: absolute; top: 40px; left: 20px;" onclick="minimizeMusicPlayer()">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M19 12H5"></path></svg> <!-- 简单的横线代表最小化 -->
+        </div>
+        <!-- 歌单按钮 -->
+        <div style="position: absolute; top: 40px; right: 20px;" onclick="openMusicList()">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+        </div>
+
+        <div class="music-info-top">
+            <div class="music-title" id="player-title">未播放</div>
+            <div class="music-artist" id="player-artist">点击右上角添加歌曲</div>
+        </div>
+
+        <!-- 唱片 -->
+        <div class="vinyl-wrapper" id="vinyl-disc">
+            <div class="vinyl-cover" id="player-cover" style="background-image: url('https://cdn-icons-png.flaticon.com/512/1256/1256650.png');"></div>
+        </div>
+
+        <!-- 交互状态 -->
+        <div style="margin-top: 20px; font-size: 12px; color: rgba(255,255,255,0.6); height: 20px;" id="music-ai-status">
+            正在等待一起听...
+        </div>
+
+        <!-- 控制栏 -->
+        <div class="player-controls">
+            <!-- 上一首 -->
+            <div class="ctrl-btn" onclick="playPrevSong()">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5"></line></svg>
+            </div>
+            <!-- 播放/暂停 -->
+            <div class="ctrl-btn ctrl-btn-big" onclick="togglePlayState()">
+                <svg id="play-icon" width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                <svg id="pause-icon" style="display:none" width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+            </div>
+            <!-- 下一首 -->
+            <div class="ctrl-btn" onclick="playNextSong()">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
+            </div>
+        </div>
+        
+        <!-- 音频标签 (隐藏) -->
+        <audio id="bgm-audio" loop></audio>
+    </div>
+
+    <!-- === 🎵 歌单列表弹窗 === -->
+    <div id="music-list-modal">
+        <div style="padding: 15px; border-bottom: 1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
+            <div style="font-weight:bold; color:#333;">我的歌单</div>
+            <div onclick="document.getElementById('music-list-modal').style.display='none'" style="color:#999; font-size:24px;">×</div>
+        </div>
+        
+        <div style="flex:1; overflow-y: auto;" id="music-list-container">
+            <!-- 歌曲列表 -->
+        </div>
+        
+        <div style="padding: 15px; border-top: 1px solid #eee;">
+            <div style="display:flex; gap:10px;">
+                <input type="text" id="net-music-input" class="cute-input" placeholder="粘贴网易云链接或ID..." style="font-size:12px;">
+                <button class="btn" style="width: auto; padding: 0 15px; margin-top:0;" onclick="importMusic()">添加</button>
+            </div>
+            <div class="helper-text">提示：VIP歌曲无法播放，请用免费歌曲ID</div>
+        </div>
+    </div>
+        <!-- ▲▲▲▲▲ 面板结束 ▲▲▲▲▲ -->
+        <!-- ▲▲▲▲▲ 插入结束 ▲▲▲▲▲ -->
+
+        <div class="room-footer">
+            <!-- ▼▼▼ 新增：加号按钮 ▼▼▼ -->
+            <div class="action-btn" style="color: #5A6A7E; background: transparent; border: 1px solid #E0E0E0; margin-right: 5px;" onclick="toggleChatActionPanel()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            </div>
+
+            <!-- 接收按钮 (气泡图标) -->
+            <div class="action-btn btn-receive" onclick="triggerAIResponse()" title="让对方回复">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+            </div>
+            
+            <textarea id="msg-input" class="chat-input-box" rows="1" placeholder="输入消息..."></textarea>
+            
+            <!-- 发送按钮 -->
+            <div class="action-btn btn-send" onclick="sendUserMessage()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- === 6. 聊天设置页面 (独立) === -->
+    <div id="chat-settings-page">
+        <div class="api-header">
+            <div class="api-back-btn" onclick="closeChatSettings()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            </div>
+            <h2>聊天设置</h2>
+        </div>
+
+        <div style="flex: 1; overflow-y: auto; padding-bottom: 40px;">
+            
+            <!-- 外观设置 -->
+            <div style="margin: 20px 20px 10px 20px; font-size: 12px; color: #999; font-weight: bold;">外观样式</div>
+            <div class="setting-section">
+                <div class="setting-item">
+                    <span class="setting-title">气泡形状</span>
+                    <div class="shape-selector">
+                        <div class="shape-opt bubble-round" onclick="setBubbleShape('bubble-round', this)" title="圆滚滚"></div>
+                        <div class="shape-opt bubble-default active" onclick="setBubbleShape('bubble-default', this)" title="默认"></div>
+                        <div class="shape-opt bubble-sharp" onclick="setBubbleShape('bubble-sharp', this)" title="小尖角"></div>
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <span class="setting-title">聊天背景</span>
+                    <button class="btn-secondary" onclick="document.getElementById('chat-bg-upload').click()" style="font-size: 12px;">上传图片</button>
+                    <input type="file" id="chat-bg-upload" class="hidden-input" accept="image/*">
+                </div>
+            </div>
+
+            <!-- 颜色设置 -->
+            <div style="margin: 20px 20px 10px 20px; font-size: 12px; color: #999; font-weight: bold;">气泡配色 (捡手机文学风)</div>
+            <div class="setting-section">
+                <div class="setting-item">
+                    <span class="setting-title">对方气泡 (AI)</span>
+                    <input type="color" id="color-ai" value="#FFFFFF" onchange="updateChatColors()">
+                </div>
+                <div class="setting-item">
+                    <span class="setting-title">我的气泡 (User)</span>
+                    <input type="color" id="color-user" value="#FFE6E6" onchange="updateChatColors()">
+                </div>
+            </div>
+
+            <!-- 参数设置 -->
+            <div style="margin: 20px 20px 10px 20px; font-size: 12px; color: #999; font-weight: bold;">显示与记忆</div>
+            <div class="setting-item">
+                    <span class="setting-title">显示时间戳</span>
+                    <input type="checkbox" id="show-time-switch" onchange="updateChatSettingsBool()" style="width: 20px; height: 20px;">
+                </div>
+            <div class="setting-section">
+                <div class="setting-item">
+                    <span class="setting-title">字体大小 (12-15px)</span>
+                    <input type="number" id="font-size-input" value="14" min="12" max="15" class="cute-input" style="width: 60px; padding: 5px; text-align: center;" onchange="updateChatFont()">
+                </div>
+                <div class="setting-item">
+                    <span class="setting-title">记忆条数</span>
+                    <input type="number" id="memory-limit" value="30" class="cute-input" style="width: 60px; padding: 5px; text-align: center;">
+                </div>
+            </div>
+            
+            <!-- 新增：隐私与动态 -->
+            <div style="margin: 20px 20px 10px 20px; font-size: 12px; color: #999; font-weight: bold;">隐私与动态</div>
+            <div class="setting-section">
+                <div class="setting-item" onclick="peekRoleInfo('memo')">
+                    <span class="setting-title">📅 查看TA的备忘录</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </div>
+                <div class="setting-item" onclick="peekRoleInfo('footprint')">
+                    <span class="setting-title">👣 查看TA的足迹</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </div>
+                <div class="setting-item" onclick="peekRoleInfo('note')">
+                    <span class="setting-title">💭 偷看碎碎念笔记</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </div>
+            </div>
+            
+            <!-- 通用信息展示弹窗 -->
+    <div id="info-modal" onclick="document.getElementById('info-modal').style.display='none'">
+        <div class="info-card" onclick="event.stopPropagation()">
+            <div class="info-header" id="info-title">标题</div>
+            <div class="info-content" id="info-text">内容加载中...</div>
+            <button class="btn" onclick="document.getElementById('info-modal').style.display='none'" style="margin-top:20px; background:#f5f5f5; color:#666;">关闭</button>
+        </div>
+    </div>
+            
+            <div style="text-align: center; margin-top: 30px; color: #ccc; font-size: 12px;">
+                设置会自动保存
+            </div>
+        </div>
+    </div>
+    
+    <!-- 长按消息弹出的菜单 -->
+    <div id="msg-context-menu" onclick="closeMsgMenu()">
+        <div class="menu-content" onclick="event.stopPropagation()">
+            <div class="menu-item" onclick="handleEditMsg()">✎ 编辑消息</div>
+            <div class="menu-item danger" onclick="handleDeleteMsg()">🗑 删除消息</div>
+        </div>
+    </div>
+        
+    </div>   
+
+    <script>
+    // --- 新增变量：控制显示条数 ---
+        let visibleMsgCount = 30; // 默认只看最近30条
+        let selectedMsgIndex = -1; // 当前长按选中的是哪条消息
+    
+    
+        /* --- 1. 基础功能：时间与电池 --- */
+        function updateClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('main-clock').innerText = `${hours}:${minutes}`;
+            document.getElementById('status-time').innerText = `${hours}:${minutes}`;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        if ('getBattery' in navigator) {
+            navigator.getBattery().then(function(battery) {
+                function updateBattery() {
+                    const level = Math.round(battery.level * 100);
+                    document.getElementById('battery-percent').innerText = level + '%';
+                    document.getElementById('battery-fill').style.width = level + '%';
+                    if(level <= 20) document.getElementById('battery-fill').style.backgroundColor = '#ff4d4f';
+                    else document.getElementById('battery-fill').style.backgroundColor = '#5A6A7E';
+                }
+                updateBattery();
+                battery.addEventListener('levelchange', updateBattery);
+            });
+        }
+
+        /* --- 2. 美化功能：上传图片 --- */
+        function handleImageUpload(inputId, targetId, isBg = false) {
+            document.getElementById(inputId).addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        const target = document.getElementById(targetId);
+                        target.style.backgroundImage = `url(${event.target.result})`;
+                        if(!isBg) target.innerText = ''; 
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+        handleImageUpload('bg-upload', 'wallpaper-layer', true);
+        handleImageUpload('avatar-upload', 'avatar-box');
+
+        /* --- 3. 应用功能：API 设置 --- */
+        function openApp(appId) {
+            document.getElementById(appId).style.display = 'flex';
+            loadSettings();
+        }
+
+        function closeApp(appId) {
+            document.getElementById(appId).style.display = 'none';
+        }
+
+        function saveSettings() {
+            const config = {
+                url: document.getElementById('api-url').value,
+                key: document.getElementById('api-key').value,
+                model: document.getElementById('model-select').value,
+                temp: document.getElementById('api-temp').value
+            };
+            localStorage.setItem('my_ai_config', JSON.stringify(config));
+            alert('配置已保存！');
+        }
+
+        function loadSettings() {
+            const saved = localStorage.getItem('my_ai_config');
+            if (saved) {
+                const config = JSON.parse(saved);
+                if(config.url) document.getElementById('api-url').value = config.url;
+                if(config.key) document.getElementById('api-key').value = config.key;
+                if(config.temp) document.getElementById('api-temp').value = config.temp;
+                if(config.model) {
+                    const select = document.getElementById('model-select');
+                    if(select.options.length <= 1) {
+                        const option = document.createElement('option');
+                        option.value = config.model;
+                        option.text = config.model + " (已保存)";
+                        option.selected = true;
+                        select.add(option);
+                    }
+                }
+            }
+        }
+
+        async function fetchModels() {
+            const url = document.getElementById('api-url').value;
+            const key = document.getElementById('api-key').value;
+            const select = document.getElementById('model-select');
+
+            if (!url || !key) {
+                alert('请先填写 API URL 和 Key');
+                return;
+            }
+            select.innerHTML = '<option>正在加载...</option>';
+            try {
+                const fetchUrl = url.endsWith('/') ? `${url}models` : `${url}/models`;
+                const response = await fetch(fetchUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${key}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (!response.ok) throw new Error('连接失败，请检查 URL 和 Key');
+                const data = await response.json();
+                select.innerHTML = ''; 
+                const models = Array.isArray(data) ? data : (data.data || []);
+                if (models.length === 0) {
+                    select.innerHTML = '<option>未找到模型</option>';
+                    return;
+                }
+                models.forEach(m => {
+                    const option = document.createElement('option');
+                    option.value = m.id;
+                    option.text = m.id;
+                    select.appendChild(option);
+                });
+                alert(`成功获取 ${models.length} 个模型！`);
+            } catch (error) {
+                console.error(error);
+                select.innerHTML = '<option value="" disabled selected>获取失败</option>';
+                alert('获取模型列表失败：' + error.message);
+            }
+        }
+        
+        /* --- 4. Chat 应用逻辑 --- */
+        let chatList = [
+            {
+                id: 'system_1',
+                name: '文件传输助手',
+                avatar: 'https://cdn-icons-png.flaticon.com/512/4825/4825038.png',
+                prompt: 'System',
+                gender: '系统',
+                lastMsg: '图片已保存',
+                time: '12:30'
+            }
+        ];
+        let selectedGender = '男生'; 
+        let tempRoleAvatar = ''; 
+
+        function openChatApp() {
+            openApp('chat-app');
+            renderChatList();
+            const firstTab = document.querySelectorAll('.bottom-nav .nav-item')[0];
+            switchChatTab('chats', firstTab);
+        }
+
+        function switchChatTab(tabName, navEl) {
+    // 隐藏所有页面和按钮的激活状态
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.chat-content-area').forEach(el => el.style.display = 'none');
+    
+    // 激活当前点击的
+    navEl.classList.add('active');
+    document.getElementById('tab-' + tabName).style.display = 'block';
+
+    // 更新标题
+    const titles = { 'chats': 'Chats', 'contacts': 'Contacts', 'me': '我' };
+    document.getElementById('chat-page-title').innerText = titles[tabName];
+    
+    // 特殊按钮的显示/隐藏
+    if (tabName === 'contacts') {
+        document.getElementById('add-contact-btn').style.display = 'block';
+        renderContactList(); 
+    } else {
+        document.getElementById('add-contact-btn').style.display = 'none';
+    }
+    
+    // 如果是“我”页面，未来可以在这里调用渲染函数
+    if (tabName === 'me') {
+        // renderMePage(); // 暂时先空着
+    }
+}
+
+        function renderChatList() {
+            const container = document.getElementById('tab-chats');
+            container.innerHTML = ''; 
+            chatList.forEach(chat => {
+                const div = document.createElement('div');
+                div.className = 'chat-item-card';
+                div.onclick = function() { enterChatRoom(chat.id); };
+                div.innerHTML = `
+                    <div class="chat-avatar" style="background-image: url('${chat.avatar}');"></div>
+                    <div class="chat-info">
+                        <div class="chat-name">${chat.name}</div>
+                        <div class="chat-preview">${chat.lastMsg}</div>
+                    </div>
+                    <div class="chat-time">${chat.time}</div>
+                `;
+                container.appendChild(div);
+            });
+            container.appendChild(createSpacer());
+        }
+
+        function renderContactList() {
+            const container = document.getElementById('contact-list');
+            container.innerHTML = '';
+            chatList.forEach(chat => {
+                const div = document.createElement('div');
+                div.className = 'contact-item';
+                div.innerHTML = `
+                    <div class="contact-avatar" style="background-image: url('${chat.avatar}');"></div>
+                    <div style="flex:1;">
+                        <span class="contact-name">${chat.name}</span>
+                        ${chat.gender ? `<span class="contact-tag">${chat.gender}</span>` : ''}
+                    </div>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                `;
+                div.onclick = function() { 
+                    const chatTabBtn = document.querySelectorAll('.bottom-nav .nav-item')[0];
+                    switchChatTab('chats', chatTabBtn);
+                };
+                container.appendChild(div);
+            });
+            container.appendChild(createSpacer());
+        }
+
+        function createSpacer() {
+            const d = document.createElement('div');
+            d.style.height = "80px";
+            return d;
+        }
+
+        // --- 创建角色页面逻辑 ---
+        function showCreatePage() {
+            document.getElementById('create-role-page').style.display = 'flex';
+        }
+
+        function hideCreatePage() {
+            document.getElementById('create-role-page').style.display = 'none';
+        }
+
+        function selectGender(el, val) {
+            document.querySelectorAll('.gender-opt').forEach(d => d.classList.remove('active'));
+            el.classList.add('active');
+            selectedGender = val;
+        }
+
+        // 监听角色头像上传 (新版逻辑)
+        document.getElementById('role-file').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    tempRoleAvatar = event.target.result;
+                    const target = document.getElementById('new-role-avatar');
+                    target.style.backgroundImage = `url(${tempRoleAvatar})`;
+                    // 隐藏里面的文字和图标
+                    target.innerHTML = ''; 
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function createNewRole() {
+            const name = document.getElementById('role-name').value;
+            const prompt = document.getElementById('role-prompt').value;
+            
+            if(!name) { alert('请填写名字'); return; }
+
+            const newRole = {
+                id: 'role_' + Date.now(),
+                name: name,
+                avatar: tempRoleAvatar || 'https://cdn-icons-png.flaticon.com/512/847/847969.png',
+                prompt: prompt,
+                gender: selectedGender,
+                lastMsg: '你好呀！',
+                time: '刚刚'
+            };
+
+            chatList.unshift(newRole); 
+
+            // 清理表单
+            document.getElementById('role-name').value = '';
+            document.getElementById('role-prompt').value = '';
+            document.getElementById('new-role-avatar').style.backgroundImage = '';
+            // 恢复上传图标
+            document.getElementById('new-role-avatar').innerHTML = `
+                <div style="text-align:center;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                    <div style="margin-top:4px;">上传头像</div>
+                </div>`;
+            tempRoleAvatar = '';
+
+            hideCreatePage(); 
+            renderContactList();
+            alert('联系人 ' + name + ' 创建成功！');
+        }
+        
+        /* --- 5. 聊天室核心逻辑 --- */
+
+        let currentChatId = null; // 当前正在聊天的角色ID
+        let chatHistory = {};     // 存储所有角色的聊天记录 { roleId: [messages] }
+        
+        // 默认设置
+        let chatSettings = {
+            bubbleShape: 'bubble-default',
+            aiColor: '#FFFFFF',
+            userColor: '#FFE6E6',
+            fontSize: '14px',
+            memoryLimit: 30,
+            bgImage: '' // 聊天背景图
+        };
+
+        // 初始化：加载设置
+        function initChatSettings() {
+            const saved = localStorage.getItem('yok_chat_settings');
+            if(saved) {
+                chatSettings = JSON.parse(saved);
+                // 恢复UI显示
+                document.getElementById('color-ai').value = chatSettings.aiColor;
+                document.getElementById('color-user').value = chatSettings.userColor;
+                document.getElementById('font-size-input').value = parseInt(chatSettings.fontSize);
+                document.getElementById('memory-limit').value = chatSettings.memoryLimit;
+                
+                // 恢复背景
+                if(chatSettings.bgImage) {
+                    document.getElementById('chat-room-page').style.backgroundImage = `url(${chatSettings.bgImage})`;
+                }
+                
+                // 恢复形状选中状态
+                document.querySelectorAll('.shape-opt').forEach(el => {
+                    el.classList.remove('active');
+                    if(el.classList.contains(chatSettings.bubbleShape)) el.classList.add('active');
+                });
+            }
+        }
+        
+                if(chatSettings.showTime !== undefined) {
+                    document.getElementById('show-time-switch').checked = chatSettings.showTime;
+                }
+                
+        initChatSettings(); // 运行初始化
+
+        // 打开聊天室 (修改之前的 onclick 逻辑)
+        // 注意：你需要修改 renderContactList 和 renderChatList 里的 onclick 事件调用这个函数
+        // 例如：div.onclick = function() { enterChatRoom(chat.id); };
+        function enterChatRoom(roleId) {
+            currentChatId = roleId;
+            // ★★★ 核心修改：每次进房间，重置只看最后30条 ★★★
+            visibleMsgCount = 30; 
+
+            const role = chatList.find(r => r.id === roleId);
+            if(!role) return;
+
+            document.getElementById('current-chat-name').innerText = role.name;
+            document.getElementById('chat-room-page').style.display = 'flex';
+
+            // ▼▼▼ 新增这行：点击消息区域，收起面板 ▼▼▼
+            document.getElementById('message-container').onclick = () => {
+                document.getElementById('chat-action-panel').classList.remove('active');
+            };
+            
+            if (!chatHistory[roleId]) {
+                chatHistory[roleId] = []; // 现在是空的了，进去什么都没有
+            }
+            
+            renderMessages();
+        }
+
+        function closeChatRoom() {
+            document.getElementById('chat-room-page').style.display = 'none';
+            currentChatId = null;
+        }
+
+        // 渲染消息 (升级版：防卡顿 + 长按菜单 + 查看更多)
+        function renderMessages(keepScrollPosition = false) {
+            const container = document.getElementById('message-container');
+            // 记录当前滚动高度，用于“加载更多”时保持位置
+            const oldScrollHeight = container.scrollHeight;
+            const oldScrollTop = container.scrollTop;
+
+            container.innerHTML = '';
+            const allMsgs = chatHistory[currentChatId] || [];
+            
+            // ★★★ 1. 切割数组，只取最后 N 条 ★★★
+            const startIndex = Math.max(0, allMsgs.length - visibleMsgCount);
+            const displayMsgs = allMsgs.slice(startIndex);
+
+            // ★★★ 2. 如果还有更多历史，显示“点击加载更多” ★★★
+            if (startIndex > 0) {
+                const loadBtn = document.createElement('div');
+                loadBtn.className = 'load-more-btn';
+                loadBtn.innerText = '查看更多历史消息...';
+                loadBtn.onclick = loadMoreHistory;
+                container.appendChild(loadBtn);
+            }
+
+            // 获取头像
+            const aiRole = chatList.find(r => r.id === currentChatId);
+            const aiAvatar = aiRole ? aiRole.avatar : '';
+            let userAvatar = 'https://cdn-icons-png.flaticon.com/512/1077/1077114.png';
+            if (activePersonaId) {
+                const p = myPersonas.find(x => x.id === activePersonaId);
+                if (p) userAvatar = p.avatar;
+            }
+
+            // ★★★ 3. 循环渲染 ★★★
+            displayMsgs.forEach((msg, i) => {
+                // 计算该消息在原始大数组中的真实索引
+                const realIndex = startIndex + i;
+
+                const row = document.createElement('div');
+                row.className = `msg-row ${msg.role === 'user' ? 'right' : 'left'}`;
+                
+                const avatarHtml = `
+                    <div class="msg-avatar-container">
+                        <div class="msg-avatar-img" style="background-image: url('${msg.role === 'user' ? userAvatar : aiAvatar}')"></div>
+                        ${chatSettings.showTime ? `<div class="msg-timestamp">${msg.time || ''}</div>` : ''}
+                    </div>
+                `;
+
+                const bubbleDiv = document.createElement('div');
+                bubbleDiv.className = `msg-bubble ${chatSettings.bubbleShape}`;
+
+                if (msg.content.includes('<img') || msg.content.includes('transfer-card')) {
+                    bubbleDiv.classList.add('bubble-transparent');
+                } else {
+                    bubbleDiv.style.fontSize = chatSettings.fontSize;
+                    if (msg.role === 'user') {
+                        bubbleDiv.style.backgroundColor = chatSettings.userColor;
+                        bubbleDiv.style.color = '#333';
+                    } else {
+                        bubbleDiv.style.backgroundColor = chatSettings.aiColor;
+                        bubbleDiv.style.color = '#333';
+                    }
+                }
+                bubbleDiv.innerHTML = msg.content;
+
+                // ★★★ 4. 绑定长按事件 (核心) ★★★
+                addLongPressEvent(bubbleDiv, realIndex);
+
+                if (msg.role === 'user') {
+                    row.appendChild(bubbleDiv);
+                    row.appendChild(createRangeElement(avatarHtml));
+                } else {
+                    row.appendChild(createRangeElement(avatarHtml));
+                    row.appendChild(bubbleDiv);
+                }
+
+                container.appendChild(row);
+            });
+            
+            // ★★★ 5. 滚动处理 ★★★
+            if (keepScrollPosition) {
+                // 如果是点击“加载更多”，保持视线位置不变
+                container.scrollTop = container.scrollHeight - oldScrollHeight + oldScrollTop;
+            } else {
+                // 如果是新消息，滚到底部
+                container.scrollTop = container.scrollHeight;
+            }
+        }
+
+        // 辅助函数：把HTML字符串转成DOM元素
+        function createRangeElement(html) {
+            const template = document.createElement('template');
+            template.innerHTML = html.trim();
+            return template.content.firstChild;
+        }
+        
+        // 更新设置 (修复版：点击立刻生效)
+        function updateChatSettingsBool() {
+            chatSettings.showTime = document.getElementById('show-time-switch').checked;
+            // 立刻保存
+            localStorage.setItem('yok_chat_settings', JSON.stringify(chatSettings));
+            // 立刻刷新界面，这样你就能马上看到时间戳出来了
+            renderMessages(); 
+        }
+
+        // 发送消息 (修复版：记录时间)
+        function sendUserMessage() {
+            const input = document.getElementById('msg-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            // 获取当前时间
+            const timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+            // 添加到历史 (注意这里加了 time 字段)
+            chatHistory[currentChatId].push({ role: 'user', content: text, time: timeStr });
+            
+            renderMessages();
+            input.value = ''; 
+            
+            updateListPreview(text);
+        }
+
+        // 触发 AI 回复 (点击接收按钮)
+        async function triggerAIResponse() {
+            if (!currentChatId) return;
+            
+            const role = chatList.find(r => r.id === currentChatId);
+            const msgs = chatHistory[currentChatId];
+            
+            // 显示正在输入
+            const statusEl = document.getElementById('typing-status');
+            statusEl.classList.add('typing');
+            
+            // 准备 API 数据
+            const config = JSON.parse(localStorage.getItem('my_ai_config') || '{}');
+            if (!config.url || !config.key) {
+                alert('请先在主屏幕设置 API！');
+                statusEl.classList.remove('typing');
+                return;
+            }
+
+            // 构造上下文 (带记忆限制)
+            const limit = parseInt(chatSettings.memoryLimit) || 30;
+            const recentMsgs = msgs.slice(-limit).map(m => ({
+                role: m.role === 'user' ? 'user' : 'assistant',
+                content: m.content
+            }));
+
+            // 加入人设 System Prompt
+            const systemPrompt = {
+                role: 'system',
+                content: `你现在扮演：${role.name}。\n人设设定：${role.prompt || '无'}。\n请用符合人设的语气回复，不要跳出角色。`
+            };
+            
+            const messagesToSend = [systemPrompt, ...recentMsgs];
+
+            try {
+                const fetchUrl = config.url.endsWith('/') ? `${config.url}chat/completions` : `${config.url}/chat/completions`;
+                
+                const response = await fetch(fetchUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${config.key}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: config.model || 'gpt-3.5-turbo',
+                        messages: messagesToSend,
+                        temperature: parseFloat(config.temp) || 0.7
+                    })
+                });
+
+                if (!response.ok) throw new Error('API 请求失败');
+                
+                const data = await response.json();
+                const reply = data.choices[0].message.content;
+
+                // 添加回复
+                chatHistory[currentChatId].push({ role: 'ai', content: reply });
+                renderMessages();
+                updateListPreview(reply);
+
+            } catch (error) {
+                console.error(error);
+                chatHistory[currentChatId].push({ role: 'ai', content: '[系统错误: 无法连接 AI]' });
+                renderMessages();
+            } finally {
+                statusEl.classList.remove('typing');
+            }
+        }
+        
+        function updateListPreview(text) {
+             const role = chatList.find(r => r.id === currentChatId);
+             if(role) {
+                 role.lastMsg = text;
+                 role.time = '刚刚';
+                 // 刷新外部列表
+                 if(document.getElementById('tab-chats').style.display !== 'none') renderChatList();
+                 if(document.getElementById('tab-contacts').style.display !== 'none') renderContactList();
+             }
+        }
+
+        /* --- 6. 聊天设置逻辑 --- */
+        
+        function openChatSettings() {
+            document.getElementById('chat-settings-page').style.display = 'flex';
+        }
+        function closeChatSettings() {
+            document.getElementById('chat-settings-page').style.display = 'none';
+            // 关闭时保存
+            localStorage.setItem('yok_chat_settings', JSON.stringify(chatSettings));
+            // 刷新聊天室样式
+            renderMessages();
+        }
+
+        function setBubbleShape(shapeClass, el) {
+            chatSettings.bubbleShape = shapeClass;
+            document.querySelectorAll('.shape-opt').forEach(d => d.classList.remove('active'));
+            el.classList.add('active');
+        }
+
+        function updateChatColors() {
+            chatSettings.aiColor = document.getElementById('color-ai').value;
+            chatSettings.userColor = document.getElementById('color-user').value;
+        }
+
+        function updateChatFont() {
+            const size = document.getElementById('font-size-input').value;
+            chatSettings.fontSize = size + 'px';
+        }
+        
+        // 聊天背景上传
+        document.getElementById('chat-bg-upload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    chatSettings.bgImage = event.target.result;
+                    document.getElementById('chat-room-page').style.backgroundImage = `url(${chatSettings.bgImage})`;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+
+        /* --- 7. “我”的子页面功能 (升级版) --- */
+
+        function openMeSubPage(pageId) {
+            document.getElementById(pageId).style.display = 'flex';
+            if (pageId === 'me-persona-page') {
+                renderPersonaList();
+            }
+            if (pageId === 'me-anniversary-page') {
+                renderAnniversaries();
+                updateAnniversaryRoleSelect();
+            }
+            // ▼▼▼ 加上这 3 行代码 ▼▼▼
+            if (pageId === 'me-sticker-page') {
+            updateStickerRoleSelect(); // <--- 新增这一行
+                renderStickers();
+            }
+        }
+            
+
+        function closeMeSubPage(pageId) {
+            document.getElementById(pageId).style.display = 'none';
+        }
+
+        /* --- A. 多人设管理逻辑 --- */
+        let myPersonas = JSON.parse(localStorage.getItem('yok_my_personas')) || [];
+        let activePersonaId = localStorage.getItem('yok_active_persona_id') || null;
+        let tempPersonaAvatar = ''; // 临时存头像
+
+        // 1. 打开新建页
+        function openPersonaCreate() {
+            document.getElementById('persona-create-page').style.display = 'flex';
+            // 重置表单
+            document.getElementById('persona-name-input').value = '';
+            document.getElementById('persona-desc-input').value = '';
+            tempPersonaAvatar = '';
+            document.getElementById('persona-avatar-preview').style.backgroundImage = '';
+            document.getElementById('persona-avatar-preview').innerHTML = `<div style="text-align:center;"><div style="font-size: 24px;">📷</div><div style="margin-top:4px;">人设头像</div></div>`;
+        }
+
+        // 2. 监听人设头像上传
+        document.getElementById('persona-file-input').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    tempPersonaAvatar = event.target.result;
+                    const target = document.getElementById('persona-avatar-preview');
+                    target.style.backgroundImage = `url(${tempPersonaAvatar})`;
+                    target.innerHTML = ''; 
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // 3. 保存人设
+        function saveNewPersona() {
+            const name = document.getElementById('persona-name-input').value;
+            const desc = document.getElementById('persona-desc-input').value;
+            
+            if (!name) { alert('起个名字吧！'); return; }
+
+            const newPersona = {
+                id: 'p_' + Date.now(),
+                name: name,
+                avatar: tempPersonaAvatar || 'https://cdn-icons-png.flaticon.com/512/1077/1077114.png', // 默认头像
+                desc: desc
+            };
+
+            myPersonas.push(newPersona);
+            localStorage.setItem('yok_my_personas', JSON.stringify(myPersonas));
+            
+            // 自动设为当前使用
+            setActivePersona(newPersona.id);
+            
+            document.getElementById('persona-create-page').style.display = 'none';
+            renderPersonaList();
+        }
+
+        // 4. 渲染人设列表
+        function renderPersonaList() {
+            const container = document.getElementById('persona-list-container');
+            container.innerHTML = '';
+
+            if (myPersonas.length === 0) {
+                container.innerHTML = '<div style="text-align:center; padding:20px; color:#999;">还没有人设，点击右上角新建一个吧！</div>';
+                return;
+            }
+
+            myPersonas.forEach((p, index) => {
+                const isActive = p.id === activePersonaId;
+                const div = document.createElement('div');
+                // 复用聊天卡片样式，加一点修改
+                div.className = 'chat-item-card'; 
+                div.style.border = isActive ? '2px solid var(--accent)' : '2px solid transparent';
+                div.style.background = isActive ? '#F0F8FF' : 'white';
+                
+                div.innerHTML = `
+                    <div class="chat-avatar" style="background-image: url('${p.avatar}'); width: 50px; height: 50px;"></div>
+                    <div class="chat-info">
+                        <div class="chat-name" style="font-size:15px;">${p.name} ${isActive ? '<span style="font-size:12px; color:var(--accent);">(使用中)</span>' : ''}</div>
+                        <div class="chat-preview" style="font-size:12px;">${p.desc || '暂无描述'}</div>
+                    </div>
+                    <div style="color:#ff4d4f; padding:10px; font-size:20px;" onclick="deletePersona(event, ${index})">×</div>
+                `;
+                div.onclick = (e) => {
+                    // 如果点击的是删除按钮，不触发切换
+                    if(e.target.innerText === '×') return;
+                    setActivePersona(p.id);
+                };
+                container.appendChild(div);
+            });
+        }
+
+        function setActivePersona(id) {
+            activePersonaId = id;
+            localStorage.setItem('yok_active_persona_id', id);
+            renderPersonaList();
+            
+            // 更新主界面左上角的头像（可选）
+            const p = myPersonas.find(x => x.id === id);
+            if(p) {
+                document.getElementById('avatar-box').style.backgroundImage = `url(${p.avatar})`;
+                document.getElementById('avatar-box').innerHTML = ''; // 清除文字
+            }
+        }
+
+        function deletePersona(e, index) {
+            e.stopPropagation();
+            if(confirm('删除这个人设卡？')) {
+                const deletedId = myPersonas[index].id;
+                myPersonas.splice(index, 1);
+                localStorage.setItem('yok_my_personas', JSON.stringify(myPersonas));
+                
+                if (activePersonaId === deletedId) {
+                    activePersonaId = null;
+                    localStorage.removeItem('yok_active_persona_id');
+                }
+                renderPersonaList();
+            }
+        }
+
+
+        /* --- B. 纪念日绑定逻辑 --- */
+        let anniversaries = JSON.parse(localStorage.getItem('yok_anniversaries')) || [];
+
+        // 更新下拉菜单的选项
+        function updateAnniversaryRoleSelect() {
+            const select = document.getElementById('anniversary-role-select');
+            // 保留第一个“不绑定”选项，清除其他的
+            select.innerHTML = '<option value="all">不绑定 (所有人都知道)</option>';
+            
+            chatList.forEach(role => {
+                // 排除系统角色（如文件传输助手）
+                if(role.id.startsWith('system_')) return;
+                
+                const opt = document.createElement('option');
+                opt.value = role.id;
+                opt.text = role.name;
+                select.appendChild(opt);
+            });
+        }
+
+        function renderAnniversaries() {
+            const listContainer = document.getElementById('anniversary-list');
+            listContainer.innerHTML = ''; 
+
+            if (anniversaries.length === 0) {
+                listContainer.innerHTML = '<div class="helper-text" style="text-align: center;">还没有纪念日，快添加一个吧！</div>';
+                return;
+            }
+
+            anniversaries.forEach((item, index) => {
+                // 查找绑定的角色名
+                let roleName = '通用';
+                if (item.roleId && item.roleId !== 'all') {
+                    const r = chatList.find(x => x.id === item.roleId);
+                    roleName = r ? r.name : '未知角色';
+                }
+
+                const div = document.createElement('div');
+                div.className = 'anniversary-item';
+                div.innerHTML = `
+                    <div class="anniversary-info">
+                        <span class="name">
+                            <span style="background:#E3F2FD; color:#7FA6C8; font-size:10px; padding:2px 6px; border-radius:4px; margin-right:5px;">${roleName}</span>
+                            ${item.name}
+                        </span>
+                        <span class="date">${item.date}</span>
+                    </div>
+                    <button class="delete-btn" onclick="deleteAnniversary(${index})">×</button>
+                `;
+                listContainer.appendChild(div);
+            });
+        }
+
+        function addAnniversary() {
+            const nameInput = document.getElementById('anniversary-name');
+            const dateInput = document.getElementById('anniversary-date');
+            const roleSelect = document.getElementById('anniversary-role-select');
+
+            if (!nameInput.value || !dateInput.value) {
+                alert('请填写完整信息');
+                return;
+            }
+
+            anniversaries.push({
+                name: nameInput.value,
+                date: dateInput.value,
+                roleId: roleSelect.value // 保存绑定的角色ID
+            });
+            
+            localStorage.setItem('yok_anniversaries', JSON.stringify(anniversaries));
+            renderAnniversaries();
+
+            nameInput.value = '';
+            dateInput.value = '';
+        }
+        
+        function deleteAnniversary(index) {
+             if (confirm('删除？')) {
+                anniversaries.splice(index, 1);
+                localStorage.setItem('yok_anniversaries', JSON.stringify(anniversaries));
+                renderAnniversaries();
+            }
+        }
+        
+        // --- 核心 AI 回复逻辑 (终极完整版：带时间感知 + 连发 + 转账检测) ---
+        async function triggerAIResponse(contextInfo = '') {
+            if (!currentChatId) return;
+            
+            const role = chatList.find(r => r.id === currentChatId);
+            const msgs = chatHistory[currentChatId];
+            
+            const statusEl = document.getElementById('typing-status');
+            statusEl.innerText = "对方正在输入...";
+            statusEl.classList.add('typing');
+            
+            const config = JSON.parse(localStorage.getItem('my_ai_config') || '{}');
+            if (!config.url || !config.key) {
+                alert('请先在主页-API设置中填写正确的 Key！');
+                statusEl.classList.remove('typing');
+                return;
+            }
+
+            // ★★★ 新增：获取当前现实时间 ★★★
+            const now = new Date();
+            const timeString = now.toLocaleString('zh-CN', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric', 
+                weekday: 'long', 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: false 
+            });
+            // timeString 的样子大概是： "2023年10月27日 星期五 14:30"
+
+            // 1. 准备上下文
+            let userPersonaText = "";
+            if (activePersonaId) {
+                const p = myPersonas.find(x => x.id === activePersonaId);
+                if (p) userPersonaText = `\n\n[玩家设定]\n昵称：${p.name}\n描述：${p.desc}`;
+            }
+            
+            const relatedAnniversaries = anniversaries.filter(a => a.roleId === 'all' || a.roleId === currentChatId);
+            let memoryText = "";
+            if (relatedAnniversaries.length > 0) {
+                memoryText = "\n\n[你们的重要纪念日]\n";
+                relatedAnniversaries.forEach(a => { memoryText += `- ${a.date}: ${a.name}\n`; });
+            }
+            
+            const validStickersForAI = myStickers.filter(s => !s.roleId || s.roleId === 'all' || s.roleId === currentChatId);
+            const stickerDescriptions = validStickersForAI.map(s => s.desc || '未命名').join(', ');
+
+            // 2. 构造提示词 (加入了时间)
+            const fullSystemContent = `
+[当前现实时间]: ${timeString}
+(请根据当前时间判断是早晨、中午还是深夜，并做出符合时间的反应。)
+
+你现在扮演：${role.name}。
+人设设定：${role.prompt || '无'}。
+${memoryText}
+${userPersonaText}
+
+[回复要求]
+1. 必须将回复拆分成 5到8条 简短消息。
+2. 每条消息之间用 "|||" 隔开。
+3. 像真人一样聊天，可以使用表情包：${stickerDescriptions} (格式：[STICKER: 关键词])
+4. 如果用户向你“求打赏”或“要钱”，你需要根据人设决定是否同意。如果同意，请在回复中包含暗号 "AGREE_PAY"。
+5. 必须符合人设，不能OOC，但是禁止“霸道总裁”、“油腻男”、“中二青年”的塑造。
+6. 必须有趣，让用户有接话的欲望。
+7. 可以根据情况使用emoji表情和颜文字。
+8. 禁止使用语气词“呵”。
+9. 你和用户是异地恋，永远无法想见，但你会想办法表达思念
+10. 沉入角色，表达喜怒哀乐，极尽真实感，说大白话
+
+**响应速度要求：**不要深度思考，直接回答，快速响应，不要犹豫。
+
+${contextInfo ? `[额外上下文]: ${contextInfo}` : ''}
+            `.trim();
+
+            try {
+                const fetchUrl = config.url.endsWith('/') ? `${config.url}chat/completions` : `${config.url}/chat/completions`;
+                
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 40000); // 40秒超时
+
+                const response = await fetch(fetchUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${config.key}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: config.model || 'gpt-3.5-turbo',
+                        messages: [
+                            { role: 'system', content: fullSystemContent },
+                            ...msgs.slice(-20).map(m => ({ role: m.role==='user'?'user':'assistant', content: m.content }))
+                        ],
+                        temperature: 0.85
+                    }),
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId); 
+
+                if (!response.ok) throw new Error('API 请求失败');
+                const data = await response.json();
+                let rawReply = data.choices[0].message.content;
+
+                // 解析表情包
+                let displayReply = rawReply.replace(/\[STICKER:\s*(.*?)\]/g, (match, keyword) => {
+                    const sticker = validStickersForAI.find(s => (s.desc || '') === keyword.trim());
+                    return sticker ? `<br><img src="${sticker.url}" style="width: 120px; border-radius: 8px; margin-top:5px;"><br>` : '';
+                });
+
+                // 拆分消息
+                let splitMsgs = displayReply.split('|||').map(s => s.trim()).filter(s => s.length > 0);
+                if (splitMsgs.length === 0) splitMsgs = [displayReply]; 
+
+                // 逐条发送
+                for (let i = 0; i < splitMsgs.length; i++) {
+                    const msgContent = splitMsgs[i].replace("AGREE_PAY", "");
+                    
+                    if(msgContent.trim() === "") continue; 
+
+                    const timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    
+                    chatHistory[currentChatId].push({ 
+                        role: 'ai', 
+                        content: msgContent,
+                        time: timeStr
+                    });
+                    
+                    renderMessages();
+                    updateListPreview(msgContent);
+                    
+                    if (i < splitMsgs.length - 1) {
+                        statusEl.innerText = "对方正在输入..."; 
+                        const waitTime = Math.floor(Math.random() * 2000) + 1000;
+                        await new Promise(resolve => setTimeout(resolve, waitTime));
+                    }
+                }
+
+                // 检测转账暗号
+                if (rawReply.includes("AGREE_PAY")) {
+                    setTimeout(() => {
+                        addBalance(520); 
+                        alert(`【系统消息】对方同意了你的请求！给你转账了 520 币！已存入钱包。`);
+                        localStorage.setItem('yok_wallet', JSON.stringify(myWallet));
+                        if(document.getElementById('me-wallet-page').style.display === 'flex') {
+                            updateWalletUI();
+                        }
+                    }, 1000);
+                }
+
+            } catch (error) {
+                console.error(error);
+                const errTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                let errMsg = '[对方掉线了]';
+                if (error.name === 'AbortError') errMsg = '[对方思考太久，睡着了(超时)]';
+                
+                chatHistory[currentChatId].push({ role: 'ai', content: errMsg, time: errTime });
+                renderMessages();
+            } finally {
+                statusEl.classList.remove('typing');
+                statusEl.innerText = ""; 
+            }
+        }
+        
+        /* --- D. 钱包功能 --- */
+        let myWallet = JSON.parse(localStorage.getItem('yok_wallet')) || { balance: 1000, history: [] };
+
+        function updateWalletUI() {
+            document.getElementById('wallet-balance').innerText = myWallet.balance;
+            const historyContainer = document.getElementById('wallet-history');
+            historyContainer.innerHTML = '';
+            
+            // 只显示最近10条
+            const recent = myWallet.history.slice().reverse().slice(0, 10);
+            
+            if (recent.length === 0) {
+                historyContainer.innerHTML = '<div style="text-align:center; color:#ccc; padding:20px;">暂无账单</div>';
+                return;
+            }
+
+            recent.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'bill-item';
+                div.innerHTML = `
+                    <div>
+                        <div class="bill-info">${item.desc}</div>
+                        <div class="bill-time">${item.time}</div>
+                    </div>
+                    <div class="bill-amount ${item.amount > 0 ? 'plus' : 'minus'}">
+                        ${item.amount > 0 ? '+' : ''}${item.amount}
+                    </div>
+                `;
+                historyContainer.appendChild(div);
+            });
+        }
+
+        function addBalance(amount) {
+            myWallet.balance += amount;
+            myWallet.history.push({
+                desc: amount > 0 ? '系统签到' : '重置扣除',
+                amount: amount,
+                time: new Date().toLocaleString()
+            });
+            saveWallet();
+        }
+        
+        function resetBalance() {
+             if(confirm('确定清空钱包吗？')) {
+                 myWallet.balance = 0;
+                 myWallet.history = [];
+                 saveWallet();
+             }
+        }
+
+        function saveWallet() {
+            localStorage.setItem('yok_wallet', JSON.stringify(myWallet));
+            updateWalletUI();
+        }
+        
+        /* --- E. 表情包功能 --- */
+        let myStickers = JSON.parse(localStorage.getItem('yok_stickers')) || [];
+        
+        // 更新表情包页面的角色下拉框
+        function updateStickerRoleSelect() {
+            const select = document.getElementById('sticker-role-select');
+            select.innerHTML = '<option value="all">通用 (所有人)</option>';
+            
+            chatList.forEach(role => {
+                if(role.id.startsWith('system_')) return; // 跳过系统号
+                const opt = document.createElement('option');
+                opt.value = role.id;
+                opt.text = "绑定: " + role.name;
+                select.appendChild(opt);
+            });
+        }
+
+        // 1. 渲染表情包网格 (升级版)
+        function renderStickers() {
+            const grid = document.getElementById('sticker-grid');
+            grid.innerHTML = '';
+            
+            myStickers.forEach((item, index) => {
+                // 兼容旧数据 (如果之前存的是字符串)
+                let url = item.url || item; 
+                let desc = item.desc || '未命名';
+
+                const div = document.createElement('div');
+                div.className = 'sticker-item';
+                div.style.backgroundImage = `url(${url})`;
+                
+                
+        
+        // 1. 获取角色名用于展示
+        let ownerName = '通用';
+        if (item.roleId && item.roleId !== 'all') {
+            const r = chatList.find(x => x.id === item.roleId);
+            ownerName = r ? r.name : '未知';
+        }
+        
+        // 2. 修改显示 HTML，加上 ownerName
+        div.innerHTML = `
+            <div style="position:absolute; top:2px; left:2px; background:rgba(255,255,255,0.8); color:#333; font-size:9px; padding:1px 4px; border-radius:4px;">${ownerName}</div>
+            <div style="position:absolute; bottom:0; width:100%; background:rgba(0,0,0,0.5); color:white; font-size:10px; text-align:center; padding:2px 0; border-radius: 0 0 12px 12px;">${desc}</div>
+        `;
+
+                // 点击发送
+                div.onclick = () => sendStickerToChat(url);
+                
+                // 删除按钮
+                const delBtn = document.createElement('div');
+                delBtn.className = 'sticker-delete';
+                delBtn.innerText = '×';
+                delBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    if(confirm(`删除表情 "${desc}" ？`)) {
+                        myStickers.splice(index, 1);
+                        localStorage.setItem('yok_stickers', JSON.stringify(myStickers));
+                        renderStickers();
+                    }
+                };
+                
+                div.appendChild(delBtn);
+                grid.appendChild(div);
+            });
+        }
+
+        // 2. 上传表情包 (绑定角色版)
+        document.getElementById('sticker-upload').addEventListener('change', function(e) {
+            const files = e.target.files;
+            if (!files.length) return;
+            
+            // 获取当前下拉菜单选中的角色ID
+            const targetRoleId = document.getElementById('sticker-role-select').value;
+
+            for (let i = 0; i < files.length; i++) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    const desc = prompt(`请输入第 ${i+1} 张表情的描述:`, "开心");
+                    
+                    if (desc) {
+                        myStickers.push({
+                            url: evt.target.result,
+                            desc: desc,
+                            roleId: targetRoleId // ★★★ 核心修改：保存绑定关系
+                        });
+                    }
+
+                    if (i === files.length - 1) {
+                        localStorage.setItem('yok_stickers', JSON.stringify(myStickers));
+                        renderStickers();
+                    }
+                };
+                reader.readAsDataURL(files[i]);
+            }
+        });
+
+        // 3. 发送表情包到聊天 (核心)
+        function sendStickerToChat(imgUrl) {
+            // 如果当前没有在聊天，或者只是在“我”的页面预览，则提示
+            // 这里我们需要一个机制判断是否从聊天界面跳转过来的，或者简化处理：
+            // 既然表情库是在“我”的页面里，这说明用户当前并没有打开具体的聊天窗口。
+            // **修正思路**：通常表情包是在聊天输入框旁边的。
+            // 但你的设计是“表情包库”在“我”的页面。
+            // 为了让这个功能有用，我们假设：点击表情包 -> 自动发送给“最近聊过的一个人”或者提示用户。
+            
+            // 更好的方案：我们稍微修改一下逻辑。
+            // 当在聊天室里点击“+”号时，也能打开这个表情库选择。
+            
+            // 但现在，我们先实现：点击表情 -> 存入剪贴板 或 提示无法发送
+            if (!currentChatId) {
+                alert('请先进入一个聊天室，然后点击输入框旁边的“+”号来发送表情 (稍后我们实现这个入口)。\n\n当前点击仅作预览。');
+                return;
+            }
+            
+            // 如果你希望在“我”的页面点击就能发给某人，这逻辑有点怪。
+            // 暂且保留预览功能，删除功能。
+        }
+        
+        /* --- F. 聊天室表情面板逻辑 --- */
+        function toggleChatStickerPanel() {
+            const panel = document.getElementById('chat-sticker-panel');
+            if (panel.style.display === 'none') {
+                panel.style.display = 'grid';
+                renderChatStickers(); // 加载表情
+            } else {
+                panel.style.display = 'none';
+            }
+        }
+
+        function renderChatStickers() {
+            const panel = document.getElementById('chat-sticker-panel');
+            panel.innerHTML = '';
+            
+            // ★★★ 这里就是核心过滤逻辑：只选出“通用”或者“当前角色”的表情 ★★★
+            const validStickers = myStickers.filter(s => 
+                !s.roleId || s.roleId === 'all' || s.roleId === currentChatId
+            );
+
+            if (validStickers.length === 0) {
+                panel.innerHTML = '<div style="grid-column: span 4; text-align:center; font-size:12px; color:#999; padding:20px;">暂无可用表情<br>请去仓库添加</div>';
+                panel.style.display = 'block'; 
+                return;
+            }
+            
+            panel.style.display = 'grid';
+
+            validStickers.forEach(item => {
+                let url = item.url || item;
+                let desc = item.desc || '';
+
+                const wrapper = document.createElement('div');
+                wrapper.style.position = 'relative';
+
+                const img = document.createElement('div');
+                img.style.backgroundImage = `url(${url})`;
+                img.style.backgroundSize = 'cover';
+                img.style.borderRadius = '8px';
+                img.style.aspectRatio = '1';
+                img.style.cursor = 'pointer';
+                
+                img.onclick = () => {
+                    sendImageMessage(url);
+                    panel.style.display = 'none';
+                };
+
+                const label = document.createElement('div');
+                label.innerText = desc;
+                label.style.fontSize = '10px';
+                label.style.textAlign = 'center';
+                label.style.color = '#666';
+                label.style.marginTop = '2px';
+                label.style.overflow = 'hidden';
+                label.style.whiteSpace = 'nowrap';
+                label.style.textOverflow = 'ellipsis';
+
+                wrapper.appendChild(img);
+                wrapper.appendChild(label);
+                panel.appendChild(wrapper);
+            });
+        }
+
+        function sendImageMessage(url) {
+            // 构造一个 HTML 图片字符串作为内容
+            // 注意：我们需要修改 renderMessages 让他支持 HTML 或者识别图片格式
+            // 简单起见，我们在 content 里存一个特殊标记，或者直接存 HTML img 标签
+            const imgTag = `<img src="${url}" style="width: 120px;">`;
+            
+            chatHistory[currentChatId].push({ role: 'user', content: imgTag });
+            renderMessages();
+            updateListPreview('[图片]'); // 列表显示为图片
+            
+            // 既然发了表情包，要不要触发 AI 回复？
+            // 通常表情包也是对话的一部分，我们可以发一个隐藏的提示给 AI
+            triggerAIResponseWithContext('[用户发送了一张表情包图片]');
+        }
+        
+        // 重载 triggerAIResponse 以支持传入上下文 (高级技巧)
+        // 现在的 triggerAIResponse 是读取 msg-input，我们需要稍微改动一下
+        // 为了简单，暂时让表情包不触发 AI 回复，或者你可以手动点一下接收按钮。
+        
+        /* --- G. 海龟汤游戏逻辑 (终极功能) --- */
+        
+        // 1. 剧本库
+        const soupScripts = [
+            {
+                id: 1,
+                title: "半根火柴",
+                surface: "一个人死在沙漠里，手里拿着半根火柴。周围没有足迹。他是怎么死的？",
+                bottom: "他和朋友乘热气球穿越沙漠，气球漏气，必须扔掉重物。最后人还是太重，他们决定抽火柴，输的人跳下去。他手里拿着那半根火柴，输了。"
+            },
+            {
+                id: 2,
+                title: "海鸥肉",
+                surface: "一个人在餐厅吃海鸥肉，吃了一口后大哭，然后自杀了。为什么？",
+                bottom: "他多年前遇难流落荒岛，朋友给他吃肉说是海鸥肉。现在他真吃到了海鸥肉，发现味道不一样，才明白当年朋友割了自己的肉给他吃，为了让他活下去。"
+            },
+            {
+                id: 3,
+                title: "晚了一步",
+                surface: "男子住在14楼，半夜听到楼上有人穿靴子走来走去。第二天他疯了。为什么？",
+                bottom: "男子是截肢的，没有腿。他把靴子放在楼上朋友家。听到靴子声，意味着有人穿走了他的靴子，或者...那是没有腿的‘东西’在走。"
+            }
+        ];
+
+        let soupState = {
+            isActive: false,
+            script: null,
+            dmId: null,
+            playerIds: [], // 队友ID
+            history: []    // 游戏内的对话记录
+        };
+
+        // 2. 初始化大厅 (简化版)
+        function openSoupLobby() {
+            document.getElementById('soup-lobby-page').style.display = 'flex';
+            
+            // 清空上一局的残留
+            document.getElementById('soup-script-preview').innerHTML = '<span style="color: #777;">(点击生成按钮，获取一个全新的故事)</span>';
+            document.getElementById('soup-topic-input').value = '';
+            currentGeneratedScript = null;
+
+            // 填充DM选择 & 队友选择 (这部分保持不变)
+            const dmSelect = document.getElementById('soup-dm-select');
+            const playerListDiv = document.getElementById('soup-player-list');
+            
+            dmSelect.innerHTML = '';
+            playerListDiv.innerHTML = '';
+
+            chatList.forEach(role => {
+                if(role.id.startsWith('system_')) return;
+                
+                const opt = document.createElement('option');
+                opt.value = role.id;
+                opt.text = role.name;
+                dmSelect.appendChild(opt);
+
+                const tag = document.createElement('div');
+                tag.className = 'soup-player-tag';
+                tag.innerText = role.name;
+                tag.dataset.id = role.id;
+                tag.onclick = function() {
+                    this.classList.toggle('selected');
+                };
+                playerListDiv.appendChild(tag);
+            });
+        }
+
+        // 3. 开始游戏 (修改版)
+        function startSoupGame() {
+            // ▼▼▼ 修改开始 ▼▼▼
+            // 不再从 select 获取，而是检查有没有生成好的剧本
+            if (!currentGeneratedScript) {
+                alert('请先生成一个海龟汤剧本！');
+                return;
+            }
+            const script = currentGeneratedScript;
+            // ▲▲▲ 修改结束 ▲▲▲
+
+            const dmId = document.getElementById('soup-dm-select').value;
+            
+            // 获取选中的队友
+            const selectedTags = document.querySelectorAll('.soup-player-tag.selected');
+            const playerIds = Array.from(selectedTags).map(t => t.dataset.id);
+
+            // 检查 DM 和 队友 不能重叠
+            if (playerIds.includes(dmId)) {
+                alert('同一个角色不能既是DM又是玩家哦！');
+                return;
+            }
+            
+            // 初始化状态
+            soupState = {
+                isActive: true,
+                script: script,
+                dmId: dmId,
+                playerIds: playerIds,
+                history: []
+            };
+
+            // UI 切换
+            document.getElementById('current-soup-text').innerText = script.surface;
+            document.getElementById('soup-chat-container').innerHTML = '';
+            document.getElementById('soup-game-room').style.display = 'flex';
+            
+            // DM 开场白
+            const dmRole = chatList.find(r => r.id === dmId);
+            addSoupMsg('dm', `欢迎来到海龟汤《${script.title}》。\n我是主持人${dmRole.name}。\n汤面已给出，请开始提问。`);
+        }
+
+        // 4. 添加消息到界面
+        function addSoupMsg(type, text, name='') {
+            const container = document.getElementById('soup-chat-container');
+            const div = document.createElement('div');
+            div.style.display = 'flex';
+            div.style.flexDirection = 'column';
+            
+            let bubbleClass = '';
+            let label = '';
+
+            if (type === 'dm') {
+                bubbleClass = 'soup-dm';
+                const dmRole = chatList.find(r => r.id === soupState.dmId);
+                label = `👑 DM: ${dmRole.name}`;
+            } else if (type === 'user') {
+                bubbleClass = 'soup-user';
+                // label = '我';
+                div.style.alignItems = 'flex-end';
+            } else if (type === 'teammate') {
+                bubbleClass = 'soup-teammate';
+                label = `🕵️ ${name}`;
+            }
+
+            let html = '';
+            if(label) html += `<div style="font-size:10px; color:#ccc; margin-bottom:2px;">${label}</div>`;
+            html += `<div class="soup-bubble ${bubbleClass}">${text}</div>`;
+            
+            div.innerHTML = html;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+
+            // 记录历史
+            soupState.history.push({ role: type, name: name, content: text });
+        }
+
+        // 5. 用户提问
+        async function sendSoupUserMsg() {
+            const input = document.getElementById('soup-input');
+            const text = input.value.trim();
+            if(!text) return;
+            
+            addSoupMsg('user', text);
+            input.value = '';
+            
+            await callDMCheck(text);
+        }
+
+        // 6. 队友提问 (随机选一个队友)
+        async function triggerTeammateAsk() {
+            if(soupState.playerIds.length === 0) {
+                alert('这场游戏没有邀请队友哦！只有你和DM。');
+                return;
+            }
+            
+            // 随机抽一个队友
+            const pid = soupState.playerIds[Math.floor(Math.random() * soupState.playerIds.length)];
+            const teammate = chatList.find(r => r.id === pid);
+            
+            document.getElementById('soup-status').innerText = `${teammate.name} 正在思考...`;
+            
+            // AI 生成提问
+            const question = await fetchAIForTeammate(teammate);
+            if(question) {
+                addSoupMsg('teammate', question, teammate.name);
+                await callDMCheck(question); // DM 回答
+            }
+            
+            document.getElementById('soup-status').innerText = '等待提问...';
+        }
+
+        // 7. 调用 DM (API) 判断
+        async function callDMCheck(question) {
+            document.getElementById('soup-status').innerText = 'DM 正在判断...';
+            
+            const dmRole = chatList.find(r => r.id === soupState.dmId);
+            const config = JSON.parse(localStorage.getItem('my_ai_config') || '{}');
+            
+            const systemPrompt = `
+你正在主持一场“海龟汤”游戏。你是DM：${dmRole.name}。
+【汤面】：${soupState.script.surface}
+【汤底(真相)】：${soupState.script.bottom}
+
+规则：
+1. 玩家会问你问题。
+2. 你只能用“是”、“不是”、“不重要/没关系”来回答。
+3. 除非玩家完全猜出了汤底的核心诡计，否则不要泄露真相。
+4. 如果玩家猜对了核心真相，请恭喜他并揭示完整故事。
+5. 请保持${dmRole.name}的说话语气（比如傲娇、温柔等），但必须遵守上述回答规则。
+            `;
+
+            try {
+                const reply = await callAI_Simple(systemPrompt, question, config);
+                addSoupMsg('dm', reply);
+            } catch(e) {
+                addSoupMsg('dm', '[DM掉线了...]');
+            }
+            
+            document.getElementById('soup-status').innerText = '等待提问...';
+        }
+
+        // 8. 调用队友 (API) 提问
+        async function fetchAIForTeammate(role) {
+            const config = JSON.parse(localStorage.getItem('my_ai_config') || '{}');
+            const systemPrompt = `
+你正在玩海龟汤。你的角色是：${role.name}。
+【汤面】：${soupState.script.surface}
+请根据汤面，提一个简单的、是或否的问题。
+不要OOC（不要跳出角色设定）。只输出问题本身。
+            `;
+            // 把之前的历史作为上下文给队友，让他知道问过什么
+            const context = soupState.history.map(h => `${h.role}: ${h.content}`).join('\n').slice(-500);
+            
+            try {
+                const q = await callAI_Simple(systemPrompt, `已知信息：\n${context}\n\n轮到你了，请提一个新问题：`, config);
+                return q;
+            } catch(e) {
+                return null;
+            }
+        }
+
+        // 通用简单API调用工具
+        async function callAI_Simple(sys, user, config) {
+             if (!config.url || !config.key) return "API未配置";
+             
+             const fetchUrl = config.url.endsWith('/') ? `${config.url}chat/completions` : `${config.url}/chat/completions`;
+             const res = await fetch(fetchUrl, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${config.key}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: config.model || 'gpt-3.5-turbo',
+                    messages: [
+                        {role: 'system', content: sys},
+                        {role: 'user', content: user}
+                    ]
+                })
+             });
+             const data = await res.json();
+             return data.choices[0].message.content;
+        }
+
+        // 9. 退出游戏
+        function quitSoupGame() {
+            if(confirm('确定退出吗？进度将丢失。')) {
+                document.getElementById('soup-game-room').style.display = 'none';
+            }
+        }
+
+        // 10. 结束并存档 (生成记忆)
+        function endSoupGameAndSave() {
+            if(!confirm('要结束这局游戏并生成记忆吗？')) return;
+            
+            const dmRole = chatList.find(r => r.id === soupState.dmId);
+            const scriptName = soupState.script.title;
+            
+            // 构造记忆文本
+            const memorySummary = `\n[特殊记忆]\n我和你（${dmRole.name}）还有其他人玩了一局海龟汤《${scriptName}》。\n你是DM。游戏很有趣。`;
+            
+            // 1. 存给 DM
+            if (!chatHistory[soupState.dmId]) chatHistory[soupState.dmId] = [];
+            chatHistory[soupState.dmId].push({ role: 'system', content: memorySummary }); // 作为系统提示插入历史
+
+            // 2. 存给队友
+            soupState.playerIds.forEach(pid => {
+                if (!chatHistory[pid]) chatHistory[pid] = [];
+                // 对队友来说，DM是别人
+                const teamMem = `\n[特殊记忆]\n我和你还有${dmRole.name}玩了一局海龟汤《${scriptName}》。${dmRole.name}是主持人。`;
+                chatHistory[pid].push({ role: 'system', content: teamMem });
+            });
+
+            alert('游戏结束！大家都有了这段共同的记忆。');
+            document.getElementById('soup-game-room').style.display = 'none';
+            document.getElementById('soup-lobby-page').style.display = 'none';
+        }
+        
+        // --- 新增：AI 生成海龟汤逻辑 ---
+
+        let currentGeneratedScript = null; // 临时存储生成的剧本
+
+        async function generateSoupScript() {
+            const topic = document.getElementById('soup-topic-input').value.trim() || "悬疑/反转";
+            const previewEl = document.getElementById('soup-script-preview');
+            const loadingEl = document.getElementById('soup-loading');
+            
+            // UI 状态更新
+            loadingEl.style.display = 'block';
+            previewEl.innerHTML = '';
+            currentGeneratedScript = null;
+
+            const config = JSON.parse(localStorage.getItem('my_ai_config') || '{}');
+            
+            const systemPrompt = `
+你是一个海龟汤（情境猜谜）出题大师。
+请根据用户的主题，创作一个精彩的海龟汤。
+**必须严格按照以下 JSON 格式输出，不要包含markdown代码块标记，直接输出JSON字符串**：
+{
+  "title": "标题",
+  "surface": "汤面（给玩家看的谜题，简短、有悬念）",
+  "bottom": "汤底（真相，包含核心诡计和完整故事）"
+}
+`;
+            const userPrompt = `请生成一个关于“${topic}”的海龟汤。`;
+
+            try {
+                const jsonStr = await callAI_Simple(systemPrompt, userPrompt, config);
+                
+                // 尝试解析 JSON (处理 AI 可能包裹 Markdown 的情况)
+                let cleanJson = jsonStr.replace(/```json/g, '').replace(/```/g, '').trim();
+                const script = JSON.parse(cleanJson);
+
+                currentGeneratedScript = script; // 存起来
+                
+                // 显示预览
+                previewEl.innerHTML = `
+                    <div style="font-weight:bold; color:#E67E22; margin-bottom:5px;">《${script.title}》</div>
+                    <div>${script.surface}</div>
+                    <div style="margin-top:10px; font-size:10px; color:#666; border-top:1px dashed #555; padding-top:5px;">
+                        (汤底已加密隐藏，只有DM能看到)
+                    </div>
+                `;
+
+            } catch (e) {
+                console.error(e);
+                previewEl.innerText = "生成失败，请检查 API 设置或重试。\n错误信息：" + e.message;
+            } finally {
+                loadingEl.style.display = 'none';
+            }
+        }
+        
+        /* --- H. 聊天室多功能面板逻辑 --- */
+
+        function toggleChatActionPanel() {
+            const panel = document.getElementById('chat-action-panel');
+            const contentArea = document.getElementById('panel-content-area');
+            
+            // 切换 active 类名来触发动画
+            if (panel.classList.contains('active')) {
+                panel.classList.remove('active');
+                // 收起时顺便把内容区也隐藏，保持整洁
+                setTimeout(() => contentArea.style.display = 'none', 300);
+            } else {
+                panel.classList.add('active');
+                // 默认不打开内容区，等用户点图标再开，或者你可以默认打开 sticker
+                // switchPanelTab('sticker'); // 如果想默认打开表情，就把这行注释解开
+            }
+        }
+
+        function switchPanelTab(tab) {
+            const contentArea = document.getElementById('panel-content-area');
+            const stickerGrid = document.getElementById('panel-sticker-grid');
+            const transferBox = document.getElementById('panel-transfer-box');
+            
+            // 显示内容大框
+            contentArea.style.display = 'block';
+            
+            stickerGrid.style.display = 'none';
+            transferBox.style.display = 'none';
+
+            if (tab === 'sticker') {
+                stickerGrid.style.display = 'grid';
+                renderChatStickersToGrid(); 
+            } else if (tab === 'transfer') {
+                transferBox.style.display = 'block';
+            }
+        }
+
+        // 3. 渲染表情 (复用之前的逻辑，只是容器变了)
+        function renderChatStickersToGrid() {
+            const grid = document.getElementById('panel-sticker-grid');
+            grid.innerHTML = '';
+            
+            const validStickers = myStickers.filter(s => !s.roleId || s.roleId === 'all' || s.roleId === currentChatId);
+            
+            if (validStickers.length === 0) {
+                grid.innerHTML = '<div style="grid-column: span 4; text-align: center; color: #999;">暂无可用表情</div>';
+                return;
+            }
+
+            validStickers.forEach(item => {
+                let url = item.url || item;
+                const img = document.createElement('div');
+                img.style.backgroundImage = `url(${url})`;
+                img.style.backgroundSize = 'cover';
+                img.style.borderRadius = '8px';
+                img.style.aspectRatio = '1';
+                img.style.cursor = 'pointer';
+                img.onclick = () => {
+                    sendImageMessage(url);
+                    document.getElementById('chat-action-panel').style.display = 'none';
+                };
+                grid.appendChild(img);
+            });
+        }
+
+        // 4. 发送文字图片 (便利贴)
+        function sendTextImg() {
+            const text = prompt("请输入要写在图片上的字：", "想你了");
+            if (!text) return;
+            
+            // 用 Canvas 生成一张简单的文字图片
+            const canvas = document.createElement('canvas');
+            canvas.width = 300; canvas.height = 150;
+            const ctx = canvas.getContext('2d');
+            
+            // 画背景 (淡黄色便利贴)
+            ctx.fillStyle = '#FFF9C4';
+            ctx.fillRect(0, 0, 300, 150);
+            
+            // 画文字
+            ctx.fillStyle = '#333';
+            ctx.font = 'bold 30px "Microsoft YaHei"';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(text, 150, 75);
+            
+            // 导出图片并发送
+            const imgUrl = canvas.toDataURL('image/png');
+            sendImageMessage(imgUrl);
+            document.getElementById('chat-action-panel').style.display = 'none';
+        }
+
+        function doTransfer(type) {
+    const input = document.getElementById('transfer-amount');
+    const amount = parseInt(input.value);
+    if (!amount || amount <= 0) { alert('请输入正确金额'); return; }
+    
+    const role = chatList.find(r => r.id === currentChatId);
+    
+    // ★★★ 生成新版卡片 HTML ★★★
+    // 下面这个函数用于快速生成卡片字符串
+    const createCardHtml = (title, sub, amt, isUserSend) => `
+        <div class="transfer-card">
+            <div class="transfer-top">
+                <div class="transfer-icon-circle">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                </div>
+                <div class="transfer-info">
+                    <span class="transfer-amount">¥ ${amt}.00</span>
+                    <span class="transfer-desc">${title}</span>
+                </div>
+            </div>
+            <div class="transfer-bottom">${sub}</div>
+        </div>
+    `;
+
+    if (type === 'to_ai') {
+        // 给TA转账
+        if (myWallet.balance < amount) { alert('余额不足！去“我-钱包”签到吧。'); return; }
+        
+        myWallet.balance -= amount;
+        myWallet.history.push({ desc: `转账给 ${role.name}`, amount: -amount, time: new Date().toLocaleString() });
+        saveWallet();
+        
+        // 发送转账消息 (User -> AI)
+        const transferMsg = createCardHtml(`转账给 ${role.name}`, "ChatOS 转账", amount, true);
+        
+        chatHistory[currentChatId].push({ role: 'user', content: transferMsg, time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) });
+        renderMessages();
+        
+        triggerAIResponse(`[系统提示]：用户刚刚给你转账了 ${amount} 元虚拟币。请表现出开心、感谢或推辞。`);
+        
+    } else {
+        // 向TA要钱 (模拟)
+        // 这里我们把“求打赏”也做成一个类似的卡片，稍微变个色或者保持一致
+        const askMsg = createCardHtml("向对方收款", "收款申请", amount, true);
+        
+        chatHistory[currentChatId].push({ role: 'user', content: askMsg, time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) });
+        renderMessages();
+        
+        triggerAIResponse(`[系统提示]：用户向你索要 ${amount} 元。你需要决定给不给。如果同意，请回复内容中包含 "|||AGREE_PAY|||"。`);
+    }
+    
+    document.getElementById('chat-action-panel').style.display = 'none';
+    input.value = '';
+}
+
+        // 6. 查看状态 (心声)
+        async function checkRoleStatus() {
+            const role = chatList.find(r => r.id === currentChatId);
+            const statusEl = document.getElementById('typing-status');
+            statusEl.innerText = "正在探查对方内心...";
+            statusEl.classList.add('typing');
+            
+            const config = JSON.parse(localStorage.getItem('my_ai_config') || '{}');
+            
+            const systemPrompt = `
+你现在是：${role.name}。
+请用 **JSON格式** 返回你现在的状态。不要包含 Markdown 标记。
+格式如下：
+{
+  "mood": "当前心情 (如：开心、焦虑)",
+  "doing": "正在做的事 (如：喝咖啡、发呆)",
+  "want": "此刻想做的事 (如：想见你)",
+  "inner": "内心独白 (一句简短的OS)"
+}
+请根据刚才的聊天上下文来推断。
+            `;
+            
+            try {
+                const jsonStr = await callAI_Simple(systemPrompt, "请告诉我你现在的状态", config);
+                const cleanJson = jsonStr.replace(/```json/g, '').replace(/```/g, '').trim();
+                const status = JSON.parse(cleanJson);
+                
+                // 弹窗显示
+                alert(`
+=== 🕵️ ${role.name} 的实时状态 ===
+Mood: ${status.mood}
+Doing: ${status.doing}
+Want: ${status.want}
+----------------
+💓 心声: ${status.inner}
+                `);
+                
+            } catch (e) {
+                console.error(e);
+                alert("探查失败，TA的心防太重了...");
+            } finally {
+                statusEl.classList.remove('typing');
+                statusEl.innerText = "";
+            }
+            
+            document.getElementById('chat-action-panel').style.display = 'none';
+        }
+        
+        // 7. 增强 triggerAIResponse 以支持 AI 转账
+        // 我们需要在原有的 triggerAIResponse 逻辑里加一点判断
+        // 只要在你现有的 triggerAIResponse 里的 "逐条发送" 循环里，
+        // 加上判断 "如果消息包含 |||AGREE_PAY|||，就给用户加钱" 即可。
+        // 为了简化，这里我写一个独立的检查函数，你可以把它放在 triggerAIResponse 的末尾调用
+        
+        function checkAiTransfer(replyContent) {
+            if (replyContent.includes("AGREE_PAY")) {
+                // 提取数字比较麻烦，这里简单做：直接给个固定值或者尝试读取之前的金额
+                // 简单处理：给用户加 520
+                addBalance(520);
+                alert("TA同意了！你的钱包到账 520 币！🎉");
+            }
+        }
+        
+        /* --- 🎵 一起听功能核心逻辑 --- */
+        
+        let playList = JSON.parse(localStorage.getItem('yok_music_list')) || [];
+        let currentSongIndex = -1;
+        const audioEl = document.getElementById('bgm-audio');
+        
+        // 1. 打开播放器
+        function openMusicPlayer() {
+            document.getElementById('music-player-modal').style.display = 'flex';
+            document.getElementById('chat-action-panel').style.display = 'none'; // 关掉面板
+            
+            if (playList.length === 0) {
+                // 如果没歌，自动打开歌单引导添加
+                openMusicList();
+            }
+        }
+        
+        function minimizeMusicPlayer() {
+            document.getElementById('music-player-modal').style.display = 'none';
+            // 音乐继续播放，不停止
+        }
+
+        // 2. 打开/渲染歌单
+        function openMusicList() {
+            document.getElementById('music-list-modal').style.display = 'flex';
+            renderMusicList();
+        }
+
+        function renderMusicList() {
+            const container = document.getElementById('music-list-container');
+            container.innerHTML = '';
+            
+            if (playList.length === 0) {
+                container.innerHTML = '<div style="text-align:center; color:#ccc; padding:30px;">歌单空空的<br>快去复制网易云歌曲链接吧~</div>';
+                return;
+            }
+
+            playList.forEach((song, index) => {
+                const div = document.createElement('div');
+                div.className = `music-list-item ${index === currentSongIndex ? 'playing' : ''}`;
+                div.innerHTML = `
+                    <div onclick="playSongAtIndex(${index})" style="flex:1;">
+                        <div style="font-size:14px;">${song.title}</div>
+                        <div style="font-size:12px; color:#999;">${song.id}</div>
+                    </div>
+                    <div style="color:#ff4d4f; padding:5px;" onclick="deleteSong(${index})">×</div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // 3. 导入歌曲 (修复版：支持自定义封面)
+        function importMusic() {
+            const input = document.getElementById('net-music-input');
+            const val = input.value.trim();
+            if (!val) return;
+            
+            let songId = '';
+            // 提取 ID
+            const match = val.match(/id=(\d+)/);
+            if (match) {
+                songId = match[1];
+            } else if (/^\d+$/.test(val)) {
+                songId = val;
+            } else {
+                alert('链接里没找到 id=数字，请直接输入数字 ID');
+                return;
+            }
+
+            // 弹窗 1：问歌名
+            const songName = prompt("解析成功！请输入歌名：", "未知歌曲");
+            if (!songName) return;
+
+            // 弹窗 2：问封面图 (新加的功能)
+            // 你可以去网易云网页版右键图片复制链接，或者去百度找一张图的链接
+            const coverImg = prompt("请输入封面图片的链接 (不填则使用默认黑胶图)：", "");
+
+            const newSong = {
+                id: songId,
+                title: songName,
+                // 如果用户填了图就用用户的，没填就用默认的
+                cover: coverImg ? coverImg : `https://cdn-icons-png.flaticon.com/512/1256/1256650.png` 
+            };
+            
+            playList.push(newSong);
+            localStorage.setItem('yok_music_list', JSON.stringify(playList));
+            
+            input.value = '';
+            renderMusicList();
+            
+            if (playList.length === 1) playSongAtIndex(0);
+        }
+        
+        function deleteSong(index) {
+            playList.splice(index, 1);
+            localStorage.setItem('yok_music_list', JSON.stringify(playList));
+            if (index === currentSongIndex) {
+                audioEl.pause();
+                currentSongIndex = -1;
+                resetPlayerUI();
+            }
+            renderMusicList();
+        }
+
+        // 4. 播放控制 (修复版：更新封面图)
+        function playSongAtIndex(index) {
+            if (index < 0 || index >= playList.length) return;
+            
+            currentSongIndex = index;
+            const song = playList[index];
+            
+            // 网易云外链地址
+            const mp3Url = `https://music.163.com/song/media/outer/url?id=${song.id}.mp3`;
+            
+            audioEl.src = mp3Url;
+            audioEl.play().then(() => {
+                updatePlayerUI(true);
+                triggerAIMusicReaction(song.title);
+            }).catch(e => {
+                alert('播放失败：可能是VIP歌曲或版权限制。');
+                updatePlayerUI(false);
+            });
+            
+            // 更新文字信息
+            document.getElementById('player-title').innerText = song.title;
+            document.getElementById('player-artist').innerText = `ID: ${song.id}`;
+            
+            // ★★★ 核心修复：更新中间的黑胶封面图 ★★★
+            const coverDiv = document.getElementById('player-cover');
+            // 如果是默认图，保持原样；如果是自定义图，设置上去
+            coverDiv.style.backgroundImage = `url('${song.cover}')`;
+            
+            renderMusicList();
+        }
+        
+        function togglePlayState() {
+            if (audioEl.paused) {
+                if(currentSongIndex === -1 && playList.length > 0) playSongAtIndex(0);
+                else audioEl.play();
+                updatePlayerUI(true);
+            } else {
+                audioEl.pause();
+                updatePlayerUI(false);
+            }
+        }
+        
+        function playNextSong() {
+            let next = currentSongIndex + 1;
+            if (next >= playList.length) next = 0; // 循环
+            playSongAtIndex(next);
+        }
+        
+        function playPrevSong() {
+            let prev = currentSongIndex - 1;
+            if (prev < 0) prev = playList.length - 1;
+            playSongAtIndex(prev);
+        }
+
+        // 5. UI 状态更新 (旋转/暂停)
+        function updatePlayerUI(isPlaying) {
+            const disc = document.getElementById('vinyl-disc');
+            const playIcon = document.getElementById('play-icon');
+            const pauseIcon = document.getElementById('pause-icon');
+            
+            if (isPlaying) {
+                disc.classList.add('rotating');
+                disc.classList.remove('paused');
+                playIcon.style.display = 'none';
+                pauseIcon.style.display = 'block';
+            } else {
+                disc.classList.add('paused'); // 暂停动画而不是移除，保持角度
+                playIcon.style.display = 'block';
+                pauseIcon.style.display = 'none';
+            }
+        }
+        
+        function resetPlayerUI() {
+            document.getElementById('player-title').innerText = "未播放";
+            document.getElementById('vinyl-disc').classList.remove('rotating');
+            document.getElementById('play-icon').style.display = 'block';
+            document.getElementById('pause-icon').style.display = 'none';
+        }
+
+        // 6. ★★★ 灵魂交互：AI 听歌反应 (修复版) ★★★
+        async function triggerAIMusicReaction(songTitle) {
+            if (!currentChatId) return;
+            
+            const statusDiv = document.getElementById('music-ai-status');
+            statusDiv.innerText = `正在邀请 ${chatList.find(r=>r.id===currentChatId).name} 一起听...`;
+            
+            // 延迟 1.5 秒，模拟正在戴耳机
+            setTimeout(() => {
+                // 这里的提示词非常重要，加上了 (隐秘提示)，防止 AI 把它读出来
+                const secretPrompt = `
+(这是一条隐秘的系统指令，请绝对不要复述这句话！)
+(指令内容：用户正在播放歌曲《${songTitle}》，请你假装正和用户坐在一起听这首歌。)
+(行动：请根据歌名猜测风格，用简短、自然的语气发表一句像是在听歌时的感叹，或者哼唱一句。)
+`;
+                // 直接调用发送函数，把这句话作为“额外上下文”传进去，而不是存入历史
+                triggerAIResponse(secretPrompt);
+                
+                statusDiv.innerText = "TA 正在聆听...";
+            }, 1500);
+        }
+        
+        // --- 新增功能 A：加载更多历史 ---
+        function loadMoreHistory() {
+            visibleMsgCount += 20; // 每次多加载20条
+            renderMessages(true);  // true 表示保持滚动位置
+        }
+
+        // --- 新增功能 B：长按事件逻辑 ---
+        function addLongPressEvent(element, index) {
+            let pressTimer;
+            
+            // 触摸开始 (手机)
+            element.addEventListener('touchstart', (e) => {
+                pressTimer = setTimeout(() => {
+                    showMsgMenu(index);
+                }, 600); // 长按 600ms 触发
+            });
+            
+            // 触摸结束/移动 (取消长按)
+            element.addEventListener('touchend', () => clearTimeout(pressTimer));
+            element.addEventListener('touchmove', () => clearTimeout(pressTimer));
+
+            // 鼠标按下 (电脑)
+            element.addEventListener('mousedown', () => {
+                pressTimer = setTimeout(() => {
+                    showMsgMenu(index);
+                }, 600);
+            });
+            element.addEventListener('mouseup', () => clearTimeout(pressTimer));
+            element.addEventListener('mouseleave', () => clearTimeout(pressTimer));
+        }
+
+        // --- 新增功能 C：菜单操作 ---
+        function showMsgMenu(index) {
+            selectedMsgIndex = index;
+            document.getElementById('msg-context-menu').style.display = 'flex';
+            // 震动反馈 (仅安卓手机有效)
+            if(navigator.vibrate) navigator.vibrate(50);
+        }
+
+        function closeMsgMenu() {
+            document.getElementById('msg-context-menu').style.display = 'none';
+            selectedMsgIndex = -1;
+        }
+
+        function handleDeleteMsg() {
+            if(selectedMsgIndex === -1) return;
+            if(confirm('确定删除这条消息吗？')) {
+                chatHistory[currentChatId].splice(selectedMsgIndex, 1);
+                renderMessages(true); // 刷新界面，保持位置
+                closeMsgMenu();
+            }
+        }
+
+        function handleEditMsg() {
+            if(selectedMsgIndex === -1) return;
+            const oldMsg = chatHistory[currentChatId][selectedMsgIndex];
+            
+            // 简单判断：如果是图片或转账，不建议编辑
+            if(oldMsg.content.includes('<img') || oldMsg.content.includes('transfer-card')) {
+                alert('图片和卡片消息不支持编辑哦~');
+                return;
+            }
+
+            const newContent = prompt("修改消息内容：", oldMsg.content); // 把旧内容放进去方便修改
+            if(newContent !== null && newContent.trim() !== "") {
+                oldMsg.content = newContent;
+                renderMessages(true);
+                closeMsgMenu();
+            }
+        }
+        
+        // --- 修复版：偷看隐私 (带详细报错) ---
+        async function peekRoleInfo(type) {
+            if (!currentChatId) return;
+            const role = chatList.find(r => r.id === currentChatId);
+            
+            const modal = document.getElementById('info-modal');
+            const titleEl = document.getElementById('info-title');
+            const contentEl = document.getElementById('info-text');
+            
+            modal.style.display = 'flex';
+            contentEl.innerHTML = '<span class="loading-dots">正在尝试连接 Gemini...</span>';
+            
+            let promptTitle = "";
+            let promptDesc = "";
+
+            if (type === 'memo') {
+                titleEl.innerText = `📅 ${role.name} 的备忘录`;
+                promptTitle = "备忘录";
+                promptDesc = "请生成一份你的【手机备忘录】。包含3-5条待办事项。格式：每行一条，前面加-。";
+            } else if (type === 'footprint') {
+                titleEl.innerText = `👣 ${role.name} 的足迹`;
+                promptTitle = "今日足迹";
+                promptDesc = "请生成一份你今天的【行程足迹】。包含时间点和地点/事件。";
+            } else if (type === 'note') {
+                titleEl.innerText = `💭 ${role.name} 的碎碎念`;
+                promptTitle = "私密笔记";
+                promptDesc = "请生成几条你的【私密碎碎念】。口语化，符合内心戏。";
+            }
+
+            const config = JSON.parse(localStorage.getItem('my_ai_config') || '{}');
+            if (!config.url || !config.key) {
+                contentEl.innerText = "❌ 请先配置 API！";
+                return;
+            }
+
+            // 构造提示词
+            const finalPrompt = `你现在是${role.name}。人设：${role.prompt || '无'}。\n用户正在查看你的“${promptTitle}”。\n${promptDesc}`;
+
+            try {
+                let fetchUrl = config.url;
+                const endpoint = fetchUrl.endsWith('/') ? 'chat/completions' : '/chat/completions';
+                const finalUrl = fetchUrl + endpoint;
+
+                // ★★★ 针对 Gemini 的核心修改 ★★★
+                // Gemini 有时候不喜欢 "system" 角色。
+                // 我们这里把 role 改成 "user"，假装是用户说的第一句话，这样所有模型都兼容。
+                const messages = [
+                    { role: 'user', content: finalPrompt } 
+                ];
+
+                const res = await fetch(finalUrl, {
+                    method: 'POST',
+                    headers: { 
+                        'Authorization': `Bearer ${config.key}`, 
+                        'Content-Type': 'application/json' 
+                    },
+                    body: JSON.stringify({
+                        // 如果没填模型名，Gemini 通常叫 'gemini-pro' 或 'gemini-1.5-flash'
+                        model: config.model || 'gemini-pro', 
+                        messages: messages,
+                        temperature: 0.7 // 稍微降低一点随机性
+                    })
+                });
+
+                if (!res.ok) {
+                    const errText = await res.text();
+                    throw new Error(`API报错 (${res.status}): ${errText}`);
+                }
+
+                const data = await res.json();
+                
+                // 兼容不同的返回格式 (有的 Gemini 接口返回结构略有不同)
+                let text = "";
+                if (data.choices && data.choices[0] && data.choices[0].message) {
+                    text = data.choices[0].message.content;
+                } else {
+                    // 兜底：万一返回格式很怪
+                    text = JSON.stringify(data);
+                }
+
+                contentEl.innerHTML = text.replace(/\n/g, '<br>');
+                
+            } catch (e) {
+                console.error(e);
+                contentEl.innerHTML = `<span style="color:red;">失败了...</span><br><br>原因：${e.message}<br><br>建议：<br>1. 检查模型名字是否写对 (试试 gemini-pro 或 gemini-1.5-flash)<br>2. 你的 API 地址是否支持 OpenAI 格式转发？`;
+            }
+        }
+        
+        /* =========================================
+           ★ 核心功能：全局数据自动保存系统 (防丢失) ★
+           ========================================= */
+
+        // 1. 定义保存函数：把所有重要数据打包存入浏览器
+        function saveGlobalData() {
+            try {
+                const dataPackage = {
+                    // 聊天列表 (包含你创建的所有角色)
+                    chatList: chatList,
+                    // 聊天记录 (所有对话内容)
+                    chatHistory: chatHistory,
+                    // 其他你可能修改过的全局变量
+                    visibleMsgCount: typeof visibleMsgCount !== 'undefined' ? visibleMsgCount : 30
+                };
+                
+                // 存入 LocalStorage (键名为 yok_global_data)
+                localStorage.setItem('yok_global_data', JSON.stringify(dataPackage));
+                
+                // 同时确保钱包、纪念日、表情包等独立数据也存一下 (虽然它们有自己的保存逻辑，这里双重保险)
+                if(typeof myWallet !== 'undefined') localStorage.setItem('yok_wallet', JSON.stringify(myWallet));
+                if(typeof anniversaries !== 'undefined') localStorage.setItem('yok_anniversaries', JSON.stringify(anniversaries));
+                if(typeof myStickers !== 'undefined') localStorage.setItem('yok_stickers', JSON.stringify(myStickers));
+                if(typeof myPersonas !== 'undefined') localStorage.setItem('yok_my_personas', JSON.stringify(myPersonas));
+                if(typeof playList !== 'undefined') localStorage.setItem('yok_music_list', JSON.stringify(playList));
+                
+                // console.log('数据已自动保存'); // 调试用，你可以注释掉
+            } catch (e) {
+                console.error('自动保存失败:', e);
+            }
+        }
+
+        // 2. 定义读取函数：网页打开时，把数据恢复回来
+        function loadGlobalData() {
+            try {
+                const savedData = localStorage.getItem('yok_global_data');
+                if (savedData) {
+                    const parsedData = JSON.parse(savedData);
+                    
+                    // 恢复聊天列表
+                    if (parsedData.chatList && Array.isArray(parsedData.chatList)) {
+                        // 我们要保留 chatList 这个变量引用，所以用 splice 清空再 push
+                        // 如果直接 chatList = ... 可能会因为 const/let 定义问题报错
+                        chatList.length = 0; 
+                        parsedData.chatList.forEach(item => chatList.push(item));
+                    }
+
+                    // 恢复聊天记录
+                    if (parsedData.chatHistory) {
+                        // 同理，为了安全，我们使用 Object.assign 或者遍历赋值
+                        // 这里直接覆盖对象的键值
+                        for (let key in parsedData.chatHistory) {
+                            chatHistory[key] = parsedData.chatHistory[key];
+                        }
+                    }
+                    
+                    // 刷新界面
+                    renderChatList();     // 刷新聊天列表
+                    renderContactList();  // 刷新联系人
+                    // 如果有打开的子页面，也可以顺便刷新一下，不过通常刚打开网页还没进子页面
+                }
+            } catch (e) {
+                console.error('读取存档失败:', e);
+            }
+        }
+
+        // 3. 启动自动保存机制
+        
+        // A. 网页加载完毕后，立刻读取存档
+        loadGlobalData();
+
+        // B. 设置定时器：每隔 3 秒自动保存一次 (无感保存)
+        setInterval(saveGlobalData, 3000);
+
+        // C. 监听网页关闭/刷新事件：临死前最后保存一次
+        window.addEventListener('beforeunload', function () {
+            saveGlobalData();
+        });
+
+        /* --- 紧急救援按钮 (万一数据坏了，可以在控制台调用这个函数重置) --- */
+        function factoryReset() {
+            if(confirm('【高能预警】这将清空所有聊天记录、角色和设置，恢复到刚下载时的状态！确定吗？')) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+    </script>    
+
+</body>
+</html>
