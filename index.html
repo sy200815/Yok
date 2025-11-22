@@ -487,7 +487,7 @@
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             background-color: #F2F6FC;
-            z-index: 50; /* 在底部导航之上 */
+            z-index: 85; /* 在底部导航之上 */
             display: none;
             flex-direction: column;
             animation: slideUp 0.3s ease;
@@ -1688,6 +1688,71 @@
     background: var(--card-bg) !important; /* 使用变量，支持透明 */
     backdrop-filter: blur(5px); /* 顺便加个毛玻璃效果，透明时更好看 */
 }
+
+/* === 世界书专用样式 === */
+
+/* 列表条目卡片 */
+.wb-item-card {
+    background: white;
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 4px 12px rgba(127, 166, 200, 0.1);
+    position: relative;
+    border-left: 4px solid var(--accent); /* 左侧加个色条装饰 */
+    transition: transform 0.1s;
+}
+.wb-item-card:active { transform: scale(0.99); }
+
+.wb-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 8px;
+}
+.wb-tag {
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 10px;
+    background: #F0F8FF;
+    color: var(--accent);
+    font-weight: bold;
+}
+.wb-role-tag {
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 10px;
+    background: #FFF3E0;
+    color: #FF9800;
+    margin-left: 5px;
+}
+
+.wb-preview {
+    font-size: 13px;
+    color: #555;
+    line-height: 1.5;
+    /* 限制显示3行 */
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* 编辑弹窗的大文本框 */
+.wb-textarea {
+    width: 100%;
+    background: #F9F9F9;
+    border: 1px solid #EEE;
+    border-radius: 12px;
+    padding: 15px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #333;
+    box-sizing: border-box;
+    resize: none; /* 禁止拖拽大小 */
+    outline: none;
+    height: 200px; /* 固定高度 */
+    transition: border 0.2s;
+}
+.wb-textarea:focus { border-color: var(--accent); background: white; }
     </style>
 </head>
 <body>
@@ -1718,7 +1783,7 @@
     <!-- 应用图标区域 -->
     <div id="app-grid">
         <!-- API 设置应用图标 -->
-        <div class="app-icon" onclick="openApp('api-settings')">
+<div class="app-icon" id="icon-api" onclick="openApp('api-settings')">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7FA6C8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="3"></circle>
                 <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
@@ -1727,7 +1792,7 @@
         </div>
         
         <!-- Chat 应用图标 -->
-        <div class="app-icon" onclick="openChatApp()">
+        <div class="app-icon" id="icon-chat" onclick="openChatApp()">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#7FA6C8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
             </svg>
@@ -1998,7 +2063,10 @@
             </div>
         </div>
 
+    <!-- 找到 id="tab-me" 里面的最后一部分，修改成这样 -->
+
     <div class="me-section">
+         <!-- 海龟汤 (这是原本有的) -->
          <div class="me-item" onclick="openSoupLobby()">
             <div class="me-item-title">
                 <span>🐢</span>
@@ -2006,6 +2074,16 @@
             </div>
              <div class="arrow">&gt;</div>
         </div>
+
+        <!-- ▼▼▼ 把世界书放在这里 (注意：它被包在 me-section 里面了) ▼▼▼ -->
+        <div class="me-item" onclick="openWorldBookPage()">
+            <div class="me-item-title">
+                <span>🌍</span>
+                <span>世界书 (补充设定)</span>
+            </div>
+            <div class="arrow">&gt;</div>
+        </div>
+        <!-- ▲▲▲ 这样它就拥有白色卡片背景了 ▲▲▲ -->
     </div>
 
 </div>
@@ -2603,6 +2681,52 @@
             ↻
         </div>
     </div>
+    
+    <!-- === 世界书列表页面 === -->
+<div id="world-book-page" class="me-page">
+    <div class="api-header">
+        <div class="api-back-btn" onclick="document.getElementById('world-book-page').style.display='none'">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </div>
+        <h2>世界书设定集</h2>
+        <div style="color: var(--accent); font-weight: bold; cursor: pointer;" onclick="openWorldEntryEdit()">
+            + 新建
+        </div>
+    </div>
+    
+    <div class="me-page-content" id="world-book-list">
+        <!-- 动态生成条目 -->
+    </div>
+</div>
+
+<!-- === 世界书编辑弹窗 (美化版) === -->
+<div id="world-entry-edit" class="me-page" style="z-index: 120; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; display: none;">
+    <div class="settings-card" style="width: 90%; max-height: 90%; overflow-y: auto; animation: slideUp 0.2s ease;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="margin:0; font-size: 18px;">编辑世界观设定</h3>
+            <div onclick="document.getElementById('world-entry-edit').style.display='none'" style="font-size: 24px; color: #999; cursor: pointer;">×</div>
+        </div>
+
+        <div class="form-group">
+            <div class="setting-label">适用范围 (谁知道这个设定？)</div>
+            <select id="wb-role-select" class="cute-input">
+                <option value="all">🌍 通用 (所有角色都知道)</option>
+                <!-- JS 动态插入 -->
+            </select>
+        </div>
+
+        <div class="form-group">
+            <div class="setting-label">设定详情 (常驻生效)</div>
+            <div class="helper-text" style="margin-bottom: 8px;">
+                这部分内容会【始终】包含在 AI 的记忆里，不需要触发。适合写世界背景、人物关系、重要物品等。
+            </div>
+            <textarea id="wb-content" class="wb-textarea" placeholder="例如：在这个世界里，货币叫做‘星尘’。我和你是从小一起长大的青梅竹马，但我们是对立的阵营..."></textarea>
+        </div>
+
+        <button class="btn-save" onclick="saveWorldEntry()">保存设定</button>
+        <button class="btn-secondary" onclick="deleteWorldEntry()" id="btn-delete-entry" style="width: 100%; margin-top: 10px; color: #ff4d4f; display: none; background: #FFF0F0; border: 1px solid #FFCDD2;">删除此条目</button>
+    </div>
+</div>
 
     <!-- === 6. 聊天设置页面 (独立) === -->
     <div id="chat-settings-page">
@@ -2645,6 +2769,19 @@
                     <input type="color" id="color-user" value="#FFE6E6" onchange="updateChatColors()">
                 </div>
             </div>
+            
+            <!-- ▼▼▼▼▼ 请把这段插入到 <div id="chat-settings-page"> 里 ▼▼▼▼▼ -->
+<!-- 建议放在 "外观样式" 的上面 -->
+
+<div style="margin: 20px 20px 10px 20px; font-size: 12px; color: #999; font-weight: bold;">角色档案</div>
+<div class="setting-section">
+    <div class="setting-item" onclick="editCurrentRole()">
+        <span class="setting-title">✎ 编辑 TA 的头像/名字/人设</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+    </div>
+</div>
+
+<!-- ▲▲▲▲▲ 插入结束 ▲▲▲▲▲ -->
 
             <!-- 参数设置 -->
             <div style="margin: 20px 20px 10px 20px; font-size: 12px; color: #999; font-weight: bold;">显示与记忆</div>
@@ -2894,6 +3031,7 @@
         ];
         let selectedGender = '男生'; 
         let tempRoleAvatar = ''; 
+        let isEditingRole = false; // 标记是否正在编辑角色
 
         function openChatApp() {
             openApp('chat-app');
@@ -3013,40 +3151,67 @@
             }
         });
 
-        function createNewRole() {
-            const name = document.getElementById('role-name').value;
-            const prompt = document.getElementById('role-prompt').value;
+        // 找到 createNewRole 函数，替换成这个：
+function createNewRole() {
+    const name = document.getElementById('role-name').value;
+    const promptStr = document.getElementById('role-prompt').value;
+    
+    if (!name) { alert('请填写角色名字'); return; }
+
+    if (isEditingRole) {
+        // === 这里是编辑模式 ===
+        const role = chatList.find(r => r.id === currentChatId);
+        if (role) {
+            role.name = name;
+            role.prompt = promptStr;
+            role.gender = selectedGender;
+            if (tempRoleAvatar) role.avatar = tempRoleAvatar; // 如果没换图就用旧的
             
-            if(!name) { alert('请填写名字'); return; }
-
-            const newRole = {
-                id: 'role_' + Date.now(),
-                name: name,
-                avatar: tempRoleAvatar || 'https://cdn-icons-png.flaticon.com/512/847/847969.png',
-                prompt: prompt,
-                gender: selectedGender,
-                lastMsg: '你好呀！',
-                time: '刚刚'
-            };
-
-            chatList.unshift(newRole); 
-
-            // 清理表单
-            document.getElementById('role-name').value = '';
-            document.getElementById('role-prompt').value = '';
-            document.getElementById('new-role-avatar').style.backgroundImage = '';
-            // 恢复上传图标
-            document.getElementById('new-role-avatar').innerHTML = `
-                <div style="text-align:center;">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                    <div style="margin-top:4px;">上传头像</div>
-                </div>`;
-            tempRoleAvatar = '';
-
-            hideCreatePage(); 
-            renderContactList();
-            alert('联系人 ' + name + ' 创建成功！');
+            // 刷新界面显示
+            document.getElementById('current-chat-name').innerText = name; // 聊天室标题
+            renderChatList();     // 列表页
+            renderContactList();  // 联系人页
+            
+            alert('角色信息修改成功！');
         }
+    } else {
+        // === 这里是新建模式 ===
+        const newRole = {
+            id: 'role_' + Date.now(),
+            name: name,
+            avatar: tempRoleAvatar || 'https://cdn-icons-png.flaticon.com/512/847/847969.png',
+            prompt: promptStr,
+            gender: selectedGender,
+            lastMsg: '你好呀！',
+            time: '刚刚'
+        };
+        chatList.unshift(newRole);
+        alert('新角色创建成功！');
+    }
+    
+    // 保存全局数据
+    saveGlobalData();
+
+    // 关闭窗口并清理
+    hideCreatePage();
+    
+    // 重置状态
+    isEditingRole = false;
+    document.querySelector('#create-role-page .create-btn-float').innerText = "确认创建";
+    
+    // 清空表单
+    document.getElementById('role-name').value = '';
+    document.getElementById('role-prompt').value = '';
+    document.getElementById('new-role-avatar').style.backgroundImage = '';
+    document.getElementById('new-role-avatar').innerHTML = `
+        <div style="text-align:center;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            <div style="margin-top:4px;">上传头像</div>
+        </div>`;
+    tempRoleAvatar = '';
+}
+
+            
         
         /* --- 5. 聊天室核心逻辑 --- */
 
@@ -3409,19 +3574,26 @@
 
         /* --- A. 多人设管理逻辑 --- */
         let myPersonas = JSON.parse(localStorage.getItem('yok_my_personas')) || [];
+let editingPersonaId = null; // 用来记录当前正在编辑哪个人设
         let activePersonaId = localStorage.getItem('yok_active_persona_id') || null;
         let tempPersonaAvatar = ''; // 临时存头像
 
         // 1. 打开新建页
-        function openPersonaCreate() {
-            document.getElementById('persona-create-page').style.display = 'flex';
-            // 重置表单
-            document.getElementById('persona-name-input').value = '';
-            document.getElementById('persona-desc-input').value = '';
-            tempPersonaAvatar = '';
-            document.getElementById('persona-avatar-preview').style.backgroundImage = '';
-            document.getElementById('persona-avatar-preview').innerHTML = `<div style="text-align:center;"><div style="font-size: 24px;">📷</div><div style="margin-top:4px;">人设头像</div></div>`;
-        }
+        // 找到 openPersonaCreate 函数，替换成这个：
+function openPersonaCreate() {
+    editingPersonaId = null; // ★ 重要：标记这是在新建，不是编辑
+    document.getElementById('persona-create-page').style.display = 'flex';
+    
+    // 清空表单
+    document.getElementById('persona-name-input').value = '';
+    document.getElementById('persona-desc-input').value = '';
+    
+    // 重置头像预览
+    tempPersonaAvatar = '';
+    const preview = document.getElementById('persona-avatar-preview');
+    preview.style.backgroundImage = '';
+    preview.innerHTML = `<div style="text-align:center;"><div style="font-size: 24px;">📷</div><div style="margin-top:4px;">人设头像</div></div>`;
+}
 
         // 2. 监听人设头像上传
         document.getElementById('persona-file-input').addEventListener('change', function(e) {
@@ -3439,63 +3611,113 @@
         });
 
         // 3. 保存人设
-        function saveNewPersona() {
-            const name = document.getElementById('persona-name-input').value;
-            const desc = document.getElementById('persona-desc-input').value;
-            
-            if (!name) { alert('起个名字吧！'); return; }
+        // 找到 saveNewPersona 函数，替换成这个：
+function saveNewPersona() {
+    const name = document.getElementById('persona-name-input').value;
+    const desc = document.getElementById('persona-desc-input').value;
+    
+    if (!name) { alert('起个名字吧！'); return; }
 
-            const newPersona = {
-                id: 'p_' + Date.now(),
-                name: name,
-                avatar: tempPersonaAvatar || 'https://cdn-icons-png.flaticon.com/512/1077/1077114.png', // 默认头像
-                desc: desc
-            };
-
-            myPersonas.push(newPersona);
-            localStorage.setItem('yok_my_personas', JSON.stringify(myPersonas));
-            
-            // 自动设为当前使用
-            setActivePersona(newPersona.id);
-            
-            document.getElementById('persona-create-page').style.display = 'none';
-            renderPersonaList();
+    // 1. 判断是【编辑模式】还是【新建模式】
+    if (editingPersonaId) {
+        // --- 编辑旧的 ---
+        const index = myPersonas.findIndex(p => p.id === editingPersonaId);
+        if (index > -1) {
+            myPersonas[index].name = name;
+            myPersonas[index].desc = desc;
+            // 如果上传了新图就用新的，没上传就保持旧的
+            if (tempPersonaAvatar) {
+                myPersonas[index].avatar = tempPersonaAvatar;
+            }
+            alert('人设修改成功！');
         }
+    } else {
+        // --- 新建一个新的 ---
+        const newPersona = {
+            id: 'p_' + Date.now(),
+            name: name,
+            avatar: tempPersonaAvatar || 'https://cdn-icons-png.flaticon.com/512/1077/1077114.png',
+            desc: desc
+        };
+        myPersonas.push(newPersona);
+        // 自动选中新建的
+        setActivePersona(newPersona.id);
+    }
+
+    // 2. 保存并刷新
+    localStorage.setItem('yok_my_personas', JSON.stringify(myPersonas));
+    document.getElementById('persona-create-page').style.display = 'none';
+    renderPersonaList();
+}
 
         // 4. 渲染人设列表
-        function renderPersonaList() {
-            const container = document.getElementById('persona-list-container');
-            container.innerHTML = '';
+        // 找到 renderPersonaList 函数，替换成这个：
+function renderPersonaList() {
+    const container = document.getElementById('persona-list-container');
+    container.innerHTML = '';
 
-            if (myPersonas.length === 0) {
-                container.innerHTML = '<div style="text-align:center; padding:20px; color:#999;">还没有人设，点击右上角新建一个吧！</div>';
-                return;
-            }
+    if (myPersonas.length === 0) {
+        container.innerHTML = '<div style="text-align:center; padding:20px; color:#999;">还没有人设，点击右上角新建一个吧！</div>';
+        return;
+    }
 
-            myPersonas.forEach((p, index) => {
-                const isActive = p.id === activePersonaId;
-                const div = document.createElement('div');
-                // 复用聊天卡片样式，加一点修改
-                div.className = 'chat-item-card'; 
-                div.style.border = isActive ? '2px solid var(--accent)' : '2px solid transparent';
-                div.style.background = isActive ? '#F0F8FF' : 'white';
-                
-                div.innerHTML = `
-                    <div class="chat-avatar" style="background-image: url('${p.avatar}'); width: 50px; height: 50px;"></div>
-                    <div class="chat-info">
-                        <div class="chat-name" style="font-size:15px;">${p.name} ${isActive ? '<span style="font-size:12px; color:var(--accent);">(使用中)</span>' : ''}</div>
-                        <div class="chat-preview" style="font-size:12px;">${p.desc || '暂无描述'}</div>
-                    </div>
-                    <div style="color:#ff4d4f; padding:10px; font-size:20px;" onclick="deletePersona(event, ${index})">×</div>
-                `;
-                div.onclick = (e) => {
-                    // 如果点击的是删除按钮，不触发切换
-                    if(e.target.innerText === '×') return;
-                    setActivePersona(p.id);
-                };
-                container.appendChild(div);
-            });
-        }
+    myPersonas.forEach((p, index) => {
+        const isActive = p.id === activePersonaId;
+        const div = document.createElement('div');
+        div.className = 'chat-item-card'; 
+        div.style.border = isActive ? '2px solid var(--accent)' : '2px solid transparent';
+        div.style.background = isActive ? '#F0F8FF' : 'white';
+        
+        div.innerHTML = `
+            <div class="chat-avatar" style="background-image: url('${p.avatar}'); width: 50px; height: 50px;"></div>
+            <div class="chat-info">
+                <div class="chat-name" style="font-size:15px;">${p.name} ${isActive ? '<span style="font-size:12px; color:var(--accent);">(使用中)</span>' : ''}</div>
+                <div class="chat-preview" style="font-size:12px;">${p.desc || '暂无描述'}</div>
+            </div>
+            
+            <!-- ▼▼▼ 新增：操作按钮区域 ▼▼▼ -->
+            <div style="display:flex; gap:10px; align-items:center;">
+                <!-- 编辑按钮 (蓝色铅笔) -->
+                <div style="color:#409EFF; padding:5px; font-size:18px; cursor:pointer;" onclick="triggerEditPersona(event, '${p.id}')">✎</div>
+                <!-- 删除按钮 (红色叉叉) -->
+                <div style="color:#ff4d4f; padding:5px; font-size:20px; cursor:pointer;" onclick="deletePersona(event, ${index})">×</div>
+            </div>
+        `;
+        
+        div.onclick = (e) => {
+            // 如果点击的是按钮区域，不要触发“选中”
+            if(e.target.innerText === '×' || e.target.innerText === '✎') return;
+            setActivePersona(p.id);
+        };
+        container.appendChild(div);
+    });
+}
+
+// ▼▼▼ 新增的函数：点击铅笔时调用 ▼▼▼
+function triggerEditPersona(e, id) {
+    e.stopPropagation(); // 阻止冒泡，防止误触选中
+    
+    const p = myPersonas.find(x => x.id === id);
+    if (!p) return;
+
+    // 1. 标记正在编辑谁
+    editingPersonaId = id;
+    
+    // 2. 把旧数据填进表单
+    document.getElementById('persona-name-input').value = p.name;
+    document.getElementById('persona-desc-input').value = p.desc || '';
+    
+    // 3. 把旧头像填进去
+    const preview = document.getElementById('persona-avatar-preview');
+    preview.style.backgroundImage = `url('${p.avatar}')`;
+    preview.innerHTML = ''; // 清空里面的相机图标
+    
+    // 4. 暂时不修改 tempPersonaAvatar，除非用户传了新图
+    tempPersonaAvatar = ''; 
+
+    // 5. 打开窗口
+    document.getElementById('persona-create-page').style.display = 'flex';
+}
 
         function setActivePersona(id) {
             activePersonaId = id;
@@ -3617,6 +3839,8 @@
             const role = chatList.find(r => r.id === currentChatId);
             const msgs = chatHistory[currentChatId];
             
+            // ▼▼▼ 插入这段代码：获取用户最新的一条消息，用来检测关键词 ▼▼▼ const lastUserMsg = msgs.slice().reverse().find(m => m.role === 'user'); const userText = lastUserMsg ? lastUserMsg.content : ""; // 获取世界书设定 const worldBookInfo = getWorldBookContext(userText, currentChatId); // ▲▲▲ 插入结束 ▲▲▲
+            
             // 2. 更新UI状态
             const statusEl = document.getElementById('typing-status');
             statusEl.innerText = "对方正在输入...";
@@ -3662,6 +3886,7 @@
 你扮演：${role.name}。人设：${role.prompt || '无'}。
 ${memoryText}
 ${userPersonaText}
+${worldBookInfo}
 
 【朋友圈共同记忆 (这是你们最近的社交动态，你可以主动提及)】
 ${momentsMemory}
@@ -3820,6 +4045,7 @@ ${contextInfo ? `[系统事件]: ${contextInfo}` : ''}
 
             } catch (error) {
                 console.error(error);
+                // ▼▼▼ 请插入下面这行代码，这样你就知道为什么卡住了 ▼▼▼ alert("AI罢工了，原因：" + error.message); // ▲▲▲ 插入结束 ▲▲▲
                 const errTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
                 let errMsg = error.name === 'AbortError' ? '[对方睡着了(超时)]' : '[网络有点卡...]';
                 chatHistory[currentChatId].push({ role: 'ai', content: errMsg, time: errTime });
@@ -5196,6 +5422,8 @@ Want: ${status.want}
                     chatHistory: chatHistory,
                     visibleMsgCount: typeof visibleMsgCount !== 'undefined' ? visibleMsgCount : 30,
                     
+                    worldBook: typeof worldBook !== 'undefined' ? worldBook : [],
+                    
                     // 功能模块
                     memoHistory: typeof memoHistory !== 'undefined' ? memoHistory : {},
                     footprintHistory: typeof footprintHistory !== 'undefined' ? footprintHistory : {},
@@ -5225,6 +5453,8 @@ Want: ${status.want}
                 const savedData = localStorage.getItem('yok_global_data');
                 if (savedData) {
                     const parsedData = JSON.parse(savedData);
+                    
+                    if (parsedData.worldBook) worldBook = parsedData.worldBook;
                     
                     // 恢复聊天列表
                     if (parsedData.chatList && Array.isArray(parsedData.chatList)) {
@@ -6699,90 +6929,127 @@ function getRecentMomentsContext(currentAiId) {
     return memoryText;
 }
 
-      /* ==========================================
-   ★ 美化功能增强版：支持透明度与独立背景 ★
-   ========================================== */
+// ▼▼▼ 把这个函数贴到代码最下面 ▼▼▼
+function editCurrentRole() {
+    if (!currentChatId) return;
+    const role = chatList.find(r => r.id === currentChatId);
+    if (!role) return;
 
-// 1. 扩展配置对象 (保留之前的字段)
-// 注意：如果你之前有存过配置，刷新后新字段会自动变为 undefined，这里做个兼容
+    // 1. 标记为编辑模式
+    isEditingRole = true;
+    
+    // 2. 填充旧数据
+    document.getElementById('role-name').value = role.name;
+    document.getElementById('role-prompt').value = role.prompt || '';
+    
+    // 3. 填充头像
+    tempRoleAvatar = role.avatar;
+    const avatarBox = document.getElementById('new-role-avatar');
+    avatarBox.style.backgroundImage = `url(${role.avatar})`;
+    avatarBox.innerHTML = ''; // 清空图标
+
+    // 4. 填充性别 (视觉选中)
+    document.querySelectorAll('.gender-opt').forEach(el => {
+        el.classList.remove('active');
+        if (el.innerText.trim() === role.gender) {
+            el.classList.add('active');
+            selectedGender = role.gender;
+        }
+    });
+
+    // 5. 修改按钮文字
+    const btn = document.querySelector('#create-role-page .create-btn-float');
+    if(btn) btn.innerText = "保存修改";
+
+    // 6. 打开窗口，关闭设置页
+    document.getElementById('chat-settings-page').style.display = 'none';
+    document.getElementById('create-role-page').style.display = 'flex';
+}
+
+/* ==========================================================================
+   ★ 修复版：美化与保存核心系统 (请复制这段代码替换脚本最底部的相关逻辑) ★
+   ========================================================================== */
+
+// 1. 读取配置 (如果读取不到，就用默认值)
 let themeConfig = JSON.parse(localStorage.getItem('yok_theme_config')) || {
     themeColor: 'blue',
     wallpaper: '',
     avatar: '',
     icons: {},
-    // ▼▼▼ 新增字段 ▼▼▼
-    chatAppBg: '',       // Chat列表页背景
-    cardOpacity: 1       // 卡片不透明度 (0-1)
+    chatAppBg: '',
+    cardOpacity: 1
 };
 
-// 2. 初始化系统 (应用所有设置)
-function initThemeSystem() {
-    // 应用基础颜色
-    applyTheme(themeConfig.themeColor || 'blue', false);
+// 2. 【核心修复】缺少这个函数，导致切换颜色失败、刷新后卡死
+function applyTheme(colorName) {
+    // 第一步：记录当前选了什么颜色 (这步不做，保存的就是旧颜色)
+    themeConfig.themeColor = colorName;
     
-    // 应用主屏幕壁纸
-    if (themeConfig.wallpaper) {
-        document.getElementById('wallpaper-layer').style.backgroundImage = `url(${themeConfig.wallpaper})`;
-    }
-    
-    // 应用头像
-    if (themeConfig.avatar) {
-        const box = document.getElementById('avatar-box');
-        if(box) {
-            box.style.backgroundImage = `url(${themeConfig.avatar})`;
-            box.innerText = '';
-        }
-    }
-
-    // 应用图标
-    if (themeConfig.icons) {
-        for (let key in themeConfig.icons) {
-            if (themeConfig.icons[key]) updateAppIconUI(key, themeConfig.icons[key]);
-        }
-    }
-
-    // ▼▼▼ 新增：应用 Chat 背景和透明度 ▼▼▼
-    
-    // 1. 应用 ChatApp 背景
-    if (themeConfig.chatAppBg) {
-        document.documentElement.style.setProperty('--chat-bg-img', `url(${themeConfig.chatAppBg})`);
+    // 第二步：真正去改界面颜色
+    const root = document.documentElement;
+    if (colorName === 'pink') {
+        root.style.setProperty('--bg-color', '#FDE2E4');
+        root.style.setProperty('--accent', '#FFB7B2');
+        root.style.setProperty('--bubble-mine', '#FFB7B2');
+        root.style.setProperty('--text-main', '#8E5555');
+    } else if (colorName === 'green') {
+        root.style.setProperty('--bg-color', '#E2F0CB');
+        root.style.setProperty('--accent', '#88D8B0');
+        root.style.setProperty('--bubble-mine', '#88D8B0');
+        root.style.setProperty('--text-main', '#4A6B45');
     } else {
-        document.documentElement.style.setProperty('--chat-bg-img', 'none');
+        // 默认蓝色
+        root.style.setProperty('--bg-color', '#DCE9F5');
+        root.style.setProperty('--accent', '#7FA6C8');
+        root.style.setProperty('--bubble-mine', '#7FA6C8');
+        root.style.setProperty('--text-main', '#5A6A7E');
     }
-
-    // 2. 应用透明度
-    const opacity = themeConfig.cardOpacity !== undefined ? themeConfig.cardOpacity : 1;
-    changeCardOpacity(opacity);
-    
-    // 同步滑块位置 (如果滑块存在)
-    const rangeInput = document.querySelector('input[type="range"]');
-    if(rangeInput) rangeInput.value = opacity;
 }
 
-// 3. 调节透明度函数
-function changeCardOpacity(value) {
-    // 更新显示数值
-    const label = document.getElementById('opacity-val');
-    if(label) label.innerText = Math.round(value * 100) + '%';
-    
-    // 更新 CSS 变量
-    // 我们用 rgba(255, 255, 255, alpha) 来实现
-    const rgbaValue = `rgba(255, 255, 255, ${value})`;
-    document.documentElement.style.setProperty('--card-bg', rgbaValue);
-    
-    // 存入配置 (但不立即写入 localStorage，点保存按钮才写)
-    themeConfig.cardOpacity = value;
+// 3. 初始化系统 (网页一打开，就把保存的东西贴上去)
+function initThemeSystem() {
+    try {
+        // 恢复颜色 (之前就是因为没有 applyTheme 函数，代码运行到这里就报错停止了)
+        applyTheme(themeConfig.themeColor || 'blue');
+
+        // 恢复壁纸
+        if (themeConfig.wallpaper) {
+            document.getElementById('wallpaper-layer').style.backgroundImage = `url(${themeConfig.wallpaper})`;
+        }
+
+        // 恢复头像
+        if (themeConfig.avatar) {
+            const box = document.getElementById('avatar-box');
+            if (box) {
+                box.style.backgroundImage = `url(${themeConfig.avatar})`;
+                box.innerText = ''; // 把“点此上传”几个字去掉
+            }
+        }
+
+        // 恢复应用图标
+        if (themeConfig.icons) {
+            for (let key in themeConfig.icons) {
+                updateAppIconUI(key, themeConfig.icons[key]);
+            }
+        }
+
+        // 恢复 Chat 背景和透明度
+        if (themeConfig.chatAppBg) {
+            document.documentElement.style.setProperty('--chat-bg-img', `url(${themeConfig.chatAppBg})`);
+        }
+        if (themeConfig.cardOpacity !== undefined) {
+            changeCardOpacity(themeConfig.cardOpacity);
+            const range = document.querySelector('input[type="range"]');
+            if(range) range.value = themeConfig.cardOpacity;
+        }
+
+    } catch (e) {
+        console.error("初始化主题失败:", e);
+        // 就算出错，也不要影响其他功能
+    }
 }
 
-// 4. 清除 ChatApp 背景
-function resetChatAppBg() {
-    document.documentElement.style.setProperty('--chat-bg-img', 'none');
-    themeConfig.chatAppBg = '';
-}
-
-// 5. 修改上传处理函数 (增加 chatAppBg 的情况)
-const originalHandleUpload = handleThemeUpload; // 备份一下之前的函数，如果你没删的话
-// 这里重写 handleThemeUpload，整合所有逻辑
+// 4. 处理图片上传 (统一管理，确保都能存进 config)
 function handleThemeUpload(input, type) {
     const file = input.files[0];
     if (!file) return;
@@ -6791,60 +7058,225 @@ function handleThemeUpload(input, type) {
     reader.onload = function(e) {
         const url = e.target.result;
 
+        // 根据类型，一边更新界面，一边存入 themeConfig
         if (type === 'wallpaper') {
             document.getElementById('wallpaper-layer').style.backgroundImage = `url(${url})`;
             themeConfig.wallpaper = url;
         } else if (type === 'avatar') {
-            document.getElementById('avatar-box').style.backgroundImage = `url(${url})`;
-            document.getElementById('avatar-box').innerText = '';
+            const box = document.getElementById('avatar-box');
+            box.style.backgroundImage = `url(${url})`;
+            box.innerText = '';
             themeConfig.avatar = url;
-        } else if (type === 'chatAppBg') { 
-            // ★ 新增：ChatApp 背景
+        } else if (type === 'chatAppBg') {
             document.documentElement.style.setProperty('--chat-bg-img', `url(${url})`);
             themeConfig.chatAppBg = url;
         } else if (type.startsWith('icon-')) {
-            document.getElementById('preview-' + type).style.backgroundImage = `url(${url})`;
+            // 配合之前修好的 ID
             updateAppIconUI(type, url);
-            if(!themeConfig.icons) themeConfig.icons = {};
+            if (!themeConfig.icons) themeConfig.icons = {};
             themeConfig.icons[type] = url;
+            // 同时也更新预览图
+            const preview = document.getElementById('preview-' + type);
+            if(preview) preview.style.backgroundImage = `url(${url})`;
         }
     };
     reader.readAsDataURL(file);
 }
 
-// 5. 更新主屏幕图标 UI
+// 5. 辅助：更新图标显示
 function updateAppIconUI(elementId, imgUrl) {
     const el = document.getElementById(elementId);
     if (!el) return;
-    
-    // 清空原有的 SVG
-    // 简单粗暴：直接把背景设为图片，把 SVG 隐藏
     el.style.backgroundImage = `url(${imgUrl})`;
     el.style.backgroundSize = 'cover';
     el.style.backgroundPosition = 'center';
-    
-    // 隐藏里面的 SVG，但保留文字 (.app-name)
     const svg = el.querySelector('svg');
     if (svg) svg.style.display = 'none';
 }
 
-// 6. 清除壁纸
+// 6. 辅助：调节透明度
+function changeCardOpacity(value) {
+    document.getElementById('opacity-val').innerText = Math.round(value * 100) + '%';
+    document.documentElement.style.setProperty('--card-bg', `rgba(255, 255, 255, ${value})`);
+    themeConfig.cardOpacity = value;
+}
+
+// 7. 保存并关闭
+function saveThemeConfig() {
+    try {
+        localStorage.setItem('yok_theme_config', JSON.stringify(themeConfig));
+        alert('所有美化设置已保存！刷新也不会丢啦 ✨');
+        closeApp('beautify-app');
+    } catch (e) {
+        alert('保存失败，图片可能太大了(超过5MB)，请截图后再上传试试！');
+    }
+}
+
+// 8. 清除功能
 function resetWallpaper() {
     document.getElementById('wallpaper-layer').style.backgroundImage = '';
     themeConfig.wallpaper = '';
 }
-
-// 7. 保存所有设置
-function saveThemeConfig() {
-    localStorage.setItem('yok_theme_config', JSON.stringify(themeConfig));
-    alert('美化设置已保存！✨');
-    closeApp('beautify-app');
+function resetChatAppBg() {
+    document.documentElement.style.setProperty('--chat-bg-img', 'none');
+    themeConfig.chatAppBg = '';
 }
 
-      
+/* ==========================================
+   ★ 世界书 (World Book) 功能模块 (无触发词版) ★
+   ========================================== */
 
-// 8. 启动时运行
-// 必须确保这行代码执行，才能在刷新后加载主题
+// 1. 数据存储 (兼容旧数据，旧数据里的 keys 字段会自动忽略)
+let worldBook = JSON.parse(localStorage.getItem('yok_world_book')) || [];
+let editingEntryId = null;
+
+// 2. 打开列表页
+function openWorldBookPage() {
+    document.getElementById('world-book-page').style.display = 'flex';
+    renderWorldBookList();
+}
+
+// 3. 渲染列表 (美化版)
+function renderWorldBookList() {
+    const container = document.getElementById('world-book-list');
+    container.innerHTML = '';
+
+    if (worldBook.length === 0) {
+        container.innerHTML = `
+            <div style="text-align:center; color:#999; margin-top:60px;">
+                <div style="font-size:40px; margin-bottom:10px;">🌍</div>
+                <div>还没有设定哦<br>点击右上角 + 号添加</div>
+            </div>`;
+        return;
+    }
+
+    worldBook.forEach(item => {
+        let roleName = '通用';
+        let roleClass = ''; // 样式区分
+        
+        if (item.roleId === 'all') {
+            roleName = '🌍 全员通用';
+        } else {
+            const r = chatList.find(x => x.id === item.roleId);
+            roleName = r ? `👤 ${r.name} 专属` : '未知角色';
+            roleClass = 'wb-role-tag'; // 专属角色用黄色标签
+        }
+
+        const div = document.createElement('div');
+        div.className = 'wb-item-card'; // 使用新 CSS
+        div.innerHTML = `
+            <div class="wb-header">
+                <span class="wb-tag ${roleClass}">${roleName}</span>
+            </div>
+            <div class="wb-preview">${item.content}</div>
+        `;
+        div.onclick = () => openWorldEntryEdit(item.id);
+        container.appendChild(div);
+    });
+}
+
+// 4. 打开编辑窗口
+function openWorldEntryEdit(id = null) {
+    editingEntryId = id;
+    const modal = document.getElementById('world-entry-edit');
+    const delBtn = document.getElementById('btn-delete-entry');
+    
+    // 填充角色下拉框
+    const select = document.getElementById('wb-role-select');
+    select.innerHTML = '<option value="all">🌍 通用 (所有角色都知道)</option>';
+    
+    chatList.forEach(r => {
+        if (!r.id.startsWith('system_')) {
+            const opt = document.createElement('option');
+            opt.value = r.id;
+            opt.text = `👤 ${r.name} (仅 TA 知道)`;
+            select.appendChild(opt);
+        }
+    });
+
+    if (id) {
+        // 编辑模式
+        const item = worldBook.find(x => x.id === id);
+        document.getElementById('wb-content').value = item.content;
+        select.value = item.roleId;
+        delBtn.style.display = 'block';
+    } else {
+        // 新建模式
+        document.getElementById('wb-content').value = '';
+        select.value = 'all';
+        delBtn.style.display = 'none';
+    }
+    
+    modal.style.display = 'flex';
+}
+
+// 5. 保存条目 (去掉 keys)
+function saveWorldEntry() {
+    const content = document.getElementById('wb-content').value.trim();
+    const roleId = document.getElementById('wb-role-select').value;
+
+    if (!content) {
+        alert("设定内容不能为空");
+        return;
+    }
+
+    if (editingEntryId) {
+        // 修改
+        const index = worldBook.findIndex(x => x.id === editingEntryId);
+        if (index > -1) {
+            worldBook[index] = { id: editingEntryId, content, roleId };
+        }
+    } else {
+        // 新增
+        worldBook.push({
+            id: 'wb_' + Date.now(),
+            content, roleId
+        });
+    }
+
+    localStorage.setItem('yok_world_book', JSON.stringify(worldBook));
+    saveGlobalData(); // 全局备份
+    
+    document.getElementById('world-entry-edit').style.display = 'none';
+    renderWorldBookList();
+}
+
+// 6. 删除条目
+function deleteWorldEntry() {
+    if (confirm("确定删除这条设定吗？")) {
+        const index = worldBook.findIndex(x => x.id === editingEntryId);
+        if (index > -1) {
+            worldBook.splice(index, 1);
+            localStorage.setItem('yok_world_book', JSON.stringify(worldBook));
+            saveGlobalData();
+            document.getElementById('world-entry-edit').style.display = 'none';
+            renderWorldBookList();
+        }
+    }
+}
+
+// 7. ★★★ 核心改动：直接获取设定 (无触发词) ★★★
+function getWorldBookContext(userText, currentRoleId) {
+    if (!worldBook || worldBook.length === 0) return "";
+
+    let matchedEntries = [];
+
+    worldBook.forEach(item => {
+        // 只要角色匹配，就直接加入
+        // (userText 参数这里已经没用了，但保留参数位防止报错)
+        if (item.roleId === 'all' || item.roleId === currentRoleId) {
+            matchedEntries.push(item.content);
+        }
+    });
+
+    if (matchedEntries.length > 0) {
+        // 加上明确的提示头，告诉 AI 这是设定
+        return `\n【世界观与补充设定 (World Info)】\n${matchedEntries.join('\n')}\n`;
+    }
+    return "";
+}
+
+// ★★★ 最重要的一步：立即启动！ ★★★
 initThemeSystem();
    
     </script>    
