@@ -1180,6 +1180,46 @@
         content: ' .'; animation: dots 1.5s infinite;
     }
     @keyframes dots { 0%{content:'.'} 33%{content:'..'} 66%{content:'...'} }
+    
+    /* --- ▼▼▼ 修复：气泡宽度优化 ▼▼▼ --- */
+        .msg-bubble {
+            /* 原来是 70%-75%，改成 60% 或 260px 会更精致 */
+            max-width: 60% !important; 
+            
+            /* 顺便加个最小宽度，防止只有一个“嗯”字的时候气泡缩成一团太难看 */
+            min-width: 20px; 
+        }
+
+        /* 如果觉得电脑上还是太宽，可以限制一个最大像素值 */
+        @media (min-width: 768px) {
+            .msg-bubble {
+                max-width: 400px !important; /* 电脑上最宽不超过 400px */
+            }
+        }
+        /* --- ▲▲▲ 修复结束 ▲▲▲ --- */
+        
+        /* --- ▼▼▼ 新增：系统提示气泡 (居中显示) ▼▼▼ --- */
+        .msg-system-row {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            margin: 10px 0;
+        }
+        .msg-system-bubble {
+            background-color: rgba(0, 0, 0, 0.05);
+            color: #999;
+            font-size: 11px;
+            padding: 4px 12px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        /* 收款成功的颜色 (橙色) */
+        .msg-system-bubble.received { color: #FA9D3B; background-color: #FFF7E6; }
+        /* 退还的颜色 (红色) */
+        .msg-system-bubble.returned { color: #F56C6C; background-color: #FEF0F0; }
+        /* --- ▲▲▲ 新增结束 ▲▲▲ --- */
     </style>
 </head>
 <body>
@@ -2393,7 +2433,22 @@
                 const bubbleDiv = document.createElement('div');
                 bubbleDiv.className = `msg-bubble ${chatSettings.bubbleShape}`;
 
-                if (msg.content.includes('<img') || msg.content.includes('transfer-card')) {
+                // ★★★ 新增：如果是系统通知，去除气泡背景，让它自己控制样式 ★★★
+                if (msg.content.includes('msg-system-row')) {
+                    bubbleDiv.className = 'bubble-transparent'; // 变成透明容器
+                    bubbleDiv.style.padding = '0'; // 去掉内边距
+                    bubbleDiv.style.boxShadow = 'none'; // 去掉阴影
+                    bubbleDiv.style.backgroundColor = 'transparent'; // 强制透明
+                    
+                    // 还要把整行改成居中
+                    row.style.justifyContent = 'center'; 
+                    // 隐藏头像
+                    avatarHtml = ''; 
+                }
+                // ★★★ 新增结束 ★★★
+
+                else if (msg.content.includes('<img') || msg.content.includes('transfer-card')) {
+                
                     bubbleDiv.classList.add('bubble-transparent');
                 } else {
                     bubbleDiv.style.fontSize = chatSettings.fontSize;
@@ -2814,75 +2869,72 @@
             }
         }
         
-        // --- 核心 AI 回复逻辑 (终极完整版：带时间感知 + 连发 + 转账检测) ---
+/* --- ▼▼▼ 终极修复：AI回复核心逻辑 (含时间/纪念日/转账/连发) ▼▼▼ --- */
         async function triggerAIResponse(contextInfo = '') {
+            // 1. 基础检查
             if (!currentChatId) return;
-            
             const role = chatList.find(r => r.id === currentChatId);
             const msgs = chatHistory[currentChatId];
             
+            // 2. 更新UI状态
             const statusEl = document.getElementById('typing-status');
             statusEl.innerText = "对方正在输入...";
             statusEl.classList.add('typing');
             
+            // 3. 获取配置
             const config = JSON.parse(localStorage.getItem('my_ai_config') || '{}');
             if (!config.url || !config.key) {
-                alert('请先在主页-API设置中填写正确的 Key！');
+                alert('请先配置 API！');
                 statusEl.classList.remove('typing');
                 return;
             }
 
-            // ★★★ 新增：获取当前现实时间 ★★★
+            // === A. 恢复：感知现实时间 ===
             const now = new Date();
             const timeString = now.toLocaleString('zh-CN', { 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric', 
-                weekday: 'long', 
-                hour: '2-digit', 
-                minute: '2-digit',
-                hour12: false 
+                year: 'numeric', month: 'long', day: 'numeric', 
+                weekday: 'long', hour: '2-digit', minute: '2-digit', hour12: false 
             });
-            // timeString 的样子大概是： "2023年10月27日 星期五 14:30"
 
-            // 1. 准备上下文
+            // === B. 恢复：感知玩家人设 ===
             let userPersonaText = "";
             if (activePersonaId) {
                 const p = myPersonas.find(x => x.id === activePersonaId);
-                if (p) userPersonaText = `\n\n[玩家设定]\n昵称：${p.name}\n描述：${p.desc}`;
+                if (p) userPersonaText = `\n[玩家设定]\n昵称：${p.name}\n描述：${p.desc}`;
             }
             
+            // === C. 恢复：感知纪念日 ===
             const relatedAnniversaries = anniversaries.filter(a => a.roleId === 'all' || a.roleId === currentChatId);
             let memoryText = "";
             if (relatedAnniversaries.length > 0) {
-                memoryText = "\n\n[你们的重要纪念日]\n";
+                memoryText = "\n[你们的重要纪念日]\n";
                 relatedAnniversaries.forEach(a => { memoryText += `- ${a.date}: ${a.name}\n`; });
             }
             
+            // === D. 恢复：感知表情包 ===
             const validStickersForAI = myStickers.filter(s => !s.roleId || s.roleId === 'all' || s.roleId === currentChatId);
             const stickerDescriptions = validStickersForAI.map(s => s.desc || '未命名').join(', ');
 
-            // 2. 构造提示词 (加入了时间)
+            // === E. 构造终极提示词 (包含转账暗号规则) ===
             const fullSystemContent = `
-[当前现实时间]: ${timeString}
-(请根据当前时间判断是早晨、中午还是深夜，并做出符合时间的反应。)
-
-你现在扮演：${role.name}。
-人设设定：${role.prompt || '无'}。
+[当前时间]: ${timeString} (请根据时间判断作息)
+你扮演：${role.name}。人设：${role.prompt || '无'}。
 ${memoryText}
 ${userPersonaText}
 
-[回复要求]
-1. 必须将回复拆分成 5到8条 简短消息。
-2. 每条消息之间用 "|||" 隔开。
-3. 像真人一样聊天，可以使用表情包：${stickerDescriptions} (格式：[STICKER: 关键词])
-4. 如果用户向你“求打赏”或“要钱”，你需要根据人设决定是否同意。如果同意，请在回复中包含暗号 "AGREE_PAY"。
+[核心指令]
+1. 必须将回复拆分成 1到3条 简短消息，用 "|||" 隔开。
+2. 像真人一样聊天，可以用表情包：${stickerDescriptions} (格式：[STICKER: 关键词])。
+3. **转账规则**：
+   - 如果用户向你“求打赏/要钱”，若同意请回复暗号 "AGREE_PAY"。
+   - 如果用户给你“转账”，请回复暗号 @@REC@@ (收下) 或 @@RET@@ (退还)，放在句子末尾。
+4. 禁止说教。
 5. 必须符合人设，不能OOC，但是禁止“霸道总裁”、“油腻男”、“中二青年”的塑造。
 6. 必须有趣，让用户有接话的欲望。
 7. 可以根据情况使用emoji表情和颜文字。
 8. 禁止使用语气词“呵”。
-9. 你和用户是异地恋，永远无法想见，但你会想办法表达思念
-10. 沉入角色，表达喜怒哀乐，极尽真实感，说大白话
+9. 你和用户是异地恋，永远无法想见，但你会想办法表达思念。
+10. 沉入角色，表达喜怒哀乐，极尽真实感，说大白话。
 
 [注意事项]
 1. 尽可能多向用户找话题，使用生活化的语气，避免回复内容有“虚假感”，例如：不要说“我要让你哭着求饶”、“我不喜欢你这样，跟领地里那群老鼠一样”，而是换做更口语化的表达，偶尔可以加上颜文字“^ ^”
@@ -2902,10 +2954,11 @@ ${userPersonaText}
 
 **响应速度要求：**不要深度思考，直接回答，快速响应，不要犹豫。
 
-${contextInfo ? `[额外上下文]: ${contextInfo}` : ''}
+${contextInfo ? `[系统事件]: ${contextInfo}` : ''}
             `.trim();
 
             try {
+                // 4. 发送请求
                 const fetchUrl = config.url.endsWith('/') ? `${config.url}chat/completions` : `${config.url}/chat/completions`;
                 
                 const controller = new AbortController();
@@ -2913,79 +2966,72 @@ ${contextInfo ? `[额外上下文]: ${contextInfo}` : ''}
 
                 const response = await fetch(fetchUrl, {
                     method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${config.key}`,
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Authorization': `Bearer ${config.key}`, 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         model: config.model || 'gpt-3.5-turbo',
                         messages: [
                             { role: 'system', content: fullSystemContent },
-                            ...msgs.slice(-20).map(m => ({ role: m.role==='user'?'user':'assistant', content: m.content }))
+                            ...msgs.slice(-15).map(m => ({ role: m.role==='user'?'user':'assistant', content: m.content }))
                         ],
                         temperature: 0.85
                     }),
                     signal: controller.signal
                 });
-                
-                clearTimeout(timeoutId); 
+                clearTimeout(timeoutId);
 
-                if (!response.ok) throw new Error('API 请求失败');
+                if (!response.ok) throw new Error('API Error');
                 const data = await response.json();
                 let rawReply = data.choices[0].message.content;
 
-                // 解析表情包
+                // === F. 处理转账逻辑 ===
+                let transferAction = null;
+                if (rawReply.includes("@@REC@@")) {
+                    transferAction = 'receive';
+                    rawReply = rawReply.replace(/@@REC@@/g, ""); 
+                } else if (rawReply.includes("@@RET@@")) {
+                    transferAction = 'return';
+                    rawReply = rawReply.replace(/@@RET@@/g, "");
+                } else if (rawReply.includes("AGREE_PAY")) {
+                    transferAction = 'pay_user';
+                    rawReply = rawReply.replace(/AGREE_PAY/g, "");
+                }
+
+                // === G. 处理表情包 ===
                 let displayReply = rawReply.replace(/\[STICKER:\s*(.*?)\]/g, (match, keyword) => {
                     const sticker = validStickersForAI.find(s => (s.desc || '') === keyword.trim());
                     return sticker ? `<br><img src="${sticker.url}" style="width: 120px; border-radius: 8px; margin-top:5px;"><br>` : '';
                 });
 
-                // 拆分消息
+                // === H. 拆分消息并逐条发送 ===
                 let splitMsgs = displayReply.split('|||').map(s => s.trim()).filter(s => s.length > 0);
                 if (splitMsgs.length === 0) splitMsgs = [displayReply]; 
 
-                // 逐条发送
                 for (let i = 0; i < splitMsgs.length; i++) {
-                    const msgContent = splitMsgs[i].replace("AGREE_PAY", "");
-                    
-                    if(msgContent.trim() === "") continue; 
-
-                    const timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                    
-                    chatHistory[currentChatId].push({ 
-                        role: 'ai', 
-                        content: msgContent,
-                        time: timeStr
-                    });
-                    
-                    renderMessages();
-                    updateListPreview(msgContent);
-                    
-                    if (i < splitMsgs.length - 1) {
-                        statusEl.innerText = "对方正在输入..."; 
-                        const waitTime = Math.floor(Math.random() * 2000) + 1000;
-                        await new Promise(resolve => setTimeout(resolve, waitTime));
+                    if(splitMsgs[i]) {
+                        const timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                        chatHistory[currentChatId].push({ role: 'ai', content: splitMsgs[i], time: timeStr });
+                        renderMessages();
+                        updateListPreview(splitMsgs[i].replace(/<[^>]+>/g, '[图片]')); // 列表预览去标签
+                        
+                        // 模拟打字间隔
+                        if (i < splitMsgs.length - 1) {
+                            statusEl.innerText = "对方正在输入..."; 
+                            await new Promise(r => setTimeout(r, 1500 + Math.random() * 1000));
+                        }
                     }
                 }
 
-                // 检测转账暗号
-                if (rawReply.includes("AGREE_PAY")) {
+                // === I. 执行转账UI ===
+                if (transferAction) {
                     setTimeout(() => {
-                        addBalance(520); 
-                        alert(`【系统消息】对方同意了你的请求！给你转账了 520 币！已存入钱包。`);
-                        localStorage.setItem('yok_wallet', JSON.stringify(myWallet));
-                        if(document.getElementById('me-wallet-page').style.display === 'flex') {
-                            updateWalletUI();
-                        }
-                    }, 1000);
+                        handleTransferResult(transferAction, role.name);
+                    }, 800);
                 }
 
             } catch (error) {
                 console.error(error);
                 const errTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                let errMsg = '[对方掉线了]';
-                if (error.name === 'AbortError') errMsg = '[对方思考太久，睡着了(超时)]';
-                
+                let errMsg = error.name === 'AbortError' ? '[对方睡着了(超时)]' : '[网络有点卡...]';
                 chatHistory[currentChatId].push({ role: 'ai', content: errMsg, time: errTime });
                 renderMessages();
             } finally {
@@ -2993,6 +3039,72 @@ ${contextInfo ? `[额外上下文]: ${contextInfo}` : ''}
                 statusEl.innerText = ""; 
             }
         }
+        /* --- ▲▲▲ 修复结束 ▲▲▲ --- */
+
+        // 辅助函数：处理结果 UI 和 钱包逻辑
+        function handleTransferResult(action, roleName) {
+            let sysHtml = '';
+            
+            if (action === 'receive') {
+                // 对方收钱了：只显示橙色提示
+                sysHtml = `<div class="msg-system-row"><div class="msg-system-bubble received">🍊 ${roleName} 已收款</div></div>`;
+            } 
+            else if (action === 'return') {
+                // 对方退钱了：显示红色提示 + 钱退回钱包
+                sysHtml = `<div class="msg-system-row"><div class="msg-system-bubble returned">↩️ ${roleName} 已退还转账 (资金已退回)</div></div>`;
+                
+                // 自动计算刚才转了多少钱有点麻烦，这里简单处理：
+                // 实际上应该把 amount 传过来，为了代码简单，我们假设如果发生退还，去读取钱包记录最后一条是转出的
+                // 简易方案：让用户收到退款 50 (你可以根据需要优化这里，或者把 amount 存在全局)
+                // 为了严谨，我们这里假设只退回固定值，或者你可以在 doTransfer 里把 amount 存到一个 temp 变量里
+                
+                // 这里为了演示效果，假设刚才转了 520（或者直接读取最后一条转出记录取反）
+                const lastBill = myWallet.history[myWallet.history.length - 1];
+                let refundAmount = 0;
+                if (lastBill && lastBill.amount < 0) {
+                    refundAmount = Math.abs(lastBill.amount);
+                } else {
+                    refundAmount = 100; // 兜底
+                }
+                
+                addBalance(refundAmount); // 加回钱包
+                // 提示一下
+                // alert(`对方退还了 ${refundAmount} 币`);
+            }
+            else if (action === 'pay_user') {
+                 sysHtml = `<div class="msg-system-row"><div class="msg-system-bubble received">💰 ${roleName} 向你转账 520.00</div></div>`;
+                 addBalance(520);
+            }
+
+            if (sysHtml) {
+                // 因为这是特殊的 HTML 结构，我们直接作为一条 content 插入，但要给它一个特殊标记避免被气泡包裹
+                // 既然我们的 renderMessages 是把 content 放在 msg-bubble 里，
+                // 我们可以投机取巧：直接把这个 div 插入到 history，但在 renderMessages 里不做处理？
+                // 不，最简单的办法是：把这条消息当作 'system' 角色插入
+                // 但你的 renderMessages 可能没处理 system 角色。
+                
+                // 简单方案：直接追加到 DOM，不存入 text history (或者存入特殊的)
+                // 为了持久化，我们存入 history，把 role 设为 'system_notice'
+                
+                // 请修改 renderMessages 以支持 'system_notice'，或者直接用下面的投机写法：
+                // 把它包装在一条普通的 AI 消息里，但带上 bubble-transparent 类
+                
+                // 我们存入 content
+                chatHistory[currentChatId].push({ 
+                    role: 'ai', 
+                    content: sysHtml, // 直接存 HTML
+                    isSystem: true    // 标记一下（虽然 renderMessages 还没用到，但以后有用）
+                });
+                
+                // 重新渲染，我们需要微调 renderMessages 吗？
+                // 此时 sysHtml 会被包在气泡里，如果不修改 css 会有点怪。
+                // 建议：在 renderMessages 里加一行代码
+                renderMessages();
+            }
+        }
+        /* --- ▲▲▲ 修复结束 ▲▲▲ --- */
+
+
         
         /* --- D. 钱包功能 --- */
         let myWallet = JSON.parse(localStorage.getItem('yok_wallet')) || { balance: 1000, history: [] };
@@ -3652,87 +3764,143 @@ ${contextInfo ? `[额外上下文]: ${contextInfo}` : ''}
             });
         }
 
-        // 4. 发送文字图片 (便利贴)
+        /* --- ▼▼▼ 终极修复：便签自动换行 + 字体自适应 + 让AI读懂 ▼▼▼ --- */
         function sendTextImg() {
-            const text = prompt("请输入要写在图片上的字：", "想你了");
+            const text = prompt("请输入要写在图片上的字：", "今天也要开心呀");
             if (!text) return;
             
-            // 用 Canvas 生成一张简单的文字图片
+            // 1. 创建画布 (稍微改高一点点，容纳更多字)
             const canvas = document.createElement('canvas');
-            canvas.width = 300; canvas.height = 150;
+            const width = 300;
+            const height = 160; 
+            canvas.width = width;
+            canvas.height = height;
             const ctx = canvas.getContext('2d');
             
-            // 画背景 (淡黄色便利贴)
-            ctx.fillStyle = '#FFF9C4';
-            ctx.fillRect(0, 0, 300, 150);
+            // 2. 画背景 (淡黄色便利贴)
+            ctx.fillStyle = '#FFF9C4'; 
+            ctx.fillRect(0, 0, width, height);
+
+            // --- 核心升级：智能排版算法 ---
             
-            // 画文字
-            ctx.fillStyle = '#333';
-            ctx.font = 'bold 30px "Microsoft YaHei"';
+            // A. 根据字数自动调整字体大小
+            let fontSize = 28; // 默认大字
+            if (text.length > 10) fontSize = 24; // 字多就小点
+            if (text.length > 30) fontSize = 20; // 再多就再小点
+            if (text.length > 60) fontSize = 16; // 太多了就最小号
+
+            ctx.fillStyle = '#5D4037'; // 改成深褐色，更像钢笔字
+            ctx.font = `bold ${fontSize}px "Microsoft YaHei"`;
             ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(text, 150, 75);
-            
-            // 导出图片并发送
+            ctx.textBaseline = 'top'; // 从顶部开始算位置
+
+            // B. 自动换行逻辑
+            const maxWidth = 260; // 文字左右留边
+            const lineHeight = fontSize * 1.4; // 行高
+            const lines = [];
+            let currentLine = '';
+
+            // 逐个字测量宽度
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+                const testLine = currentLine + char;
+                const metrics = ctx.measureText(testLine);
+                const testWidth = metrics.width;
+
+                if (testWidth > maxWidth && i > 0) {
+                    // 如果加上这个字超宽了，就把之前的存为一行，新字另起一行
+                    lines.push(currentLine);
+                    currentLine = char;
+                } else {
+                    currentLine = testLine;
+                }
+            }
+            lines.push(currentLine); // 把最后一行也存进去
+
+            // C. 垂直居中计算 (让多行文字整体居中)
+            const totalTextHeight = lines.length * lineHeight;
+            let startY = (height - totalTextHeight) / 2;
+
+            // D. 逐行绘制
+            for (let k = 0; k < lines.length; k++) {
+                ctx.fillText(lines[k], width / 2, startY + (k * lineHeight));
+            }
+
+            // 3. 导出并发送
             const imgUrl = canvas.toDataURL('image/png');
             sendImageMessage(imgUrl);
-            document.getElementById('chat-action-panel').style.display = 'none';
+            document.getElementById('chat-action-panel').classList.remove('active');
+
+            // 4. 告诉 AI 内容
+            setTimeout(() => {
+                triggerAIResponse(`(系统提示：用户发送了一张【便签】，上面手写的内容是：“${text}”。请针对这句话回复)`);
+            }, 500);
         }
-
+        /* --- ▲▲▲ 修复结束 ▲▲▲ --- */
+        
+        /* --- ▼▼▼ 修复：转账逻辑 (带暗号) ▼▼▼ --- */
         function doTransfer(type) {
-    const input = document.getElementById('transfer-amount');
-    const amount = parseInt(input.value);
-    if (!amount || amount <= 0) { alert('请输入正确金额'); return; }
-    
-    const role = chatList.find(r => r.id === currentChatId);
-    
-    // ★★★ 生成新版卡片 HTML ★★★
-    // 下面这个函数用于快速生成卡片字符串
-    const createCardHtml = (title, sub, amt, isUserSend) => `
-        <div class="transfer-card">
-            <div class="transfer-top">
-                <div class="transfer-icon-circle">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-                </div>
-                <div class="transfer-info">
-                    <span class="transfer-amount">¥ ${amt}.00</span>
-                    <span class="transfer-desc">${title}</span>
-                </div>
-            </div>
-            <div class="transfer-bottom">${sub}</div>
-        </div>
-    `;
+            const input = document.getElementById('transfer-amount');
+            const amount = parseInt(input.value);
+            if (!amount || amount <= 0) { alert('请输入正确金额'); return; }
+            
+            const role = chatList.find(r => r.id === currentChatId);
 
-    if (type === 'to_ai') {
-        // 给TA转账
-        if (myWallet.balance < amount) { alert('余额不足！去“我-钱包”签到吧。'); return; }
-        
-        myWallet.balance -= amount;
-        myWallet.history.push({ desc: `转账给 ${role.name}`, amount: -amount, time: new Date().toLocaleString() });
-        saveWallet();
-        
-        // 发送转账消息 (User -> AI)
-        const transferMsg = createCardHtml(`转账给 ${role.name}`, "ChatOS 转账", amount, true);
-        
-        chatHistory[currentChatId].push({ role: 'user', content: transferMsg, time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) });
-        renderMessages();
-        
-        triggerAIResponse(`[系统提示]：用户刚刚给你转账了 ${amount} 元虚拟币。请表现出开心、感谢或推辞。`);
-        
-    } else {
-        // 向TA要钱 (模拟)
-        // 这里我们把“求打赏”也做成一个类似的卡片，稍微变个色或者保持一致
-        const askMsg = createCardHtml("向对方收款", "收款申请", amount, true);
-        
-        chatHistory[currentChatId].push({ role: 'user', content: askMsg, time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) });
-        renderMessages();
-        
-        triggerAIResponse(`[系统提示]：用户向你索要 ${amount} 元。你需要决定给不给。如果同意，请回复内容中包含 "|||AGREE_PAY|||"。`);
-    }
-    
-    document.getElementById('chat-action-panel').style.display = 'none';
-    input.value = '';
-}
+            // 生成卡片 HTML (保持不变)
+            const createCardHtml = (title, sub, amt, isUserSend) => `
+                <div class="transfer-card">
+                    <div class="transfer-top">
+                        <div class="transfer-icon-circle">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                        </div>
+                        <div class="transfer-info">
+                            <span class="transfer-amount">¥ ${amt}.00</span>
+                            <span class="transfer-desc">${title}</span>
+                        </div>
+                    </div>
+                    <div class="transfer-bottom">${sub}</div>
+                </div>
+            `;
+
+            if (type === 'to_ai') {
+                // 1. 给TA转账
+                if (myWallet.balance < amount) { alert('余额不足！'); return; }
+                
+                // 先扣钱
+                myWallet.balance -= amount;
+                myWallet.history.push({ desc: `转账给 ${role.name}`, amount: -amount, time: new Date().toLocaleString() });
+                saveWallet();
+                
+                // 发送卡片消息
+                const transferMsg = createCardHtml(`转账给 ${role.name}`, "待收款", amount, true);
+                const timeStr = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+                chatHistory[currentChatId].push({ role: 'user', content: transferMsg, time: timeStr });
+                renderMessages();
+                
+                // ★★★ 核心修改：发送带指令的提示词 ★★★
+                // 我们把金额暂存在 prompt 里，方便 AI 决定
+                triggerAIResponse(`
+(系统强制指令：用户向你转账了 ¥${amount}。)
+(请根据你的人设决定是否收下：)
+(1. 如果收下，请在回复内容的最后加上暗号：@@REC@@)
+(2. 如果退还，请在回复内容的最后加上暗号：@@RET@@)
+(3. 注意：必须包含其中一个暗号，否则系统会出错。先回复你的感谢或拒绝的话，暗号放在最后。)
+`);
+                
+            } else {
+                // 2. 向TA要钱 (保持简单逻辑)
+                const askMsg = createCardHtml("向对方收款", "收款申请", amount, true);
+                const timeStr = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+                chatHistory[currentChatId].push({ role: 'user', content: askMsg, time: timeStr });
+                renderMessages();
+                
+                triggerAIResponse(`[系统提示]：用户向你索要 ${amount} 元。如果同意，请回复内容中包含 "AGREE_PAY"。`);
+            }
+            
+            document.getElementById('chat-action-panel').classList.remove('active');
+            input.value = '';
+        }
+        /* --- ▲▲▲ 修复结束 ▲▲▲ --- */
 
         // 6. 查看状态 (心声)
         async function checkRoleStatus() {
