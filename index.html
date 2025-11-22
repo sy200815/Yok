@@ -7276,6 +7276,180 @@ function getWorldBookContext(userText, currentRoleId) {
     return "";
 }
 
+/* 
+   =============================================================
+   ★ 终极存档补丁：数据持久化修复版 (Data Persistence Patch) ★
+   功能：强制接管所有数据保存逻辑，确保刷新网页后数据不丢失。
+   =============================================================
+*/
+
+// 1. 定义全能保存函数 (覆盖旧逻辑)
+window.saveGlobalData = function() {
+    try {
+        const bigData = {
+            // --- 核心数据 ---
+            chatList: chatList,          // 角色列表 (你丢的就是这个！)
+            chatHistory: chatHistory,    // 聊天记录
+            
+            // --- 个人数据 ---
+            myPersonas: typeof myPersonas !== 'undefined' ? myPersonas : [], // 我的人设
+            activePersonaId: typeof activePersonaId !== 'undefined' ? activePersonaId : null,
+            
+            // --- 功能数据 ---
+            worldBook: typeof worldBook !== 'undefined' ? worldBook : [],
+            memoHistory: typeof memoHistory !== 'undefined' ? memoHistory : {},
+            footprintHistory: typeof footprintHistory !== 'undefined' ? footprintHistory : {},
+            
+            // --- 朋友圈数据 ---
+            momentsData: typeof momentsData !== 'undefined' ? momentsData : [],
+            momentsCover: typeof momentsCover !== 'undefined' ? momentsCover : ''
+        };
+        
+        // 写入硬盘
+        localStorage.setItem('yok_global_data', JSON.stringify(bigData));
+        
+        // 独立备份钱包等小数据 (双重保险)
+        if(typeof myWallet !== 'undefined') localStorage.setItem('yok_wallet', JSON.stringify(myWallet));
+        if(typeof anniversaries !== 'undefined') localStorage.setItem('yok_anniversaries', JSON.stringify(anniversaries));
+        if(typeof myStickers !== 'undefined') localStorage.setItem('yok_stickers', JSON.stringify(myStickers));
+        
+        console.log("✅ 数据已自动保存 (包含新角色)");
+    } catch (e) {
+        console.error("❌ 保存失败，可能是存储空间满了:", e);
+        alert("警告：存储空间不足，数据可能无法保存！建议清理一些聊天记录。");
+    }
+};
+
+// 2. 定义全能读取函数 (网页打开时强制运行)
+window.loadGlobalData = function() {
+    try {
+        const raw = localStorage.getItem('yok_global_data');
+        if (raw) {
+            const data = JSON.parse(raw);
+            
+            // 恢复角色列表 (最重要的一步！)
+            if (data.chatList && Array.isArray(data.chatList) && data.chatList.length > 0) {
+                // 清空默认列表，加载存档
+                chatList.length = 0; 
+                data.chatList.forEach(item => chatList.push(item));
+            }
+
+            // 恢复其他数据
+            if (data.chatHistory) Object.assign(chatHistory, data.chatHistory);
+            if (data.worldBook) worldBook = data.worldBook;
+            if (data.myPersonas) myPersonas = data.myPersonas;
+            if (data.activePersonaId) activePersonaId = data.activePersonaId;
+            
+            if (data.memoHistory) memoHistory = data.memoHistory;
+            if (data.footprintHistory) footprintHistory = data.footprintHistory;
+            
+            if (data.momentsData) momentsData = data.momentsData;
+            if (data.momentsCover) momentsCover = data.momentsCover;
+        }
+        
+        // 强制刷新界面
+        if(typeof renderChatList === 'function') renderChatList();
+        if(typeof renderContactList === 'function') renderContactList();
+        if(typeof initMoments === 'function') initMoments();
+        
+        console.log("✅ 数据加载完毕，当前角色数:", chatList.length);
+
+    } catch (e) {
+        console.error("读取存档出错:", e);
+    }
+};
+
+// 3. 修复“创建新角色”逻辑 (创建后立即保存)
+// 覆盖原本的 createNewRole 函数
+window.createNewRole = function() {
+    const name = document.getElementById('role-name').value;
+    const promptStr = document.getElementById('role-prompt').value;
+    
+    if (!name) { alert('请填写角色名字'); return; }
+
+    if (window.isEditingRole) {
+        // === 编辑模式 ===
+        const role = chatList.find(r => r.id === currentChatId);
+        if (role) {
+            role.name = name;
+            role.prompt = promptStr;
+            role.gender = selectedGender;
+            if (window.tempRoleAvatar) role.avatar = window.tempRoleAvatar;
+            
+            // 刷新界面
+            document.getElementById('current-chat-name').innerText = name;
+            alert('修改成功！');
+        }
+    } else {
+        // === 新建模式 ===
+        const newRole = {
+            id: 'role_' + Date.now(), // 生成唯一ID
+            name: name,
+            avatar: window.tempRoleAvatar || 'https://cdn-icons-png.flaticon.com/512/847/847969.png',
+            prompt: promptStr,
+            gender: window.selectedGender || '未知',
+            lastMsg: '你好呀！',
+            time: '刚刚'
+        };
+        // 加入列表
+        chatList.unshift(newRole);
+        alert('新角色创建成功！');
+    }
+    
+    // ★★★ 关键点：立刻保存到硬盘！ ★★★
+    saveGlobalData(); 
+    
+    // 刷新列表显示
+    renderChatList();
+    renderContactList();
+
+    // 关闭窗口并清理
+    hideCreatePage();
+    window.isEditingRole = false;
+    document.querySelector('#create-role-page .create-btn-float').innerText = "确认创建";
+    
+    // 清空表单
+    document.getElementById('role-name').value = '';
+    document.getElementById('role-prompt').value = '';
+    document.getElementById('new-role-avatar').style.backgroundImage = '';
+    window.tempRoleAvatar = '';
+};
+
+// 4. 修复“删除角色”逻辑 (删除后立即保存)
+window.deleteCurrentContact = function() {
+    if (!currentChatId) return;
+    if (currentChatId.startsWith('system_')) {
+        alert('系统角色无法删除哦~');
+        return;
+    }
+
+    if (confirm('【高能预警】确定删除此角色吗？数据将无法恢复！')) {
+        // 从列表中删除
+        const index = chatList.findIndex(r => r.id === currentChatId);
+        if (index > -1) {
+            chatList.splice(index, 1);
+        }
+        // 删除关联数据
+        delete chatHistory[currentChatId];
+
+        // ★★★ 关键点：立刻保存！ ★★★
+        saveGlobalData();
+
+        // 刷新界面
+        closeChatSettings();
+        closeChatRoom();
+        renderChatList();
+        renderContactList();
+        alert('已删除。');
+    }
+};
+
+// 5. 自动执行加载 (立即运行)
+loadGlobalData();
+
+// 6. 双重保险：每 2 秒自动保存一次 (防止意外崩溃)
+setInterval(saveGlobalData, 2000);
+
 // ★★★ 最重要的一步：立即启动！ ★★★
 initThemeSystem();
    
