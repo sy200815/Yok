@@ -7289,6 +7289,163 @@ function getWorldBookContext(userText, currentRoleId) {
     return "";
 }
 
+/* ==========================================
+   ★ 角色管理系统：最终修复版 ★
+   包含：头像上传、新建逻辑、编辑逻辑
+   ========================================== */
+
+// 1. 定义全局状态变量 (确保不会弄丢)
+window.tempRoleAvatar = "";      // 临时存头像数据
+window.isEditingRole = false;    // 标记是否在编辑
+
+// 2. 重新绑定头像上传监听器 (确保上传能被记录)
+// 先移除旧的监听器（虽然JS很难移除匿名函数，但我们重新绑定覆盖逻辑）
+const roleFileInput = document.getElementById('role-file');
+if (roleFileInput) {
+    // 使用 onchange 覆盖之前的事件，防止重复触发
+    roleFileInput.onchange = function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                // ★ 关键：存入全局变量
+                window.tempRoleAvatar = event.target.result;
+                
+                // 更新预览图
+                const target = document.getElementById('new-role-avatar');
+                target.style.backgroundImage = `url(${window.tempRoleAvatar})`;
+                target.innerHTML = ''; // 清空中间的图标文字
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+}
+
+// 3. 修复：打开编辑窗口 (正确填充旧数据)
+window.editCurrentRole = function() {
+    if (!currentChatId) return;
+    const role = chatList.find(r => r.id === currentChatId);
+    if (!role) return;
+
+    // ★ 关键：标记为正在编辑
+    window.isEditingRole = true;
+    
+    // 填充表单
+    document.getElementById('role-name').value = role.name;
+    document.getElementById('role-prompt').value = role.prompt || '';
+    
+    // 处理头像预览
+    const avatarBox = document.getElementById('new-role-avatar');
+    avatarBox.style.backgroundImage = `url(${role.avatar})`;
+    avatarBox.innerHTML = ''; 
+    
+    // ★ 关键：清空临时头像变量
+    // (这意味着：如果你不上传新图，tempRoleAvatar 就是空的，保存时我们就不改头像)
+    window.tempRoleAvatar = ""; 
+
+    // 处理性别选中状态
+    document.querySelectorAll('.gender-opt').forEach(el => {
+        el.classList.remove('active');
+        if (el.innerText.trim() === role.gender) {
+            el.classList.add('active');
+            window.selectedGender = role.gender;
+        }
+    });
+
+    // 修改按钮文字
+    const btn = document.querySelector('#create-role-page .create-btn-float');
+    if(btn) btn.innerText = "保存修改";
+
+    // 切换页面
+    document.getElementById('chat-settings-page').style.display = 'none';
+    document.getElementById('create-role-page').style.display = 'flex';
+};
+
+// 4. 修复：保存角色 (区分新建和编辑)
+window.createNewRole = function() {
+    const nameInput = document.getElementById('role-name');
+    const promptInput = document.getElementById('role-prompt');
+    
+    const name = nameInput.value;
+    const promptStr = promptInput.value;
+    
+    if (!name) { alert('请填写角色名字'); return; }
+
+    // ★ 判断是编辑还是新建
+    if (window.isEditingRole === true) {
+        // === 编辑模式 ===
+        const role = chatList.find(r => r.id === currentChatId);
+        if (role) {
+            role.name = name;
+            role.prompt = promptStr;
+            role.gender = window.selectedGender || '未知';
+            
+            // ★ 关键：只有当用户上传了新图(tempRoleAvatar不为空)时，才更新头像
+            // 否则保持旧头像不变
+            if (window.tempRoleAvatar && window.tempRoleAvatar !== "") {
+                role.avatar = window.tempRoleAvatar;
+            }
+            
+            // 刷新界面
+            document.getElementById('current-chat-name').innerText = name;
+            alert('修改成功！');
+        }
+    } else {
+        // === 新建模式 ===
+        const newRole = {
+            id: 'role_' + Date.now(),
+            name: name,
+            // ★ 关键：如果是新建，优先用上传的图，没有就用默认图
+            avatar: window.tempRoleAvatar || 'https://cdn-icons-png.flaticon.com/512/847/847969.png',
+            prompt: promptStr,
+            gender: window.selectedGender || '未知',
+            lastMsg: '你好呀！',
+            time: '刚刚'
+        };
+        chatList.unshift(newRole);
+        alert('新角色创建成功！');
+    }
+    
+    // 保存数据
+    if(typeof saveGlobalData === 'function') saveGlobalData();
+
+    // 刷新列表
+    if(typeof renderChatList === 'function') renderChatList();
+    if(typeof renderContactList === 'function') renderContactList();
+
+    // 关闭窗口
+    hideCreatePage();
+    
+    // ★ 重置状态 (非常重要，防止下次新建变成编辑，或编辑变成新建)
+    window.isEditingRole = false;
+    window.tempRoleAvatar = "";
+    document.querySelector('#create-role-page .create-btn-float').innerText = "确认创建";
+    
+    // 清空表单
+    nameInput.value = '';
+    promptInput.value = '';
+    document.getElementById('new-role-avatar').style.backgroundImage = '';
+    document.getElementById('new-role-avatar').innerHTML = `
+        <div style="text-align:center;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            <div style="margin-top:4px;">上传头像</div>
+        </div>`;
+};
+
+// 5. 辅助：关闭创建页
+window.hideCreatePage = function() {
+    document.getElementById('create-role-page').style.display = 'none';
+    // 即使是取消操作，也要重置状态，防止逻辑混乱
+    window.isEditingRole = false;
+    window.tempRoleAvatar = "";
+    document.querySelector('#create-role-page .create-btn-float').innerText = "确认创建";
+    
+    // 清空表单
+    document.getElementById('role-name').value = '';
+    document.getElementById('role-prompt').value = '';
+    document.getElementById('new-role-avatar').style.backgroundImage = '';
+};
+
 /* 
    =============================================================
    ★ 终极存档补丁：数据持久化修复版 (Data Persistence Patch) ★
