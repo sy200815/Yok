@@ -3832,56 +3832,78 @@ function triggerEditPersona(e, id) {
             }
         }
         
-/* --- ▼▼▼ 终极修复：AI回复核心逻辑 (含时间/纪念日/转账/连发) ▼▼▼ --- */
-        async function triggerAIResponse(contextInfo = '') {
-            // 1. 基础检查
-            if (!currentChatId) return;
-            const role = chatList.find(r => r.id === currentChatId);
-            const msgs = chatHistory[currentChatId];
-            
-            // ▼▼▼ 插入这段代码：获取用户最新的一条消息，用来检测关键词 ▼▼▼ const lastUserMsg = msgs.slice().reverse().find(m => m.role === 'user'); const userText = lastUserMsg ? lastUserMsg.content : ""; // 获取世界书设定 const worldBookInfo = getWorldBookContext(userText, currentChatId); // ▲▲▲ 插入结束 ▲▲▲
-            
-            // 2. 更新UI状态
-            const statusEl = document.getElementById('typing-status');
-            statusEl.innerText = "对方正在输入...";
-            statusEl.classList.add('typing');
-            
-            // 3. 获取配置
-            const config = JSON.parse(localStorage.getItem('my_ai_config') || '{}');
-            if (!config.url || !config.key) {
-                alert('请先配置 API！');
-                statusEl.classList.remove('typing');
-                return;
+// ▼▼▼▼▼▼ 修复变量名版：含人设 + 防爆破 ▼▼▼▼▼▼
+async function triggerAIResponse(contextInfo = '') {
+    // 1. 基础检查
+    if (!currentChatId) return;
+    
+    const statusEl = document.getElementById('typing-status');
+    statusEl.innerText = "对方正在输入...";
+    statusEl.classList.add('typing');
+
+    try {
+        // === 阶段一：准备数据 ===
+        const role = chatList.find(r => r.id === currentChatId);
+        const msgs = chatHistory[currentChatId] || []; 
+        
+        const config = JSON.parse(localStorage.getItem('my_ai_config') || '{}');
+        if (!config.url || !config.key) throw new Error("API配置缺失");
+
+        // 1. 读取世界书
+        let worldBookInfo = "";
+        try {
+            const lastUserMsg = msgs.slice().reverse().find(m => m.role === 'user'); 
+            const userText = lastUserMsg ? lastUserMsg.content : ""; 
+            if (typeof getWorldBookContext === 'function') {
+                worldBookInfo = getWorldBookContext(userText, currentChatId);
             }
+        } catch (e) {}
 
-            // === A. 恢复：感知现实时间 ===
-            const now = new Date();
-            const timeString = now.toLocaleString('zh-CN', { 
-                year: 'numeric', month: 'long', day: 'numeric', 
-                weekday: 'long', hour: '2-digit', minute: '2-digit', hour12: false 
-            });
+        // 2. 读取朋友圈记忆
+        let momentsMemory = "";
+        try {
+            if (typeof getRecentMomentsContext === 'function') {
+                momentsMemory = getRecentMomentsContext(currentChatId);
+            }
+        } catch (e) {}
 
-            // === B. 恢复：感知玩家人设 ===
-            let userPersonaText = "";
-            if (activePersonaId) {
+        // 3. 读取纪念日
+        let memoryText = "";
+        try {
+            if (typeof anniversaries !== 'undefined') {
+                const related = anniversaries.filter(a => a.roleId === 'all' || a.roleId === currentChatId);
+                if (related.length > 0) memoryText = "\n[纪念日提醒]\n" + related.map(a => `- ${a.date}: ${a.name}`).join('\n');
+            }
+        } catch (e) {}
+
+        // 4. 读取表情包 (这里修正了变量名！)
+        let stickerDescriptions = ""; 
+        try {
+            if (typeof myStickers !== 'undefined') {
+                const valid = myStickers.filter(s => !s.roleId || s.roleId === 'all' || s.roleId === currentChatId);
+                stickerDescriptions = valid.map(s => s.desc || '表情').join(', ');
+            }
+        } catch (e) {}
+
+        // 5. 读取玩家人设
+        let userPersonaText = "";
+        try {
+            if (typeof activePersonaId !== 'undefined' && activePersonaId && typeof myPersonas !== 'undefined') {
                 const p = myPersonas.find(x => x.id === activePersonaId);
-                if (p) userPersonaText = `\n[玩家设定]\n昵称：${p.name}\n描述：${p.desc}`;
+                if (p) {
+                    userPersonaText = `\n[玩家(用户)设定]\n名字：${p.name}\n简介：${p.desc}\n(请记住这是用户的设定，不是你的)\n`;
+                }
             }
-            
-            // === C. 恢复：感知纪念日 ===
-            const relatedAnniversaries = anniversaries.filter(a => a.roleId === 'all' || a.roleId === currentChatId);
-            let memoryText = "";
-            if (relatedAnniversaries.length > 0) {
-                memoryText = "\n[你们的重要纪念日]\n";
-                relatedAnniversaries.forEach(a => { memoryText += `- ${a.date}: ${a.name}\n`; });
-            }
-            
-            // === D. 恢复：感知表情包 ===
-            const validStickersForAI = myStickers.filter(s => !s.roleId || s.roleId === 'all' || s.roleId === currentChatId);
-            const stickerDescriptions = validStickersForAI.map(s => s.desc || '未命名').join(', ');
+        } catch (e) { console.warn("人设读取跳过", e); }
 
-            // === E. 构造终极提示词 (包含转账暗号规则) ===
-            const fullSystemContent = `
+        // 构造最终提示词
+        const now = new Date();
+        const timeString = now.toLocaleString('zh-CN', { hour12: false });
+        const isGemini = (config.model || '').toLowerCase().includes('gemini');
+        const systemRoleName = isGemini ? 'user' : 'system';
+
+        // 注意：这里使用了 stickerDescriptions
+     const fullSystemContent = `
 [当前时间]: ${timeString} (请根据时间判断作息)
 你扮演：${role.name}。人设：${role.prompt || '无'}。
 ${memoryText}
@@ -3933,128 +3955,92 @@ ${momentsMemory}
 ${contextInfo ? `[系统事件]: ${contextInfo}` : ''}
             `.trim();
 
-            try {
-                // 4. 发送请求
-                const fetchUrl = config.url.endsWith('/') ? `${config.url}chat/completions` : `${config.url}/chat/completions`;
-                
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 40000); // 40秒超时
+        // === 阶段二：发送请求 ===
+        const fetchUrl = config.url.endsWith('/') ? `${config.url}chat/completions` : `${config.url}/chat/completions`;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 45000);
 
-                const response = await fetch(fetchUrl, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${config.key}`, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        model: config.model || 'gpt-3.5-turbo',
-                        messages: [
-                            { role: 'system', content: fullSystemContent },
-                            ...msgs.slice(-15).map(m => ({ role: m.role==='user'?'user':'assistant', content: m.content }))
-                        ],
-                        temperature: 0.85
-                    }),
-                    signal: controller.signal
-                });
-                clearTimeout(timeoutId);
+        const response = await fetch(fetchUrl, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${config.key}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                model: config.model || 'gpt-3.5-turbo',
+                messages: [
+                    { role: systemRoleName, content: fullSystemContent },
+                    ...msgs.slice(-15).map(m => ({ 
+                        role: m.role==='user'?'user':'assistant', 
+                        content: m.content 
+                    }))
+                ],
+                temperature: 0.85
+            }),
+            signal: controller.signal
+        });
+        clearTimeout(timeoutId);
 
-                if (!response.ok) throw new Error('API Error');
-                const data = await response.json();
-                let rawReply = data.choices[0].message.content;
+        if (!response.ok) {
+            const errText = await response.text();
+            throw new Error(`HTTP ${response.status}: ${errText.slice(0,50)}`);
+        }
+        
+        const data = await response.json();
+        if (!data.choices || !data.choices[0] || !data.choices[0].message) throw new Error("API返回空");
 
-              // --- 插入开始：朋友圈检测逻辑 ---
-        if (rawReply.includes("@@MOMENT:")) {
-            const match = rawReply.match(/@@MOMENT:(.*?)@@/);
-            if (match && match[1]) {
-                const momentContent = match[1];
-                // 1. 把暗号从回复里删掉，不让用户看到
-                rawReply = rawReply.replace(match[0], "");
-                
-                // 2. 真正执行发朋友圈 (延迟2秒，制造真实感)
-                setTimeout(() => {
-                    // 这里直接写发朋友圈的逻辑，不用调外部函数了，防止你找不到
-                    const role = chatList.find(r => r.id === currentChatId);
-                    if (role) {
-                        const newMoment = {
-                            id: Date.now().toString(),
-                            roleId: role.id,
-                            content: momentContent,
-                            imgs: [],
-                            time: Date.now(),
-                            likes: [],
-                            comments: []
-                        };
-                        momentsData.unshift(newMoment);
-                        
-                        // 既然朋友圈数据变了，需要保存和刷新
-                        if(typeof saveMoments === 'function') saveMoments();
-                        else localStorage.setItem('yok_moments', JSON.stringify(momentsData));
-                        
-                        if(typeof renderMoments === 'function') renderMoments();
-                        
-                        // 给个小提示
-                        console.log("AI 朋友圈发布成功！");
-                    }
-                }, 2000);
+        let rawReply = data.choices[0].message.content;
+
+        // === 阶段三：处理回复 ===
+        try {
+            const momentMatch = rawReply.match(/@@\s*MOMENT\s*:\s*(.*?)\s*@@/is);
+            if (momentMatch && momentMatch[1]) {
+                rawReply = rawReply.replace(momentMatch[0], ""); 
+                if (typeof forceAiPostMoment === 'function') setTimeout(() => forceAiPostMoment(currentChatId, momentMatch[1].trim()), 2000);
+            }
+        } catch (e) {}
+
+        let transferAction = null;
+        try {
+            if (/@@\s*REC\s*@@/i.test(rawReply)) { transferAction = 'receive'; rawReply = rawReply.replace(/@@\s*REC\s*@@/gi, ""); }
+            else if (/@@\s*RET\s*@@/i.test(rawReply)) { transferAction = 'return'; rawReply = rawReply.replace(/@@\s*RET\s*@@/gi, ""); }
+            else if (/AGREE_PAY/i.test(rawReply)) { transferAction = 'pay_user'; rawReply = rawReply.replace(/AGREE_PAY/gi, ""); }
+        } catch (e) {}
+
+        try {
+            const allStickers = typeof myStickers !== 'undefined' ? myStickers : [];
+            rawReply = rawReply.replace(/\[\s*STICKER\s*:\s*(.*?)\s*\]/gi, (match, keyword) => {
+                const sticker = allStickers.find(s => (s.desc || '') === keyword.trim());
+                return sticker ? `<br><img src="${sticker.url}" style="width: 120px; border-radius: 8px; margin-top:5px;"><br>` : '';
+            });
+        } catch (e) {}
+
+        let splitMsgs = rawReply.split('|||').map(s => s.trim()).filter(s => s.length > 0);
+        if (splitMsgs.length === 0) splitMsgs = [rawReply];
+
+        for (let i = 0; i < splitMsgs.length; i++) {
+            if(splitMsgs[i]) {
+                const timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                chatHistory[currentChatId].push({ role: 'ai', content: splitMsgs[i], time: timeStr });
+                renderMessages(); 
+                if (i < splitMsgs.length - 1) await new Promise(r => setTimeout(r, 1000));
             }
         }
-        // --- 插入结束 ---
-              
+        
+        const r = chatList.find(x => x.id === currentChatId);
+        if(r && splitMsgs.length > 0) { r.lastMsg = splitMsgs[splitMsgs.length-1].replace(/<[^>]+>/g, '[消息]'); r.time = '刚刚'; }
 
-                // === F. 处理转账逻辑 ===
-                let transferAction = null;
-                if (rawReply.includes("@@REC@@")) {
-                    transferAction = 'receive';
-                    rawReply = rawReply.replace(/@@REC@@/g, ""); 
-                } else if (rawReply.includes("@@RET@@")) {
-                    transferAction = 'return';
-                    rawReply = rawReply.replace(/@@RET@@/g, "");
-                } else if (rawReply.includes("AGREE_PAY")) {
-                    transferAction = 'pay_user';
-                    rawReply = rawReply.replace(/AGREE_PAY/g, "");
-                }
+        if (transferAction && typeof handleTransferResult === 'function') setTimeout(() => handleTransferResult(transferAction, role.name), 800);
+        if(typeof saveGlobalData === 'function') saveGlobalData();
 
-                // === G. 处理表情包 ===
-                let displayReply = rawReply.replace(/\[STICKER:\s*(.*?)\]/g, (match, keyword) => {
-                    const sticker = validStickersForAI.find(s => (s.desc || '') === keyword.trim());
-                    return sticker ? `<br><img src="${sticker.url}" style="width: 120px; border-radius: 8px; margin-top:5px;"><br>` : '';
-                });
-
-                // === H. 拆分消息并逐条发送 ===
-                let splitMsgs = displayReply.split('|||').map(s => s.trim()).filter(s => s.length > 0);
-                if (splitMsgs.length === 0) splitMsgs = [displayReply]; 
-
-                for (let i = 0; i < splitMsgs.length; i++) {
-                    if(splitMsgs[i]) {
-                        const timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                        chatHistory[currentChatId].push({ role: 'ai', content: splitMsgs[i], time: timeStr });
-                        renderMessages();
-                        updateListPreview(splitMsgs[i].replace(/<[^>]+>/g, '[图片]')); // 列表预览去标签
-                        
-                        // 模拟打字间隔
-                        if (i < splitMsgs.length - 1) {
-                            statusEl.innerText = "对方正在输入..."; 
-                            await new Promise(r => setTimeout(r, 1500 + Math.random() * 1000));
-                        }
-                    }
-                }
-
-                // === I. 执行转账UI ===
-                if (transferAction) {
-                    setTimeout(() => {
-                        handleTransferResult(transferAction, role.name);
-                    }, 800);
-                }
-
-            } catch (error) {
-                console.error(error);
-                // ▼▼▼ 请插入下面这行代码，这样你就知道为什么卡住了 ▼▼▼ alert("AI罢工了，原因：" + error.message); // ▲▲▲ 插入结束 ▲▲▲
-                const errTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                let errMsg = error.name === 'AbortError' ? '[对方睡着了(超时)]' : '[网络有点卡...]';
-                chatHistory[currentChatId].push({ role: 'ai', content: errMsg, time: errTime });
-                renderMessages();
-            } finally {
-                statusEl.classList.remove('typing');
-                statusEl.innerText = ""; 
-            }
-        }
+    } catch (error) {
+        console.error(error);
+        const errTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        chatHistory[currentChatId].push({ role: 'ai', content: `(发送失败: ${error.message})`, time: errTime });
+        renderMessages();
+    } finally {
+        statusEl.classList.remove('typing');
+        statusEl.innerText = ""; 
+    }
+}
+// ▲▲▲▲▲▲ 修复版结束 ▲▲▲▲▲▲
         /* --- ▲▲▲ 修复结束 ▲▲▲ --- */
 
         // 辅助函数：处理结果 UI 和 钱包逻辑
@@ -6483,20 +6469,47 @@ async function triggerImageAIResponse(imageBase64) {
     try {
         const fetchUrl = config.url.endsWith('/') ? `${config.url}chat/completions` : `${config.url}/chat/completions`;
         
-        // ★ 优化：30秒超时保护
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 30000); 
+        
 
         statusEl.innerText = "TA正在看图..."; // 状态 3
 
+        // ▼▼▼▼▼▼ 请替换原来的 fetch 请求部分 ▼▼▼▼▼▼
+        
+        // 1. 自动检测是不是 Gemini 模型
+        const isGemini = (config.model || '').toLowerCase().includes('gemini');
+        
+        // 2. 如果是 Gemini，必须把 system 角色伪装成 user，否则会报错卡死！
+        const systemRole = isGemini ? 'user' : 'system';
+
+        // 3. 发起请求 (加了 45秒 超时防止死等)
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 45000);
+
         const response = await fetch(fetchUrl, {
             method: 'POST',
-            headers: { 'Authorization': `Bearer ${config.key}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify(messagePayload),
+            headers: { 
+                'Authorization': `Bearer ${config.key}`, 
+                'Content-Type': 'application/json' 
+            },
+            body: JSON.stringify({
+                model: config.model || 'gemini-pro',
+                messages: [
+                    // ★ 这里直接用你原本定义的变量 fullSystemContent，绝不修改你的提示词！★
+                    { role: systemRole, content: fullSystemContent },
+                    
+                    // 附带最近的历史记录
+                    ...msgs.slice(-15).map(m => ({ 
+                        role: m.role === 'user' ? 'user' : 'assistant', 
+                        content: m.content 
+                    }))
+                ],
+                temperature: 0.85
+            }),
             signal: controller.signal
         });
         
         clearTimeout(timeoutId);
+        // ▲▲▲▲▲▲ 修改结束 ▲▲▲▲▲▲
 
         if (!response.ok) {
             const errText = await response.text();
@@ -7402,6 +7415,9 @@ window.createNewRole = function() {
     // 刷新列表显示
     renderChatList();
     renderContactList();
+    
+    // ★★★ 强制保存所有数据到硬盘 ★★★
+    saveGlobalData();
 
     // 关闭窗口并清理
     hideCreatePage();
