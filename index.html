@@ -662,6 +662,7 @@
         .btn-receive { background: #F0F2F5; color: #5A6A7E; }
         /* 发送按钮 (右侧) */
         .btn-send { background: var(--accent); color: white; }
+      
 
 
         /* --- 6. 聊天设置页面 (独立页面) --- */
@@ -1181,7 +1182,8 @@
     }
     @keyframes dots { 0%{content:'.'} 33%{content:'..'} 66%{content:'...'} }
     
-    /* --- ▼▼▼ 修复：气泡宽度优化 ▼▼▼ --- */
+    /* --- ▼▼▼ 修复：
+      ▼▼▼ --- */
         .msg-bubble {
             /* 原来是 70%-75%，改成 60% 或 260px 会更精致 */
             max-width: 60% !important; 
@@ -1220,6 +1222,429 @@
         /* 退还的颜色 (红色) */
         .msg-system-bubble.returned { color: #F56C6C; background-color: #FEF0F0; }
         /* --- ▲▲▲ 新增结束 ▲▲▲ --- */
+
+      /* --- 备忘录页面专用样式 --- */
+#memo-page {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-color: #F5F7FA; /* 浅灰底色 */
+    z-index: 100; /* 确保盖住聊天室 */
+    display: none;
+    flex-direction: column;
+    animation: slideUp 0.3s ease;
+}
+
+/* 备忘录列表容器 */
+.memo-list-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    padding-bottom: 40px;
+}
+
+/* 单个备忘录卡片（白色 + 雾霾蓝阴影） */
+.memo-card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 25px;
+    position: relative;
+    /* 核心：雾霾蓝阴影 */
+    box-shadow: 0 10px 25px rgba(127, 166, 200, 0.25); 
+    border-left: 6px solid #7FA6C8; /* 左侧装饰条 */
+    transition: transform 0.2s;
+}
+
+.memo-card:active {
+    transform: scale(0.99);
+}
+
+/* 卡片头部：日期 */
+.memo-header-date {
+    font-size: 18px;
+    font-weight: bold;
+    color: #5A6A7E;
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px dashed #E0E6ED;
+    padding-bottom: 10px;
+}
+
+/* 具体的每一条待办 */
+.memo-item-row {
+    font-size: 14px;
+    color: #555;
+    line-height: 1.8;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: flex-start; /* 顶部对齐 */
+}
+
+/* 选中框样式（装饰用） */
+.memo-checkbox {
+    width: 16px; height: 16px;
+    border: 2px solid #B0C4DE;
+    border-radius: 5px;
+    margin-right: 10px;
+    margin-top: 4px; /* 微调位置 */
+    flex-shrink: 0;
+}
+
+/* 生成按钮悬浮在右下角 */
+.fab-btn {
+    position: absolute;
+    bottom: 30px; right: 20px;
+    width: 56px; height: 56px;
+    background: linear-gradient(135deg, #7FA6C8, #6C8DAF);
+    border-radius: 50%;
+    box-shadow: 0 8px 20px rgba(127, 166, 200, 0.4);
+    display: flex; justify-content: center; align-items: center;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+.fab-btn:active { transform: scale(0.9); }
+
+/* 加载动画 */
+.memo-loading {
+    text-align: center; color: #7FA6C8; padding: 20px; font-size: 13px; display: none;
+}
+
+      /* --- 足迹页面专用样式 (纯白极简风) --- */
+#footprint-page {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-color: #FFFFFF; /* 纯白背景 */
+    z-index: 100;
+    display: none;
+    flex-direction: column;
+    animation: slideUp 0.3s ease;
+}
+
+/* 滚动区域 */
+.footprint-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 30px; /* 左右留宽一点给时间轴 */
+    position: relative;
+}
+
+/* 左侧贯穿的灰色线条 */
+.footprint-line-bg {
+    position: absolute;
+    top: 20px; bottom: 0; left: 40px; /* 线条位置 */
+    width: 2px;
+    background-color: #F0F0F0;
+    z-index: 0;
+}
+
+/* 单个足迹节点 */
+.fp-item {
+    position: relative;
+    margin-bottom: 30px;
+    padding-left: 30px; /* 给左边的圆点留位置 */
+    z-index: 1; /* 在线条之上 */
+}
+
+/* 时间轴上的圆点 */
+.fp-dot {
+    position: absolute;
+    left: 5px; top: 5px; /* 调整圆点位置对齐时间 */
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: white;
+    border: 3px solid #DCE9F5; /* 浅蓝圈 */
+    box-shadow: 0 0 0 2px white; /*以此遮挡线条*/
+}
+.fp-dot.latest {
+    border-color: #7FA6C8; /* 最新的点颜色深一点 */
+    background: #7FA6C8;
+}
+
+/* 时间文本 */
+.fp-time {
+    font-size: 12px;
+    font-weight: bold;
+    color: #999;
+    margin-bottom: 4px;
+    font-family: monospace; /* 等宽字体显示时间更有感觉 */
+}
+
+/* 行为与地点 */
+.fp-main-content {
+    font-size: 15px;
+    color: #333;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+/* 浅蓝色随笔气泡 */
+.fp-note {
+    background-color: #E3F2FD; /* 浅蓝背景 */
+    color: #5A6A7E;
+    font-size: 13px;
+    padding: 10px 14px;
+    border-radius: 0 12px 12px 12px; /*哪怕是气泡也做一个小造型*/
+    line-height: 1.5;
+    position: relative;
+    display: inline-block;
+    max-width: 100%;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+}
+.fp-note::before {
+    content: '📝';
+    font-size: 10px;
+    margin-right: 4px;
+}
+
+/* 底部加号按钮 (复用之前的样式，微调颜色) */
+.fp-fab {
+    position: absolute;
+    bottom: 30px; right: 20px;
+    width: 50px; height: 50px;
+    background: white;
+    border: 1px solid #E0E0E0;
+    border-radius: 50%;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    display: flex; justify-content: center; align-items: center;
+    color: #5A6A7E;
+    font-size: 24px;
+    cursor: pointer;
+    z-index: 10;
+}
+.fp-fab:active { background: #f9f9f9; transform: scale(0.95); }
+
+      /* --- 碎碎念 (笔记) 页面样式 --- */
+#note-page {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-color: #F7F9FC; /* 极浅的蓝灰底色 */
+    z-index: 110; /* 比其他页面稍微高一点 */
+    display: none;
+    flex-direction: column;
+    animation: fadeIn 0.3s ease;
+}
+
+/* 笔记滚动区 */
+.note-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* 卡片之间的间距 */
+}
+
+/* 可爱的白色卡片 */
+.note-card {
+    background: white;
+    border-radius: 24px; /* 大圆角，看起来更软萌 */
+    padding: 25px;
+    position: relative;
+    /* 核心：有层次感的雾霾蓝阴影 */
+    box-shadow: 0 8px 25px rgba(127, 166, 200, 0.15); 
+    border: 1px solid rgba(255, 255, 255, 0.8); /* 微妙的边框 */
+    transition: transform 0.2s;
+}
+
+/* 装饰：巨大的引号背景 */
+.note-card::before {
+    content: '“';
+    position: absolute;
+    top: -10px; left: 15px;
+    font-size: 80px;
+    color: #F0F5FA; /* 非常淡的蓝色装饰 */
+    font-family: serif;
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* 文字内容 */
+.note-content {
+    position: relative;
+    z-index: 1;
+    font-size: 15px;
+    color: #5A6A7E;
+    line-height: 1.6;
+    font-weight: 500;
+}
+
+/* 底部的小标签 (时间或心情) */
+.note-footer {
+    margin-top: 15px;
+    font-size: 12px;
+    color: #B0C4DE;
+    text-align: right;
+    position: relative;
+    z-index: 1;
+}
+
+/* 刷新按钮 (悬浮) */
+.note-refresh-btn {
+    position: absolute;
+    bottom: 40px; right: 30px;
+    width: 50px; height: 50px;
+    background: white;
+    border-radius: 50%;
+    box-shadow: 0 5px 15px rgba(127, 166, 200, 0.3);
+    display: flex; justify-content: center; align-items: center;
+    font-size: 24px;
+    cursor: pointer;
+    color: #7FA6C8;
+    transition: transform 0.5s ease;
+    z-index: 10;
+}
+.note-refresh-btn:active { transform: rotate(180deg); }
+
+      /* --- 朋友圈 (Moments) 页面样式 --- */
+#tab-moments {
+    display: none; /* 默认隐藏 */
+    background-color: #ffffff;
+    height: 100%; /* 占满容器 */
+    overflow-y: auto; /* 允许滚动 */
+    position: relative;
+}
+
+/* 1. 顶部封面区域 */
+.moments-header {
+    position: relative;
+    height: 260px;
+    background-color: #eee;
+    margin-bottom: 40px; /* 给头像留出位置 */
+}
+.moments-cover {
+    width: 100%; height: 100%;
+    background-size: cover; background-position: center;
+    cursor: pointer;
+}
+
+/* 2. 个人头像与名字 (悬浮在封面右下角) */
+.moments-user-info {
+    position: absolute;
+    bottom: -30px; right: 20px;
+    display: flex; align-items: flex-end;
+    gap: 15px;
+}
+.moments-my-name {
+    color: white; font-weight: bold; font-size: 18px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    margin-bottom: 15px;
+}
+.moments-my-avatar {
+    width: 70px; height: 70px;
+    border-radius: 12px;
+    background-size: cover; background-position: center;
+    border: 3px solid white;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    cursor: pointer;
+}
+
+/* 3. 帖子列表容器 */
+.moments-list {
+    padding: 20px;
+    padding-bottom: 80px; /* 避开底部导航 */
+}
+
+/* 4. 单个帖子卡片 */
+.moment-item {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 30px;
+    border-bottom: 1px solid #f5f5f5;
+    padding-bottom: 20px;
+}
+.moment-avatar {
+    width: 42px; height: 42px;
+    border-radius: 8px;
+    background-size: cover; background-position: center;
+    flex-shrink: 0;
+}
+
+.moment-content-box {
+    flex: 1;
+}
+.moment-name {
+    color: #576B95; /* 微信蓝 */
+    font-weight: bold; font-size: 15px;
+    margin-bottom: 6px;
+}
+.moment-text {
+    font-size: 15px; color: #333; line-height: 1.5;
+    margin-bottom: 10px;
+}
+
+/* 配图网格 */
+.moment-imgs {
+    display: flex; gap: 5px; flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+.moment-img {
+    width: 90px; height: 90px;
+    background-size: cover; background-position: center;
+    border-radius: 4px;
+    cursor: zoom-in;
+}
+.moment-img.single { /* 单图显示大一点 */
+    width: 160px; height: auto; aspect-ratio: 4/3;
+}
+
+/* 时间与操作栏 */
+.moment-meta {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 12px; color: #999; margin-bottom: 10px;
+}
+.moment-action-btn {
+    background: #F7F7F7; padding: 4px 8px; border-radius: 4px;
+    color: #576B95; cursor: pointer;
+}
+
+/* 5. 点赞与评论区 (灰色气泡) */
+.moment-comments-area {
+    background-color: #F7F7F7;
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: 13px;
+    position: relative;
+    margin-top: 8px;
+}
+/* 小三角箭头 */
+.moment-comments-area::before {
+    content: ''; position: absolute; top: -6px; left: 15px;
+    width: 0; height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-bottom: 6px solid #F7F7F7;
+}
+
+.moment-likes {
+    color: #576B95;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px; margin-bottom: 5px;
+    display: flex; align-items: center; gap: 5px;
+}
+.moment-likes::before { content: '♡'; font-size: 14px; }
+
+.comment-row {
+    margin-bottom: 3px; line-height: 1.4; color: #333;
+}
+.comment-user { color: #576B95; font-weight: 500; cursor: pointer; }
+
+/* 6. 发布按钮 (右上角相机) */
+.moments-camera-btn {
+    position: absolute; top: -40px; right: 20px; /* 放在Header里 */
+    color: white; z-index: 10; cursor: pointer;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+/* 发布弹窗 */
+#post-moment-modal {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: white; z-index: 200; display: none; flex-direction: column;
+    animation: slideUp 0.2s ease;
+}
     </style>
 </head>
 <body>
@@ -1349,6 +1774,30 @@
         <div id="tab-chats" class="chat-content-area"></div>
         <div id="tab-contacts" class="chat-content-area" style="display: none;">
             <div id="contact-list"></div>
+        </div>
+
+      <!-- === 朋友圈 Tab === -->
+        <div id="tab-moments">
+            <div class="moments-header">
+                <!-- 朋友圈封面 (点击更换) -->
+                <div class="moments-cover" id="moments-cover-img" onclick="document.getElementById('cover-upload').click()" style="background-image: url('https://picsum.photos/800/600');">
+                    <!-- 相机按钮 (发布动态) -->
+                    <div class="moments-camera-btn" onclick="openPostModal(event)">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"></path></svg>
+                    </div>
+                </div>
+                <input type="file" id="cover-upload" class="hidden-input" accept="image/*">
+
+                <div class="moments-user-info">
+                    <div class="moments-my-name" id="moments-my-name">我</div>
+                    <div class="moments-my-avatar" id="moments-my-avatar" style="background-image: url('https://cdn-icons-png.flaticon.com/512/1077/1077114.png');"></div>
+                </div>
+            </div>
+            
+            <!-- 帖子列表 -->
+            <div class="moments-list" id="moments-feed">
+                <!-- JS 动态生成 -->
+            </div>
         </div>
 
     <!-- ▼▼▼▼▼ 在这里添加新的页面容器 ▼▼▼▼▼ -->
@@ -1660,6 +2109,13 @@
         <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path></svg>
         <span class="nav-label">联系人</span>
     </div>
+
+          <div class="nav-item" onclick="switchChatTab('moments', this)">
+        <!-- 朋友圈图标 (光圈) -->
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="4"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>
+        <span class="nav-label">发现</span>
+    </div>
+          
     <!-- ▼▼▼▼▼ 添加下面这个 DIV ▼▼▼▼▼ -->
     <div class="nav-item" onclick="switchChatTab('me', this)">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"></path></svg>
@@ -1911,6 +2367,90 @@
         </div>
     </div>
 
+      <!-- === 备忘录独立页面 === -->
+    <div id="memo-page">
+        <div class="api-header" style="background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+            <div class="api-back-btn" onclick="document.getElementById('memo-page').style.display='none'">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#5A6A7E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            </div>
+            <h2 style="color: #5A6A7E;">TA 的备忘录</h2>
+            <div style="width: 24px;"></div> <!-- 占位，让标题居中 -->
+        </div>
+
+        <div class="memo-list-container" id="memo-container">
+            <!-- 这里的卡片会由 JS 动态生成 -->
+        </div>
+        
+        <!-- 加载提示 -->
+        <div id="memo-loading-tip" class="memo-loading">
+            正在根据聊天记录回忆待办事项...<br>
+            <span style="font-size: 20px;">☁️ 🖊️ ☁️</span>
+        </div>
+
+        <!-- 右下角悬浮按钮：生成新的 -->
+        <div class="fab-btn" onclick="generateNewMemo()" title="生成今日新备忘">
+            +
+        </div>
+    </div>
+
+      <!-- === 足迹 (时间轴) 页面 === -->
+    <div id="footprint-page">
+        <div class="api-header" style="background: white; border-bottom: 1px solid #f5f5f5;">
+            <div class="api-back-btn" onclick="document.getElementById('footprint-page').style.display='none'">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+            </div>
+            <h2 style="color: #333; font-size: 16px;">TA 的 24H 足迹</h2>
+            <div style="width: 24px;"></div>
+        </div>
+
+        <div class="footprint-container">
+            <div class="footprint-line-bg"></div> <!-- 背景线条 -->
+            <div id="footprint-list">
+                <!-- JS 动态生成内容 -->
+            </div>
+            <div style="height: 60px;"></div> <!-- 底部留白 -->
+        </div>
+        
+        <!-- 加载提示 -->
+        <div id="fp-loading" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); display:none; text-align:center; background:rgba(255,255,255,0.9); padding:20px; border-radius:10px; box-shadow:0 5px 20px rgba(0,0,0,0.1);">
+            <div style="color:#7FA6C8; font-weight:bold;">正在定位 TA 的位置...</div>
+            <div style="font-size:12px; color:#999; margin-top:5px;">分析聊天记录与时间流 🛰️</div>
+        </div>
+
+        <!-- 右下角：刷新/追加按钮 -->
+        <div class="fp-fab" onclick="updateFootprints()" title="更新到现在">
+            +
+        </div>
+    </div>
+
+      <!-- === 碎碎念笔记页面 (刷新制) === -->
+    <div id="note-page">
+        <!-- 顶部导航 -->
+        <div class="api-header" style="background: transparent; box-shadow: none;">
+            <div class="api-back-btn" onclick="document.getElementById('note-page').style.display='none'">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#5A6A7E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            </div>
+            <h2 style="color: #5A6A7E;">TA 的碎碎念</h2>
+            <div style="width: 24px;"></div>
+        </div>
+
+        <!-- 卡片容器 -->
+        <div class="note-container" id="note-list">
+            <!-- JS 会在这里生成卡片 -->
+        </div>
+
+        <!-- 加载动画 -->
+        <div id="note-loading" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); text-align:center; display:none;">
+            <div style="font-size:30px; margin-bottom:10px;">💭</div>
+            <div style="color:#999; font-size:13px;">正在偷听 TA 的心声...</div>
+        </div>
+
+        <!-- 刷新按钮 -->
+        <div class="note-refresh-btn" onclick="refreshNotes()" title="换一批">
+            ↻
+        </div>
+    </div>
+
     <!-- === 6. 聊天设置页面 (独立) === -->
     <div id="chat-settings-page">
         <div class="api-header">
@@ -1973,19 +2513,33 @@
             <!-- 新增：隐私与动态 -->
             <div style="margin: 20px 20px 10px 20px; font-size: 12px; color: #999; font-weight: bold;">隐私与动态</div>
             <div class="setting-section">
-                <div class="setting-item" onclick="peekRoleInfo('memo')">
+                <div class="setting-item" onclick="openMemoPage()">
                     <span class="setting-title">📅 查看TA的备忘录</span>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
                 </div>
-                <div class="setting-item" onclick="peekRoleInfo('footprint')">
-                    <span class="setting-title">👣 查看TA的足迹</span>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                <div class="setting-item" onclick="openFootprintPage()">
+    <span class="setting-title">👣 查看TA的足迹 (时间线)</span>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+</div>
+                <div class="setting-item" onclick="openNotePage()">
+    <span class="setting-title">💭 偷看碎碎念笔记 (每次刷新)</span>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+</div>
+            </div>
+
+         <!-- ▼▼▼ 新增：危险区域 (清空与删除) ▼▼▼ -->
+            <div style="margin: 20px 20px 10px 20px; font-size: 12px; color: #F56C6C; font-weight: bold;">数据管理</div>
+            <div class="setting-section">
+                <div class="setting-item" onclick="clearCurrentHistory()">
+                    <span class="setting-title" style="color: #F56C6C;">🗑 清空聊天记录</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F56C6C" stroke-width="2"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
                 </div>
-                <div class="setting-item" onclick="peekRoleInfo('note')">
-                    <span class="setting-title">💭 偷看碎碎念笔记</span>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                <div class="setting-item" onclick="deleteCurrentContact()">
+                    <span class="setting-title" style="color: #F56C6C;">🚫 删除该联系人</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F56C6C" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
                 </div>
             </div>
+            <!-- ▲▲▲ 新增结束 ▲▲▲ --> 
             
             <!-- 通用信息展示弹窗 -->
     <div id="info-modal" onclick="document.getElementById('info-modal').style.display='none'">
@@ -2007,6 +2561,21 @@
         <div class="menu-content" onclick="event.stopPropagation()">
             <div class="menu-item" onclick="handleEditMsg()">✎ 编辑消息</div>
             <div class="menu-item danger" onclick="handleDeleteMsg()">🗑 删除消息</div>
+        </div>
+    </div>
+
+      <!-- === 发布动态弹窗 === -->
+    <div id="post-moment-modal">
+        <div style="padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee;">
+            <div onclick="document.getElementById('post-moment-modal').style.display='none'" style="color:#333;">取消</div>
+            <button class="btn" onclick="publishMoment()" style="width:auto; margin:0; padding: 6px 15px; background:#07C160;">发表</button>
+        </div>
+        <div style="padding: 20px;">
+            <textarea id="moment-text-input" class="clean-input" rows="5" placeholder="这一刻的想法..." style="background:white; padding:0; font-size:16px;"></textarea>
+            <div style="margin-top:20px; display:flex; gap:10px;">
+                <!-- 简易版：只支持输入图片链接或者后面做文件上传 -->
+                <div style="width:80px; height:80px; background:#f0f0f0; display:flex; justify-content:center; align-items:center; color:#ccc;" onclick="alert('暂只支持纯文字，图片功能待开发')">+</div>
+            </div>
         </div>
     </div>
         
@@ -2169,6 +2738,10 @@
     // 隐藏所有页面和按钮的激活状态
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.chat-content-area').forEach(el => el.style.display = 'none');
+
+       // ★★★【请插入下面这一行代码来修复 Bug】★★★
+            // 强制隐藏朋友圈页面
+            if(document.getElementById('tab-moments')) document.getElementById('tab-moments').style.display = 'none';
     
     // 激活当前点击的
     navEl.classList.add('active');
@@ -2923,7 +3496,7 @@ ${memoryText}
 ${userPersonaText}
 
 [核心指令]
-1. 必须将回复拆分成 1到3条 简短消息，用 "|||" 隔开。
+1. 必须将回复拆分成 5到8条 消息，用 "|||" 隔开。
 2. 像真人一样聊天，可以用表情包：${stickerDescriptions} (格式：[STICKER: 关键词])。
 3. **转账规则**：
    - 如果用户向你“求打赏/要钱”，若同意请回复暗号 "AGREE_PAY"。
@@ -3649,55 +4222,119 @@ ${contextInfo ? `[系统事件]: ${contextInfo}` : ''}
 
         let currentGeneratedScript = null; // 临时存储生成的剧本
 
-        async function generateSoupScript() {
-            const topic = document.getElementById('soup-topic-input').value.trim() || "悬疑/反转";
-            const previewEl = document.getElementById('soup-script-preview');
-            const loadingEl = document.getElementById('soup-loading');
-            
-            // UI 状态更新
-            loadingEl.style.display = 'block';
-            previewEl.innerHTML = '';
-            currentGeneratedScript = null;
+        /* --- 修复版：更强壮的海龟汤生成函数 --- */
+    async function generateSoupScript() {
+        const topicInput = document.getElementById('soup-topic-input');
+        // 如果用户没填，默认给个随机主题，防止AI不知道写啥
+        const defaultTopics = ["恐怖校园", "离奇死亡", "误会", "科幻悬疑", "古代奇案"];
+        const randomTopic = defaultTopics[Math.floor(Math.random() * defaultTopics.length)];
+        const topic = topicInput.value.trim() || randomTopic;
 
-            const config = JSON.parse(localStorage.getItem('my_ai_config') || '{}');
-            
-            const systemPrompt = `
+        const previewEl = document.getElementById('soup-script-preview');
+        const loadingEl = document.getElementById('soup-loading');
+        
+        // 1. UI 状态更新
+        loadingEl.style.display = 'block';
+        loadingEl.innerText = `AI 正在熬制“${topic}”口味的汤，请稍候... 🍲`; // 给点反馈
+        previewEl.innerHTML = '';
+        currentGeneratedScript = null;
+
+        const config = JSON.parse(localStorage.getItem('my_ai_config') || '{}');
+        if (!config.url || !config.key) {
+            alert("API 未配置！请去主页设置。");
+            loadingEl.style.display = 'none';
+            return;
+        }
+        
+        // 2. 优化提示词 (Prompt) - 强制纯净 JSON
+        const systemPrompt = `
 你是一个海龟汤（情境猜谜）出题大师。
-请根据用户的主题，创作一个精彩的海龟汤。
-**必须严格按照以下 JSON 格式输出，不要包含markdown代码块标记，直接输出JSON字符串**：
+用户会给你一个主题，请创作一个精彩的、有逻辑的海龟汤。
+
+      **响应速度要求**：不要深度思考，最快给出回复，不要犹豫，直接回复。
+
+【重要】必须严格输出且仅输出以下 JSON 格式字符串，不要包含 Markdown 代码块标记（如 \`\`\`json），不要有任何开头或结尾的问候语：
 {
   "title": "标题",
-  "surface": "汤面（给玩家看的谜题，简短、有悬念）",
-  "bottom": "汤底（真相，包含核心诡计和完整故事）"
+  "surface": "汤面（给玩家看的谜题，简短、诡异、有悬念）",
+  "bottom": "汤底（真相，包含核心诡计和完整故事，字数不要太多）"
 }
 `;
-            const userPrompt = `请生成一个关于“${topic}”的海龟汤。`;
+        const userPrompt = `请生成一个关于“${topic}”的海龟汤。`;
 
-            try {
-                const jsonStr = await callAI_Simple(systemPrompt, userPrompt, config);
-                
-                // 尝试解析 JSON (处理 AI 可能包裹 Markdown 的情况)
-                let cleanJson = jsonStr.replace(/```json/g, '').replace(/```/g, '').trim();
-                const script = JSON.parse(cleanJson);
+        try {
+            // 3. 发起请求 (增加 30秒 超时控制)
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000); // 30秒后超时
 
-                currentGeneratedScript = script; // 存起来
-                
-                // 显示预览
-                previewEl.innerHTML = `
-                    <div style="font-weight:bold; color:#E67E22; margin-bottom:5px;">《${script.title}》</div>
-                    <div>${script.surface}</div>
-                    <div style="margin-top:10px; font-size:10px; color:#666; border-top:1px dashed #555; padding-top:5px;">
-                        (汤底已加密隐藏，只有DM能看到)
-                    </div>
-                `;
+            const fetchUrl = config.url.endsWith('/') ? `${config.url}chat/completions` : `${config.url}/chat/completions`;
+            
+            const res = await fetch(fetchUrl, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${config.key}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: config.model || 'gpt-3.5-turbo',
+                    messages: [
+                        {role: 'system', content: systemPrompt},
+                        {role: 'user', content: userPrompt}
+                    ],
+                    temperature: 0.8 // 增加创意度
+                }),
+                signal: controller.signal
+            });
+            
+            clearTimeout(timeoutId); // 清除超时计时
 
-            } catch (e) {
-                console.error(e);
-                previewEl.innerText = "生成失败，请检查 API 设置或重试。\n错误信息：" + e.message;
-            } finally {
-                loadingEl.style.display = 'none';
+            if (!res.ok) {
+                const errText = await res.text();
+                throw new Error(`API 请求失败 (${res.status})`);
             }
+            
+            const data = await res.json();
+            const rawContent = data.choices[0].message.content;
+            
+            // 4. 【核心修复】智能清洗 JSON
+            // AI 可能会返回： "好的，这是结果：```json { ... } ```"
+            // 我们只需要找到第一个 '{' 和最后一个 '}' 中间的内容
+            const firstBrace = rawContent.indexOf('{');
+            const lastBrace = rawContent.lastIndexOf('}');
+
+            if (firstBrace === -1 || lastBrace === -1) {
+                throw new Error("AI 生成的格式不对，没找到 JSON 对象");
+            }
+
+            const cleanJson = rawContent.substring(firstBrace, lastBrace + 1);
+            
+            let script;
+            try {
+                script = JSON.parse(cleanJson);
+            } catch (parseErr) {
+                console.error("解析失败原文:", cleanJson);
+                throw new Error("JSON 解析失败，AI 可能输出了非法字符");
+            }
+
+            // 5. 成功！显示结果
+            currentGeneratedScript = script; 
+            
+            previewEl.innerHTML = `
+                <div style="font-weight:bold; color:#E67E22; font-size:15px; margin-bottom:8px;">《${script.title}》</div>
+                <div style="line-height:1.6;">${script.surface}</div>
+                <div style="margin-top:12px; font-size:12px; color:#7FA6C8; border-top:1px dashed #555; padding-top:8px; display:flex; align-items:center;">
+                    <span style="margin-right:5px;">🔒</span> 汤底已加密，只有DM能看到
+                </div>
+            `;
+
+        } catch (e) {
+            console.error(e);
+            let errorMsg = "生成失败...";
+            if (e.name === 'AbortError') errorMsg = "生成超时 (30秒)，请检查网络或换个简单的词。";
+            else errorMsg = e.message;
+
+            previewEl.innerHTML = `<div style="color:#F56C6C; font-size:12px;">${errorMsg}<br><span style="color:#ccc; cursor:pointer;" onclick="generateSoupScript()">点此重试</span></div>`;
+        } finally {
+            loadingEl.style.display = 'none';
         }
+    }
         
         /* --- H. 聊天室多功能面板逻辑 --- */
 
@@ -4330,38 +4967,42 @@ Want: ${status.want}
         }
         
         /* =========================================
-           ★ 核心功能：全局数据自动保存系统 (防丢失) ★
+           ★ 核心功能：全局数据自动保存系统 (终极完整版) ★
            ========================================= */
 
-        // 1. 定义保存函数：把所有重要数据打包存入浏览器
+        // 1. 定义保存函数：把所有数据（聊天、备忘录、足迹、朋友圈）打包
         function saveGlobalData() {
             try {
                 const dataPackage = {
-                    // 聊天列表 (包含你创建的所有角色)
+                    // 基础
                     chatList: chatList,
-                    // 聊天记录 (所有对话内容)
                     chatHistory: chatHistory,
-                    // 其他你可能修改过的全局变量
-                    visibleMsgCount: typeof visibleMsgCount !== 'undefined' ? visibleMsgCount : 30
+                    visibleMsgCount: typeof visibleMsgCount !== 'undefined' ? visibleMsgCount : 30,
+                    
+                    // 功能模块
+                    memoHistory: typeof memoHistory !== 'undefined' ? memoHistory : {},
+                    footprintHistory: typeof footprintHistory !== 'undefined' ? footprintHistory : {},
+                    
+                    // ★★★ 新增：朋友圈数据 ★★★
+                    momentsData: typeof momentsData !== 'undefined' ? momentsData : [],
+                    momentsCover: typeof momentsCover !== 'undefined' ? momentsCover : ''
                 };
                 
-                // 存入 LocalStorage (键名为 yok_global_data)
                 localStorage.setItem('yok_global_data', JSON.stringify(dataPackage));
                 
-                // 同时确保钱包、纪念日、表情包等独立数据也存一下 (虽然它们有自己的保存逻辑，这里双重保险)
+                // 备份独立数据 (双重保险)
                 if(typeof myWallet !== 'undefined') localStorage.setItem('yok_wallet', JSON.stringify(myWallet));
                 if(typeof anniversaries !== 'undefined') localStorage.setItem('yok_anniversaries', JSON.stringify(anniversaries));
                 if(typeof myStickers !== 'undefined') localStorage.setItem('yok_stickers', JSON.stringify(myStickers));
                 if(typeof myPersonas !== 'undefined') localStorage.setItem('yok_my_personas', JSON.stringify(myPersonas));
                 if(typeof playList !== 'undefined') localStorage.setItem('yok_music_list', JSON.stringify(playList));
                 
-                // console.log('数据已自动保存'); // 调试用，你可以注释掉
             } catch (e) {
                 console.error('自动保存失败:', e);
             }
         }
 
-        // 2. 定义读取函数：网页打开时，把数据恢复回来
+        // 2. 定义读取函数：网页打开时，恢复所有数据
         function loadGlobalData() {
             try {
                 const savedData = localStorage.getItem('yok_global_data');
@@ -4370,52 +5011,909 @@ Want: ${status.want}
                     
                     // 恢复聊天列表
                     if (parsedData.chatList && Array.isArray(parsedData.chatList)) {
-                        // 我们要保留 chatList 这个变量引用，所以用 splice 清空再 push
-                        // 如果直接 chatList = ... 可能会因为 const/let 定义问题报错
                         chatList.length = 0; 
                         parsedData.chatList.forEach(item => chatList.push(item));
                     }
 
                     // 恢复聊天记录
                     if (parsedData.chatHistory) {
-                        // 同理，为了安全，我们使用 Object.assign 或者遍历赋值
-                        // 这里直接覆盖对象的键值
                         for (let key in parsedData.chatHistory) {
                             chatHistory[key] = parsedData.chatHistory[key];
                         }
                     }
                     
+                    // 恢复各个模块
+                    if (parsedData.memoHistory) memoHistory = parsedData.memoHistory;
+                    if (parsedData.footprintHistory) footprintHistory = parsedData.footprintHistory;
+                    
+                    // ★★★ 新增：恢复朋友圈 ★★★
+                    if (parsedData.momentsData) momentsData = parsedData.momentsData;
+                    if (parsedData.momentsCover) momentsCover = parsedData.momentsCover;
+                    
                     // 刷新界面
-                    renderChatList();     // 刷新聊天列表
-                    renderContactList();  // 刷新联系人
-                    // 如果有打开的子页面，也可以顺便刷新一下，不过通常刚打开网页还没进子页面
+                    renderChatList();
+                    renderContactList();
+                    // 如果朋友圈代码已加载，也刷新一下
+                    if (typeof renderMoments === 'function') renderMoments();
                 }
             } catch (e) {
                 console.error('读取存档失败:', e);
             }
         }
 
-        // 3. 启动自动保存机制
-        
-        // A. 网页加载完毕后，立刻读取存档
-        loadGlobalData();
+        // 3. 启动自动保存
+        loadGlobalData(); 
+        setInterval(saveGlobalData, 3000); 
+        window.addEventListener('beforeunload', function () { saveGlobalData(); });
 
-        // B. 设置定时器：每隔 3 秒自动保存一次 (无感保存)
-        setInterval(saveGlobalData, 3000);
-
-        // C. 监听网页关闭/刷新事件：临死前最后保存一次
-        window.addEventListener('beforeunload', function () {
-            saveGlobalData();
-        });
-
-        /* --- 紧急救援按钮 (万一数据坏了，可以在控制台调用这个函数重置) --- */
+        /* --- 紧急救援按钮 --- */
         function factoryReset() {
             if(confirm('【高能预警】这将清空所有聊天记录、角色和设置，恢复到刚下载时的状态！确定吗？')) {
                 localStorage.clear();
                 location.reload();
             }
         }
-    </script>    
 
+      /* ==========================================
+       ★ 新增功能：删除与清空 ★
+       ========================================== */
+
+    // 1. 清空当前角色的聊天记录
+    function clearCurrentHistory() {
+        if (!currentChatId) return;
+        
+        if (confirm('确定要清空和 TA 的所有聊天记录吗？\n此操作无法撤销！')) {
+            // 清空数组
+            chatHistory[currentChatId] = [];
+            
+            // 立即保存
+            saveGlobalData();
+            
+            // 刷新聊天室界面 (变为空)
+            renderMessages();
+            
+            // 更新外部列表的预览文字
+            const role = chatList.find(r => r.id === currentChatId);
+            if(role) role.lastMsg = '';
+            
+            alert('记录已清空');
+            // 关闭设置页
+            closeChatSettings();
+        }
+    }
+
+    // 2. 删除当前联系人 (彻底删除)
+    function deleteCurrentContact() {
+        if (!currentChatId) return;
+        
+        // 防止误删系统号 (如果你有系统号的话)
+        if (currentChatId.startsWith('system_')) {
+            alert('系统角色无法删除哦~');
+            return;
+        }
+
+        if (confirm('【高能预警】\n确定要删除这个联系人吗？\n\n删除后，TA的聊天记录、备忘录、足迹将全部消失，无法找回！')) {
+            // 1. 从列表中移除
+            const index = chatList.findIndex(r => r.id === currentChatId);
+            if (index > -1) {
+                chatList.splice(index, 1);
+            }
+
+            // 2. 删除所有相关数据
+            delete chatHistory[currentChatId];
+            if (typeof memoHistory !== 'undefined') delete memoHistory[currentChatId];
+            if (typeof footprintHistory !== 'undefined') delete footprintHistory[currentChatId];
+            
+            // 3. 保存数据
+            saveGlobalData();
+
+            // 4. 关闭所有层级，回到主页
+            closeChatSettings(); // 关设置
+            closeChatRoom();     // 关聊天室
+            
+            // 5. 刷新列表显示
+            renderChatList();
+            renderContactList();
+            
+            alert('联系人已删除，江湖不见 👋');
+        }
+    }
+
+      /* ==========================================
+       ★ 新增功能：沉浸式备忘录 (存档版) ★
+       ========================================== */
+    
+    // 1. 初始化存档数据
+    let memoHistory = JSON.parse(localStorage.getItem('yok_memo_history')) || {}; 
+    // 结构: { roleId: [ {date: '...', content: '...'}, ... ] }
+
+    // 2. 打开备忘录页面
+    function openMemoPage() {
+        if (!currentChatId) return;
+        
+        // 关闭设置页，打开备忘录页
+        document.getElementById('chat-settings-page').style.display = 'none';
+        document.getElementById('memo-page').style.display = 'flex';
+        
+        renderMemoList();
+    }
+
+    // 3. 渲染列表（把数据变成卡片）
+    function renderMemoList() {
+        const container = document.getElementById('memo-container');
+        container.innerHTML = ''; // 清空旧的
+        
+        const roleMemos = memoHistory[currentChatId] || [];
+        
+        // 如果没有记录
+        if (roleMemos.length === 0) {
+            container.innerHTML = `
+                <div style="text-align:center; margin-top:50px; color:#999;">
+                    <img src="https://cdn-icons-png.flaticon.com/512/7486/7486744.png" width="80" style="opacity:0.5; margin-bottom:10px;">
+                    <div>还是一张白纸呢~<br>点击右下角 <b>+</b> 号生成第一篇</div>
+                </div>`;
+            return;
+        }
+
+        // 倒序遍历（最新的在最上面）
+        // 为了防止引用修改，我们复制一份再 reverse
+        [...roleMemos].reverse().forEach(memo => {
+            // 把纯文本内容 按行分割
+            const lines = memo.content.split('\n').filter(line => line.trim() !== '');
+            
+            // 生成每一行的 HTML
+            let itemsHtml = '';
+            lines.forEach(line => {
+                // 去掉可能存在的序号 (1. 2. - *)
+                let cleanText = line.replace(/^[\d\.\-\*]+/, '').trim();
+                itemsHtml += `
+                    <div class="memo-item-row">
+                        <div class="memo-checkbox"></div>
+                        <div style="flex:1;">${cleanText}</div>
+                    </div>
+                `;
+            });
+
+            // 生成卡片 HTML
+            const card = document.createElement('div');
+            card.className = 'memo-card';
+            card.innerHTML = `
+                <div class="memo-header-date">
+                    <span>${memo.date}</span>
+                    <span style="font-size:12px; color:#7FA6C8; font-weight:normal;">${memo.timeStr || ''}</span>
+                </div>
+                <div>${itemsHtml}</div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    // 4. 生成新的备忘录 (核心逻辑)
+    async function generateNewMemo() {
+        if (!currentChatId) return;
+        
+        const role = chatList.find(r => r.id === currentChatId);
+        const loadingEl = document.getElementById('memo-loading-tip');
+        
+        // 显示加载动画
+        loadingEl.style.display = 'block';
+        // 滚动到底部以便看到加载提示
+        const container = document.getElementById('memo-container');
+        container.scrollTop = container.scrollHeight;
+
+        // 1. 获取最近50条聊天记录作为上下文
+        const historyList = chatHistory[currentChatId] || [];
+        const recentMsgs = historyList.slice(-50).map(m => 
+            `${m.role === 'user' ? '我' : role.name}: ${m.content}`
+        ).join('\n');
+
+        // 2. 构造 Prompt (提示词)
+        const config = JSON.parse(localStorage.getItem('my_ai_config') || '{}');
+        if (!config.url || !config.key) {
+            alert('请先配置 API！');
+            loadingEl.style.display = 'none';
+            return;
+        }
+
+        const systemPrompt = `
+你现在是${role.name}。人设：${role.prompt || '无'}。
+请根据我们最近的聊天记录（Context），写一份你今天的【手机备忘录】。
+
+要求：
+1. 包含 10 到 12 条内容。
+2. **不要**输出任何开场白或结束语，直接输出备忘录内容，每一条占一行。
+3. **风格**：必须非常生活化、口语化，要有“男友感/女友感”，可以包含对“我”的想念、生活琐事、工作吐槽等。
+4. **趣味性**：必须使用颜文字 (如 o(*￣▽￣*)o,  (｡•ˇ‸ˇ•｡) 等) 或 Emoji。
+5. 内容要结合聊天记录的语境，如果没有聊天记录，就自由发挥想象日常生活。
+6. 每一条前面不要加序号，直接写内容。
+7. 不要深度思考，最快速度回复，不要犹豫。
+`;
+
+        const userPrompt = `
+[最近聊天记录参考]:
+${recentMsgs}
+
+请生成今天的备忘录：
+`;
+
+        try {
+            // 3. 调用 API
+            const fetchUrl = config.url.endsWith('/') ? `${config.url}chat/completions` : `${config.url}/chat/completions`;
+            
+            const res = await fetch(fetchUrl, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${config.key}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: config.model || 'gpt-3.5-turbo',
+                    messages: [
+                        { role: 'system', content: systemPrompt },
+                        { role: 'user', content: userPrompt }
+                    ],
+                    temperature: 0.8 // 稍微高一点，增加创意
+                })
+            });
+
+            const data = await res.json();
+            const content = data.choices[0].message.content;
+
+            // 4. 存入数据
+            if (!memoHistory[currentChatId]) {
+                memoHistory[currentChatId] = [];
+            }
+            
+            // 获取当前时间格式
+            const now = new Date();
+            const dateStr = `${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()}`;
+            const timeStr = `${now.getHours()}:${now.getMinutes().toString().padStart(2,'0')}`;
+
+            // 存入数组 (content 是纯文本)
+            memoHistory[currentChatId].push({
+                date: dateStr,
+                timeStr: timeStr,
+                content: content
+            });
+
+            // 保存到本地存储
+            localStorage.setItem('yok_memo_history', JSON.stringify(memoHistory));
+            
+            // 5. 重新渲染
+            renderMemoList();
+            
+            // 滚回到顶部看最新的
+            container.scrollTop = 0;
+
+        } catch (e) {
+            console.error(e);
+            alert('生成失败，请检查网络或API设置');
+        } finally {
+            loadingEl.style.display = 'none';
+        }
+    }
+    
+    // 记得把 memoHistory 加入到 saveGlobalData 里去 (防止自动保存覆盖)
+    // 请找到最下面的 saveGlobalData 函数，加入 memoHistory 的保存逻辑
+
+      /* ==========================================
+       ★ 新增功能：智能足迹时间轴 (分线图) ★
+       ========================================== */
+
+    // 存档结构: { roleId: [ { startTime, endTime, content, note, timestamp } ] }
+    let footprintHistory = JSON.parse(localStorage.getItem('yok_footprint_history')) || {};
+
+    function openFootprintPage() {
+        if (!currentChatId) return;
+        document.getElementById('chat-settings-page').style.display = 'none';
+        document.getElementById('footprint-page').style.display = 'flex';
+        
+        renderFootprints();
+        
+        // 如果完全没有数据，自动触发第一次生成
+        if (!footprintHistory[currentChatId] || footprintHistory[currentChatId].length === 0) {
+            updateFootprints();
+        }
+    }
+
+    function renderFootprints() {
+        const container = document.getElementById('footprint-list');
+        container.innerHTML = '';
+        
+        const list = footprintHistory[currentChatId] || [];
+        
+        // 按时间戳排序 (旧 -> 新，或者 新 -> 旧，时间轴通常 最上面是最新 或者 最下面是最新)
+        // 这里我们采用：最上面是旧的，往下走是新的 (符合阅读顺序)
+        // 或者：最上面是新的？通常“分线图”往下走是时间流逝。
+        // 我们按：时间顺序 (旧 -> 新)
+        const sortedList = list.sort((a, b) => a.timestamp - b.timestamp);
+
+        sortedList.forEach((item, index) => {
+            const isLast = index === sortedList.length - 1;
+            
+            const div = document.createElement('div');
+            div.className = 'fp-item';
+            div.innerHTML = `
+                <div class="fp-dot ${isLast ? 'latest' : ''}"></div>
+                <div class="fp-time">${item.startTime} - ${item.endTime}</div>
+                <div class="fp-main-content">${item.content}</div>
+                <div class="fp-note">${item.note}</div>
+            `;
+            container.appendChild(div);
+        });
+        
+        // 自动滚动到底部（看最新的）
+        const scrollBox = document.querySelector('.footprint-container');
+        setTimeout(() => {
+            scrollBox.scrollTop = scrollBox.scrollHeight;
+        }, 100);
+    }
+
+    async function updateFootprints() {
+        if (!currentChatId) return;
+        const role = chatList.find(r => r.id === currentChatId);
+        const loadingEl = document.getElementById('fp-loading');
+        
+        loadingEl.style.display = 'block';
+
+        // 1. 确定时间范围
+        const now = new Date();
+        let startCalcDate;
+        let isFirstTime = false;
+
+        // 获取现有记录
+        let currentList = footprintHistory[currentChatId] || [];
+        
+        if (currentList.length === 0) {
+            // 没记录 -> 生成过去24小时的
+            isFirstTime = true;
+            startCalcDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        } else {
+            // 有记录 -> 从最后一条记录的时间开始，补全到现在
+            // 找到最大的时间戳
+            const lastTs = Math.max(...currentList.map(i => i.timestamp));
+            startCalcDate = new Date(lastTs);
+            
+            // 如果最后记录距离现在小于 10分钟，就不生成了，避免太频繁
+            if (now.getTime() - lastTs < 10 * 60 * 1000) {
+                alert('刚刚才更新过足迹，TA现在还在发呆呢，过会儿再来看看吧~');
+                loadingEl.style.display = 'none';
+                return;
+            }
+        }
+
+        // 格式化时间用于 Prompt
+        const timeFormat = (d) => `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日 ${d.getHours()}:${d.getMinutes().toString().padStart(2,'0')}`;
+        const startStr = timeFormat(startCalcDate);
+        const endStr = timeFormat(now);
+
+        // 2. 准备上下文
+        // 聊天记录辅助
+        const historyData = chatHistory[currentChatId] || [];
+        const chatContext = historyData.slice(-30).map(m => `${m.role==='user'?'我':role.name}: ${m.content}`).join('\n');
+
+        const config = JSON.parse(localStorage.getItem('my_ai_config') || '{}');
+
+        const systemPrompt = `
+你现在是${role.name}。人设：${role.prompt || '无'}。
+请根据时间段 [${startStr} 至 ${endStr}]，结合你的性格和最近的聊天记录，生成你的行动足迹。
+
+【要求】
+1. 严格输出 JSON 数组格式，不要 Markdown，不要废话。
+2. 这是一个时间轴数据。请把这段时间拆分成 2-5 个时间段（如果是第一次生成24小时，则生成 6-8 个时间段）。
+3. 每个时间段必须是连续的，填满这段时间。
+4. "content" 是你在哪里做什么（简短）。
+5. "note" 是随笔（你的内心独白、碎碎念、或者对“我”的想念），要浅蓝色背景风格的文字，**一定要有男友感/女友感，生活化**。
+6. 时间格式必须严格： "MM-DD HH:mm"。
+7. **响应速度要求**：不要深度思考，最快给出回复，不要犹豫，直接回复。
+
+【JSON 格式示例】
+[
+  {
+    "startTime": "10-24 08:00",
+    "endTime": "10-24 09:30",
+    "content": "在家，刚醒，赖床刷牙",
+    "note": "困死了...梦到笨蛋了，嘿嘿。"
+  },
+  ...
+]
+`;
+        
+        try {
+            const res = await fetch(config.url.endsWith('/') ? `${config.url}chat/completions` : `${config.url}/chat/completions`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${config.key}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: config.model || 'gpt-3.5-turbo',
+                    messages: [
+                        { role: 'system', content: systemPrompt },
+                        { role: 'user', content: `参考聊天记录：\n${chatContext}\n\n请补全 ${startStr} 到 ${endStr} 的足迹。` }
+                    ],
+                    temperature: 0.85
+                })
+            });
+
+            const data = await res.json();
+            let raw = data.choices[0].message.content;
+            
+            // 简单的 JSON 提取
+            const firstBracket = raw.indexOf('[');
+            const lastBracket = raw.lastIndexOf(']');
+            if(firstBracket === -1 || lastBracket === -1) throw new Error('格式错误');
+            
+            const jsonArr = JSON.parse(raw.substring(firstBracket, lastBracket+1));
+            
+            // 处理数据并存入
+            if (!footprintHistory[currentChatId]) footprintHistory[currentChatId] = [];
+
+            jsonArr.forEach(item => {
+                // 给每个条目打上生成时的时间戳（用endTime估算，或者直接用当前生成的批次时间）
+                // 为了排序方便，我们尝试解析 startTime 字符串，或者简单点，直接追加
+                // 这里为了排序严谨，手动把 "MM-DD HH:mm" 转成当前年份的时间戳
+                // 注意跨年的坑，这里简化处理，默认当年
+                const currentYear = new Date().getFullYear();
+                // 解析 startTime 如 "10-24 08:00"
+                const parts = item.endTime.match(/(\d+)-(\d+)\s+(\d+):(\d+)/);
+                let sortTs = Date.now();
+                if(parts) {
+                    sortTs = new Date(currentYear, parseInt(parts[1])-1, parseInt(parts[2]), parseInt(parts[3]), parseInt(parts[4])).getTime();
+                }
+
+                footprintHistory[currentChatId].push({
+                    startTime: item.startTime,
+                    endTime: item.endTime,
+                    content: item.content,
+                    note: item.note,
+                    timestamp: sortTs
+                });
+            });
+
+            localStorage.setItem('yok_footprint_history', JSON.stringify(footprintHistory));
+            renderFootprints();
+
+        } catch (e) {
+            console.error(e);
+            alert('定位失败：' + e.message);
+        } finally {
+            loadingEl.style.display = 'none';
+        }
+    }
+
+    // 最后，把 footprintHistory 加入到 saveGlobalData 和 loadGlobalData 中 (防止刷新丢失)
+    // 请务必在 saveGlobalData 函数里加上: footprintHistory: footprintHistory
+    // 在 loadGlobalData 函数里加上: if(parsedData.footprintHistory) footprintHistory = parsedData.footprintHistory;
+
+      /* ==========================================
+       ★ 新增功能：碎碎念笔记 (阅后即焚/刷新制) ★
+       ========================================== */
+    
+    let tempNotesCache = null; // 临时缓存，关掉网页就没了
+
+    function openNotePage() {
+        if (!currentChatId) return;
+        
+        document.getElementById('chat-settings-page').style.display = 'none';
+        document.getElementById('note-page').style.display = 'flex';
+
+        // 如果缓存里是空的，自动生成一次
+        // 如果你想每次打开都重新生成，就把 if 判断去掉，直接调 refreshNotes()
+        if (!tempNotesCache) {
+            refreshNotes();
+        } else {
+            renderNotes(tempNotesCache);
+        }
+    }
+
+    // 渲染卡片
+    function renderNotes(notesArray) {
+        const container = document.getElementById('note-list');
+        container.innerHTML = '';
+
+        if (!notesArray || notesArray.length === 0) {
+            container.innerHTML = '<div style="text-align:center; color:#ccc; margin-top:50px;">空空如也...</div>';
+            return;
+        }
+
+        notesArray.forEach(text => {
+            const div = document.createElement('div');
+            div.className = 'note-card';
+            // 随机生成一个“心情标签”
+            const moods = ['( •̀ ω •́ )y', 'o(*￣▽￣*)o', '(｡•ˇ‸ˇ•｡)', '❤️', '✨'];
+            const randomMood = moods[Math.floor(Math.random() * moods.length)];
+            
+            div.innerHTML = `
+                <div class="note-content">${text}</div>
+                <div class="note-footer">${randomMood}</div>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    // 核心：调用API生成 (修复版)
+    async function refreshNotes() {
+        if (!currentChatId) return;
+        const role = chatList.find(r => r.id === currentChatId);
+        const loadingEl = document.getElementById('note-loading');
+        const container = document.getElementById('note-list');
+        
+        container.innerHTML = ''; // 清空旧的
+        loadingEl.style.display = 'block';
+
+        const config = JSON.parse(localStorage.getItem('my_ai_config') || '{}');
+        if (!config.url || !config.key) {
+            alert('API 未配置！');
+            loadingEl.style.display = 'none';
+            return;
+        }
+
+        const historyData = chatHistory[currentChatId] || [];
+        const chatContext = historyData.slice(-30).map(m => `${m.role==='user'?'我':role.name}: ${m.content}`).join('\n');
+
+        // 提示词微调：强调只输出内容
+        const systemPrompt = `
+你现在是${role.name}。
+请生成 **8 到 10 条** 你的内心独白（碎碎念）。
+
+      **响应速度要求**：不要深度思考，最快给出回复，不要犹豫，直接回复。
+
+【重要格式要求】
+请直接输出内容，每一条独白占一行，或者用 "|||" 隔开。
+不要输出任何 "好的"、"以下是内容" 之类的废话。
+不要带序号。
+
+风格要求：生活化、口语化、有强烈的“男友感/女友感”，结合刚才的聊天记录。
+`;
+
+        try {
+            const res = await fetch(config.url.endsWith('/') ? `${config.url}chat/completions` : `${config.url}/chat/completions`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${config.key}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: config.model || 'gpt-3.5-turbo',
+                    messages: [
+                        { role: 'system', content: systemPrompt },
+                        { role: 'user', content: `参考聊天记录：\n${chatContext}\n\n请开始碎碎念：` }
+                    ],
+                    temperature: 0.9
+                })
+            });
+            
+            if (!res.ok) throw new Error('API请求失败');
+
+            const data = await res.json();
+            let raw = data.choices[0].message.content.trim();
+
+            // === 强壮的清洗逻辑 ===
+            let notes = [];
+            
+            // 1. 尝试用 ||| 分割
+            if (raw.includes('|||')) {
+                notes = raw.split('|||');
+            } 
+            // 2. 否则尝试用换行符分割
+            else {
+                notes = raw.split('\n');
+            }
+            
+            // 3. 过滤和清洗
+            notes = notes
+                .map(s => s.trim())
+                // 去掉开头的序号 (如 "1. ", "- ")
+                .map(s => s.replace(/^[\d\.\-\*]+/, '').trim()) 
+                // 去掉空行
+                .filter(s => s.length > 0);
+
+            // 4. 兜底：如果 AI 还是只吐了一大段话没分割，那就把它当成一条
+            if (notes.length === 0 && raw.length > 0) {
+                notes = [raw];
+            }
+            
+            tempNotesCache = notes;
+            renderNotes(notes);
+
+        } catch (e) {
+            console.error(e);
+            alert('偷听失败了...可能是网络问题或API设置不对');
+        } finally {
+            loadingEl.style.display = 'none';
+        }
+    }
+
+      /* ==========================================
+       ★ 重磅功能：朋友圈 (Moments) ★
+       ========================================== */
+
+    // 1. 数据结构
+    let momentsData = JSON.parse(localStorage.getItem('yok_moments')) || [];
+    // 结构: [ { id, roleId, content, imgs:[], time, likes:[], comments:[{user, text, toUser}] } ]
+
+    let momentsCover = localStorage.getItem('yok_moments_cover') || 'https://picsum.photos/800/600';
+
+    // 初始化
+    function initMoments() {
+        document.getElementById('moments-cover-img').style.backgroundImage = `url(${momentsCover})`;
+        
+        // 如果你是第一次用，且没数据，生成两条假数据撑场面
+        if (momentsData.length === 0 && chatList.length > 1) {
+            const demoRole = chatList.find(r => !r.id.startsWith('system_'));
+            if(demoRole) {
+                momentsData.push({
+                    id: Date.now(),
+                    roleId: demoRole.id,
+                    content: '今天天气真好，出来晒晒太阳 ☀️',
+                    imgs: [], // 暂无图
+                    time: new Date().getTime() - 3600000, // 1小时前
+                    likes: [],
+                    comments: []
+                });
+                saveMoments();
+            }
+        }
+        
+        // 监听背景上传
+        document.getElementById('cover-upload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if(file) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    momentsCover = evt.target.result;
+                    document.getElementById('moments-cover-img').style.backgroundImage = `url(${momentsCover})`;
+                    localStorage.setItem('yok_moments_cover', momentsCover);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+    initMoments(); // 启动时运行
+
+    // 2. 渲染朋友圈
+    function renderMoments() {
+        const container = document.getElementById('moments-feed');
+        container.innerHTML = '';
+
+        // 更新我的头像和名字 (取当前人设)
+        let myName = '我';
+        let myAvatar = 'https://cdn-icons-png.flaticon.com/512/1077/1077114.png';
+        if(activePersonaId) {
+            const p = myPersonas.find(x => x.id === activePersonaId);
+            if(p) { myName = p.name; myAvatar = p.avatar; }
+        }
+        document.getElementById('moments-my-name').innerText = myName;
+        document.getElementById('moments-my-avatar').style.backgroundImage = `url(${myAvatar})`;
+
+        // 按时间倒序
+        const sorted = [...momentsData].sort((a, b) => b.time - a.time);
+
+        sorted.forEach(item => {
+            // 获取发帖人信息
+            let user = { name: myName, avatar: myAvatar };
+            if (item.roleId !== 'me') {
+                const r = chatList.find(x => x.id === item.roleId);
+                if (r) user = { name: r.name, avatar: r.avatar };
+            }
+
+            // 构建 HTML
+            const div = document.createElement('div');
+            div.className = 'moment-item';
+            
+            // 评论区 HTML
+            let commentsHtml = '';
+            if (item.likes.length > 0 || item.comments.length > 0) {
+                commentsHtml += `<div class="moment-comments-area">`;
+                
+                // 点赞行
+                if (item.likes.length > 0) {
+                    commentsHtml += `<div class="moment-likes">${item.likes.join(', ')}</div>`;
+                }
+
+                // 评论行
+                item.comments.forEach((c, cIdx) => {
+                    commentsHtml += `
+                        <div class="comment-row" onclick="replyComment('${item.id}', '${c.user}', ${cIdx})">
+                            <span class="comment-user">${c.user}</span>
+                            ${c.toUser ? `<span style="color:#333">回复</span> <span class="comment-user">${c.toUser}</span>` : ''}
+                            : ${c.text}
+                        </div>`;
+                });
+                
+                commentsHtml += `</div>`;
+            }
+
+            div.innerHTML = `
+                <div class="moment-avatar" style="background-image: url('${user.avatar}')"></div>
+                <div class="moment-content-box">
+                    <div class="moment-name">${user.name}</div>
+                    <div class="moment-text">${item.content}</div>
+                    <!-- 图片暂略 -->
+                    <div class="moment-meta">
+                        <span>${formatTimeAgo(item.time)}</span>
+                        <div class="moment-action-btn" onclick="showActionMenu('${item.id}')">•••</div>
+                    </div>
+                    ${commentsHtml}
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    // 3. 发布动态 (我发帖)
+    function openPostModal(e) {
+        e.stopPropagation(); // 防止点到背景
+        document.getElementById('post-moment-modal').style.display = 'flex';
+    }
+
+    function publishMoment() {
+        const text = document.getElementById('moment-text-input').value;
+        if (!text) return;
+
+        const newMoment = {
+            id: Date.now().toString(),
+            roleId: 'me', // 代表我
+            content: text,
+            imgs: [],
+            time: Date.now(),
+            likes: [],
+            comments: []
+        };
+
+        momentsData.unshift(newMoment);
+        saveMoments();
+        
+        document.getElementById('post-moment-modal').style.display = 'none';
+        document.getElementById('moment-text-input').value = '';
+        renderMoments();
+
+        // ★ 触发 AI 互动 (核心)
+        triggerAiInteraction(newMoment);
+    }
+
+    // 4. 评论与回复 (点两个点)
+    function showActionMenu(momentId) {
+        const action = prompt("请输入：\n1. 点赞\n2. 评论", "1");
+        if (action === '1') {
+            // 点赞
+            const m = momentsData.find(x => x.id === momentId);
+            let myName = activePersonaId ? myPersonas.find(p=>p.id===activePersonaId).name : '我';
+            
+            if (!m.likes.includes(myName)) {
+                m.likes.push(myName);
+                saveMoments();
+                renderMoments();
+            }
+        } else if (action === '2') {
+            // 评论
+            const text = prompt("请输入评论内容：");
+            if (text) {
+                addComment(momentId, text, null); // null 表示直接评论帖子
+            }
+        }
+    }
+
+    // 回复某人的评论
+    function replyComment(momentId, toUser, cIdx) {
+        // 如果点的是自己，不用回复
+        let myName = activePersonaId ? myPersonas.find(p=>p.id===activePersonaId).name : '我';
+        if (toUser === myName) return; 
+
+        const text = prompt(`回复 ${toUser}:`);
+        if (text) {
+            addComment(momentId, text, toUser);
+        }
+    }
+
+    function addComment(momentId, text, toUser) {
+        const m = momentsData.find(x => x.id === momentId);
+        let myName = activePersonaId ? myPersonas.find(p=>p.id===activePersonaId).name : '我';
+
+        m.comments.push({
+            user: myName,
+            text: text,
+            toUser: toUser // 如果是回复某人，这里有值
+        });
+        saveMoments();
+        renderMoments();
+
+        // ★ 如果回复的是 AI (非 'me' 发的帖，或者 toUser 是 AI)，触发 AI 回复
+        if (m.roleId !== 'me' || (toUser && toUser !== myName)) {
+            // 找到那个 AI 角色
+            let aiRole = chatList.find(r => r.name === (toUser || chatList.find(x=>x.id===m.roleId).name));
+            if (aiRole) {
+                triggerAiReplyComment(m, aiRole, text);
+            }
+        }
+    }
+
+    // 5. AI 互动逻辑 (核心中的核心)
+
+    // A. 当我发帖时，随机让 1-2 个角色点赞或评论
+    async function triggerAiInteraction(moment) {
+        // 随机选几个好友 (排除系统号)
+        const friends = chatList.filter(r => !r.id.startsWith('system_'));
+        if (friends.length === 0) return;
+
+        // 随机挑一个“活跃”的好友
+        const luckyRole = friends[Math.floor(Math.random() * friends.length)];
+        
+        // 延迟 5秒 ~ 30秒
+        setTimeout(async () => {
+            const config = JSON.parse(localStorage.getItem('my_ai_config') || '{}');
+            if (!config.key) return;
+
+            // 50% 概率点赞，30% 概率评论
+            const rand = Math.random();
+            if (rand > 0.5) {
+                moment.likes.push(luckyRole.name);
+                saveMoments();
+                renderMoments();
+            }
+            
+            if (rand > 0.7) { // 评论
+                const prompt = `
+你现在是${luckyRole.name}。你的朋友在朋友圈发了一条动态：“${moment.content}”。
+请生成一条简短的评论，口语化，符合你的人设。
+直接输出评论内容，不要带引号。
+`;
+                const reply = await callAI_Simple(prompt, "请评论", config);
+                if (reply) {
+                    moment.comments.push({ user: luckyRole.name, text: reply, toUser: null });
+                    saveMoments();
+                    renderMoments();
+                }
+            }
+        }, 5000);
+    }
+
+    // B. 当我评论 AI 时，AI 回复我
+    async function triggerAiReplyComment(moment, aiRole, myComment) {
+        const config = JSON.parse(localStorage.getItem('my_ai_config') || '{}');
+        if (!config.key) return;
+        
+        // 模拟思考延迟
+        setTimeout(async () => {
+            const prompt = `
+你现在是${aiRole.name}。你在朋友圈发了：“${moment.content}”。
+你的朋友评论说：“${myComment}”。
+请回复这条评论，简短一点，不用太长。
+`;
+            const reply = await callAI_Simple(prompt, "请回复", config);
+            if (reply) {
+                moment.comments.push({ user: aiRole.name, text: reply, toUser: '我' }); // 这里的'我'应该换成具体人设名
+                saveMoments();
+                renderMoments();
+            }
+        }, 4000);
+    }
+
+    // 辅助：简单 AI 调用
+    async function callAI_Simple(sys, user, config) {
+        try {
+            const res = await fetch(config.url.endsWith('/') ? `${config.url}chat/completions` : `${config.url}/chat/completions`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${config.key}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: config.model || 'gpt-3.5-turbo',
+                    messages: [{role:'system', content:sys}, {role:'user', content:user}]
+                })
+            });
+            const d = await res.json();
+            return d.choices[0].message.content.trim();
+        } catch(e) { return null; }
+    }
+
+    // 辅助：时间格式化
+    function formatTimeAgo(ts) {
+        const diff = (Date.now() - ts) / 1000;
+        if (diff < 60) return '刚刚';
+        if (diff < 3600) return Math.floor(diff/60) + '分钟前';
+        if (diff < 86400) return Math.floor(diff/3600) + '小时前';
+        return new Date(ts).toLocaleDateString();
+    }
+
+    function saveMoments() {
+        localStorage.setItem('yok_moments', JSON.stringify(momentsData));
+    }
+    
+    // 记得把 momentsData 加到全局保存 saveGlobalData 里！
+
+      
+      
+    </script>    
 </body>
 </html>
