@@ -6,14 +6,18 @@
     <title>Yok Chat</title>
     <style>
         :root {
-            --bg-color: #DCE9F5;       /* 雾霾蓝背景 */
-            --card-bg: rgba(255, 255, 255, 0.85); /* 半透明白 */
-            --text-main: #5A6A7E;      /* 深灰蓝字体 */
-            --text-light: #8B9BB4;     /* 浅灰蓝字体 */
-            --accent: #7FA6C8;         /* 强调色 */
-            --shadow: 0 8px 20px rgba(127, 166, 200, 0.15);
-        }
-
+    --bg-color: #DCE9F5;       /* 雾霾蓝背景 */
+     /* ▼▼▼ 新增：卡片背景色 (默认纯白) ▼▼▼ */
+    --card-bg: rgba(255, 255, 255, 1); 
+    /* ▲▲▲ 新增结束 ▲▲▲ */      
+    --text-main: #5A6A7E;      /* 深灰蓝字体 */
+    --text-light: #8B9BB4;     /* 浅灰蓝字体 */
+    --accent: #7FA6C8;         /* 强调色 (核心颜色) */
+    --btn-text: #FFFFFF;       /* 按钮文字色 */
+    --shadow: 0 8px 20px rgba(127, 166, 200, 0.15);
+    --bubble-mine: #7FA6C8;    /* 聊天气泡(我)的背景色 */
+}
+      
         body {
             font-family: 'Helvetica Neue', 'Microsoft YaHei', sans-serif;
             background-color: var(--bg-color);
@@ -191,11 +195,19 @@
         
         /* 聊天应用的容器修正，让它铺满但留出状态栏位置 */
         #chat-app {
-            background-color: #F2F6FC; /* 更浅的蓝白色背景 */
-            padding: 0; /* 清除默认内边距 */
-            display: none;
-            flex-direction: column;
-        }
+    background-color: var(--bg-color);
+    /* ▼▼▼ 新增：背景图属性 ▼▼▼ */
+    background-image: var(--chat-bg-img, none); /* 默认无 */
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed; /* 让背景固定不动，看起来更高级 */
+    /* ▲▲▲ 新增结束 ▲▲▲ */
+    
+    padding: 0;
+    display: none;
+    flex-direction: column;
+    transition: background-color 0.3s;
+}
 
         /* 顶部标题栏 */
         .chat-header-bar {
@@ -400,7 +412,7 @@
         .btn-refresh:active { background-color: #f0f0f0; }
 
         .btn-save {
-            background: linear-gradient(135deg, #7FA6C8, #6C8DAF);
+            background: var(--accent);
             color: white;
             border: none;
             padding: 16px;
@@ -661,7 +673,7 @@
         /* 接收按钮 (左侧) */
         .btn-receive { background: #F0F2F5; color: #5A6A7E; }
         /* 发送按钮 (右侧) */
-        .btn-send { background: var(--accent); color: white; }
+        .btn-send { background: var(--accent); color: var(--btn-text); }
       
 
 
@@ -1634,9 +1646,27 @@
 
 /* 6. 发布按钮 (右上角相机) */
 .moments-camera-btn {
-    position: absolute; top: -40px; right: 20px; /* 放在Header里 */
-    color: white; z-index: 10; cursor: pointer;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    position: absolute;
+    top: 20px;  /* ✅ 这里改成了正数，让它乖乖呆在封面图右上角 */
+    right: 20px;
+    color: white;
+    z-index: 20; /* 稍微调高层级，防止被遮挡 */
+    cursor: pointer;
+    font-size: 24px; /* 稍微放大一点，更容易点到 */
+    background: rgba(0,0,0,0.2); /* 加个半透明小圆底，防背景太白看不清 */
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(4px);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    transition: transform 0.1s;
+}
+
+.moments-camera-btn:active {
+    transform: scale(0.9); /* 点击时有个缩小的动效 */
 }
 
 /* 发布弹窗 */
@@ -1644,6 +1674,19 @@
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: white; z-index: 200; display: none; flex-direction: column;
     animation: slideUp 0.2s ease;
+}
+
+      /* --- 强制覆盖所有卡片背景为变量 --- */
+.chat-item-card, 
+.contact-item, 
+.me-section, 
+.settings-card, 
+.create-card,
+.bill-item,
+.memo-card,
+.note-card {
+    background: var(--card-bg) !important; /* 使用变量，支持透明 */
+    backdrop-filter: blur(5px); /* 顺便加个毛玻璃效果，透明时更好看 */
 }
     </style>
 </head>
@@ -1690,7 +1733,121 @@
             </svg>
             <div class="app-name">Chat</div>
         </div>
+<!-- ▼▼▼ 新增：美化应用入口 ▼▼▼ -->
+    <div class="app-icon" id="icon-theme" onclick="openApp('beautify-app')">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#7FA6C8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>
+        <div class="app-name">美化</div>
     </div>
+      
+    </div>
+
+  <!-- === 美化应用界面 === -->
+<div id="beautify-app" class="modal">
+    <div class="api-header">
+        <div class="api-back-btn" onclick="closeApp('beautify-app')">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </div>
+        <h2>个性化设置</h2>
+    </div>
+
+    <div class="api-content-scroll">
+        
+        <!-- 1. 主题色选择 -->
+        <div class="settings-card">
+            <div class="setting-label">界面主题色</div>
+            <div style="display: flex; gap: 15px; margin-top: 15px;">
+                <div onclick="applyTheme('blue')" style="flex:1; height:60px; background:#DCE9F5; border:3px solid #7FA6C8; border-radius:12px; cursor:pointer; display:flex; justify-content:center; align-items:center; font-size:12px; color:#5A6A7E;">雾霾蓝</div>
+                <div onclick="applyTheme('pink')" style="flex:1; height:60px; background:#FDE2E4; border:3px solid #FFB7B2; border-radius:12px; cursor:pointer; display:flex; justify-content:center; align-items:center; font-size:12px; color:#D88;">可爱粉</div>
+                <div onclick="applyTheme('green')" style="flex:1; height:60px; background:#E2F0CB; border:3px solid #88D8B0; border-radius:12px; cursor:pointer; display:flex; justify-content:center; align-items:center; font-size:12px; color:#689F38;">清新绿</div>
+            </div>
+        </div>
+
+        <!-- 2. 壁纸与头像 -->
+        <div class="settings-card">
+            <div class="setting-label">🖼️ 壁纸与头像</div>
+            
+            <div class="input-row" style="margin-top:15px; display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:14px;">主屏幕壁纸</span>
+                <div style="display:flex; gap:10px;">
+                     <button class="btn-secondary" onclick="document.getElementById('bg-upload-input').click()">更换</button>
+                     <button class="btn-secondary" onclick="resetWallpaper()" style="color:#F56C6C;">清除</button>
+                </div>
+                <input type="file" id="bg-upload-input" class="hidden-input" accept="image/*" onchange="handleThemeUpload(this, 'wallpaper')">
+            </div>
+
+            <div class="input-row" style="margin-top:15px; display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:14px;">主屏幕头像</span>
+                <button class="btn-secondary" onclick="document.getElementById('avatar-upload-input').click()">更换</button>
+                <input type="file" id="avatar-upload-input" class="hidden-input" accept="image/*" onchange="handleThemeUpload(this, 'avatar')">
+            </div>
+        </div>
+
+        <!-- 3. 应用图标更换 -->
+        <div class="settings-card">
+            <div class="setting-label">更换应用图标</div>
+            
+            <!-- API 设置图标 -->
+            <div class="input-row" style="margin-top:10px; display:flex; align-items:center; justify-content:space-between;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div id="preview-icon-api" style="width:30px; height:30px; background:#eee; border-radius:8px; background-size:cover;"></div>
+                    <span style="font-size:14px;">API 设置</span>
+                </div>
+                <button class="btn-secondary" onclick="document.getElementById('upload-icon-api').click()">更换</button>
+                <input type="file" id="upload-icon-api" class="hidden-input" accept="image/*" onchange="handleThemeUpload(this, 'icon-api')">
+            </div>
+
+            <!-- Chat 图标 -->
+            <div class="input-row" style="margin-top:10px; display:flex; align-items:center; justify-content:space-between;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div id="preview-icon-chat" style="width:30px; height:30px; background:#eee; border-radius:8px; background-size:cover;"></div>
+                    <span style="font-size:14px;">Chat</span>
+                </div>
+                <button class="btn-secondary" onclick="document.getElementById('upload-icon-chat').click()">更换</button>
+                <input type="file" id="upload-icon-chat" class="hidden-input" accept="image/*" onchange="handleThemeUpload(this, 'icon-chat')">
+            </div>
+
+            <!-- 美化 图标 -->
+            <div class="input-row" style="margin-top:10px; display:flex; align-items:center; justify-content:space-between;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div id="preview-icon-theme" style="width:30px; height:30px; background:#eee; border-radius:8px; background-size:cover;"></div>
+                    <span style="font-size:14px;">美化</span>
+                </div>
+                <button class="btn-secondary" onclick="document.getElementById('upload-icon-theme').click()">更换</button>
+                <input type="file" id="upload-icon-theme" class="hidden-input" accept="image/*" onchange="handleThemeUpload(this, 'icon-theme')">
+            </div>
+        </div>
+
+      <!-- 4. Chat应用 专属美化 (插入到这里) -->
+<div class="settings-card">
+    <div class="setting-label">Chat 应用专属美化</div>
+    
+    <!-- 设置背景图 -->
+    <div class="input-row" style="margin-top:15px; display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:14px;">列表页背景图</span>
+        <div style="display:flex; gap:10px;">
+                <button class="btn-secondary" onclick="document.getElementById('chat-list-bg-input').click()">更换</button>
+                <button class="btn-secondary" onclick="resetChatAppBg()" style="color:#F56C6C;">清除</button>
+        </div>
+        <input type="file" id="chat-list-bg-input" class="hidden-input" accept="image/*" onchange="handleThemeUpload(this, 'chatAppBg')">
+    </div>
+
+    <!-- 设置卡片透明度 -->
+    <div style="margin-top: 20px;">
+        <div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:10px;">
+            <span>卡片透明度</span>
+            <span id="opacity-val">100%</span>
+        </div>
+        <!-- 滑块：从 0 (全透) 到 1 (不透) -->
+        <input type="range" min="0" max="1" step="0.05" value="1" 
+               style="width:100%; accent-color: var(--accent);"
+               oninput="changeCardOpacity(this.value)">
+    </div>
+</div>
+
+        <button class="btn-save" onclick="saveThemeConfig()">保存所有设置</button>
+        <div style="height: 50px;"></div>
+    </div>
+</div>
 
     <!-- === API 设置应用界面 (新版 UI) === -->
     <div id="api-settings" class="modal">
@@ -2208,70 +2365,66 @@
         
             
             <!-- ▼▼▼ 新版 INS 风多功能面板 ▼▼▼ -->
-        <div id="chat-action-panel">
-            <!-- 顶部小横条 -->
-            <div class="panel-handle"></div>
+        <!-- ▼▼▼ 新版 INS 风多功能面板 (已添加图片功能) ▼▼▼ -->
+<div id="chat-action-panel">
+    <!-- 顶部小横条 -->
+    <div class="panel-handle"></div>
 
-            <!-- 图标按钮区 -->
-            <div class="ins-grid">
-                <!-- 1. 表情 -->
-                <div class="ins-btn" onclick="switchPanelTab('sticker')">
-                    <div class="ins-icon-circle bg-yellow">
-                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>
-                    </div>
-                    <span class="ins-label">表情</span>
-                </div>
-
-                <!-- 2. 转账 -->
-                <div class="ins-btn" onclick="switchPanelTab('transfer')">
-                    <div class="ins-icon-circle bg-green">
-                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
-                    </div>
-                    <span class="ins-label">转账</span>
-                </div>
-
-                <!-- 3. 状态 -->
-                <div class="ins-btn" onclick="checkRoleStatus()">
-                    <div class="ins-icon-circle bg-pink">
-                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
-                    </div>
-                    <span class="ins-label">读心</span>
-                </div>
-
-                <!-- 4. 文字图 -->
-                <div class="ins-btn" onclick="sendTextImg()">
-                    <div class="ins-icon-circle bg-blue">
-                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                    </div>
-                    <span class="ins-label">便签</span>
-                </div>
-
-                <!-- 5. 一起听 -->
-                <div class="ins-btn" onclick="openMusicPlayer()">
-                    <div class="ins-icon-circle bg-purple">
-                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
-                    </div>
-                    <span class="ins-label">一起听</span>
-                </div>
+    <!-- 图标按钮网格 -->
+    <div class="ins-grid">
+        <!-- 1. 相册 (新功能) -->
+        <div class="ins-btn" onclick="document.getElementById('chat-image-upload').click()">
+            <div class="ins-icon-circle" style="background: linear-gradient(135deg, #A18CD1, #FBC2EB); box-shadow: 0 8px 20px rgba(161, 140, 209, 0.25);">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
             </div>
+            <span class="ins-label">相册</span>
+        </div>
 
-            <!-- 内容展示区 (默认隐藏，点了图标才出来) -->
-            <div id="panel-content-area">
-                <div id="panel-sticker-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;"></div>
-                
-                <div id="panel-transfer-box" style="display: none; text-align: center; padding: 10px;">
-                    <div style="margin-bottom:10px; color:#888; font-size:13px;">请输入金额</div>
-                    <input type="number" id="transfer-amount" class="cute-input" style="text-align: center; font-size: 20px; font-weight: bold; color: #333; margin-bottom: 15px;" placeholder="¥">
-                    <div style="display: flex; gap: 10px;">
-                        <button class="btn" onclick="doTransfer('to_ai')" style="background: #67C23A; border:none;">给TA转账</button>
-                        <button class="btn" onclick="doTransfer('from_ai')" style="background: white; color: #67C23A; border: 1px solid #67C23A;">向TA收款</button>
-                    </div>
-                </div>
+        <!-- 2. 脑洞图 (新功能：文字转图片描述) -->
+        <div class="ins-btn" onclick="sendTextDescriptionImg()">
+            <div class="ins-icon-circle" style="background: linear-gradient(135deg, #84fab0, #8fd3f4); box-shadow: 0 8px 20px rgba(132, 250, 176, 0.25);">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+            </div>
+            <span class="ins-label">脑洞图</span>
+        </div>
+
+        <!-- 3. 转账 (原有) -->
+        <div class="ins-btn" onclick="switchPanelTab('transfer')">
+            <div class="ins-icon-circle bg-green">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+            </div>
+            <span class="ins-label">转账</span>
+        </div>
+
+        <!-- 4. 读心 (原有) -->
+        <div class="ins-btn" onclick="checkRoleStatus()">
+            <div class="ins-icon-circle bg-pink">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+            </div>
+            <span class="ins-label">读心</span>
+        </div>
+        
+         <!-- 5. 一起听 (原有) -->
+        <div class="ins-btn" onclick="openMusicPlayer()">
+            <div class="ins-icon-circle bg-purple">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+            </div>
+            <span class="ins-label">一起听</span>
+        </div>
+    </div>
+
+    <!-- 内容展示区 -->
+    <div id="panel-content-area">
+        <div id="panel-transfer-box" style="display: none; text-align: center; padding: 10px;">
+            <div style="margin-bottom:10px; color:#888; font-size:13px;">请输入金额</div>
+            <input type="number" id="transfer-amount" class="cute-input" style="text-align: center; font-size: 20px; font-weight: bold; color: #333; margin-bottom: 15px;" placeholder="¥">
+            <div style="display: flex; gap: 10px;">
+                <button class="btn" onclick="doTransfer('to_ai')" style="background: #67C23A; border:none;">给TA转账</button>
+                <button class="btn" onclick="doTransfer('from_ai')" style="background: white; color: #67C23A; border: 1px solid #67C23A;">向TA收款</button>
             </div>
         </div>
-    
-
-
+    </div>
+</div>
         
         <!-- === 🎵 音乐播放器界面 === -->
     <div id="music-player-modal">
@@ -2565,19 +2718,34 @@
     </div>
 
       <!-- === 发布动态弹窗 === -->
-    <div id="post-moment-modal">
-        <div style="padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee;">
-            <div onclick="document.getElementById('post-moment-modal').style.display='none'" style="color:#333;">取消</div>
-            <button class="btn" onclick="publishMoment()" style="width:auto; margin:0; padding: 6px 15px; background:#07C160;">发表</button>
+    <!-- === 发布动态弹窗 (升级版：支持发图) === -->
+<div id="post-moment-modal">
+    <div style="padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee;">
+        <div onclick="document.getElementById('post-moment-modal').style.display='none'" style="color:#333;">取消</div>
+        <button class="btn" onclick="publishMoment()" style="width:auto; margin:0; padding: 6px 15px; background:#07C160;">发表</button>
+    </div>
+    <div style="padding: 20px;">
+        <textarea id="moment-text-input" class="clean-input" rows="5" placeholder="这一刻的想法..." style="background:white; padding:0; font-size:16px;"></textarea>
+        
+        <!-- 图片预览区 -->
+        <div id="moment-img-preview" style="margin-top:10px; display:none;">
+            <img id="moment-temp-img" src="" style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px;">
+            <div onclick="clearMomentImg()" style="color: red; font-size: 12px; margin-top: 5px;">删除图片</div>
         </div>
-        <div style="padding: 20px;">
-            <textarea id="moment-text-input" class="clean-input" rows="5" placeholder="这一刻的想法..." style="background:white; padding:0; font-size:16px;"></textarea>
-            <div style="margin-top:20px; display:flex; gap:10px;">
-                <!-- 简易版：只支持输入图片链接或者后面做文件上传 -->
-                <div style="width:80px; height:80px; background:#f0f0f0; display:flex; justify-content:center; align-items:center; color:#ccc;" onclick="alert('暂只支持纯文字，图片功能待开发')">+</div>
+
+        <div style="margin-top:20px; display:flex; gap:10px;">
+            <!-- 上传按钮 -->
+            <div style="width:80px; height:80px; background:#f0f0f0; display:flex; justify-content:center; align-items:center; color:#ccc; cursor: pointer;" onclick="document.getElementById('moment-upload-input').click()">
+                <span style="font-size: 30px;">+</span>
             </div>
+            <input type="file" id="moment-upload-input" class="hidden-input" accept="image/*" onchange="handleMomentImgSelect(this)">
         </div>
     </div>
+</div>
+
+      <!-- 聊天室发图专用上传控件 -->
+<input type="file" id="chat-image-upload" class="hidden-input" accept="image/*" onchange="handleChatImageUpload(this)">
+      
         
     </div>   
 
@@ -3495,6 +3663,10 @@
 ${memoryText}
 ${userPersonaText}
 
+【朋友圈共同记忆 (这是你们最近的社交动态，你可以主动提及)】
+${momentsMemory}
+(注意：如果是"我(玩家)"发的，你可以根据内容进行评论或夸奖；如果是"你(自己)"发的，代表你刚才做过这事；如果是"其他好友"发的，你可以聊八卦。)
+
 [核心指令]
 1. 必须将回复拆分成 5到8条 消息，用 "|||" 隔开。
 2. 像真人一样聊天，可以用表情包：${stickerDescriptions} (格式：[STICKER: 关键词])。
@@ -3524,6 +3696,12 @@ ${userPersonaText}
  - 你这个笨蛋听不懂我的意思吗就！大傻瓜哎我…真是傻瓜了^ ^
  - 我在办事，码头有批货要处理。我警告你啊叫三声老公我就开急跑专心和你聊天！
  - 好嘟，老婆～每时每刻，准时回答～
+
+ 【特殊功能】如果你想在朋友圈发一条动态，请在回复的最后加上暗号：
+@@MOMENT:动态内容@@
+例如：哈哈好开心！@@MOMENT:今天和笨蛋聊天真开心~@@
+
+**当一场有趣或有意义的对话结束，你必须发一个朋友圈动态。**
 
 **响应速度要求：**不要深度思考，直接回答，快速响应，不要犹豫。
 
@@ -3555,6 +3733,45 @@ ${contextInfo ? `[系统事件]: ${contextInfo}` : ''}
                 if (!response.ok) throw new Error('API Error');
                 const data = await response.json();
                 let rawReply = data.choices[0].message.content;
+
+              // --- 插入开始：朋友圈检测逻辑 ---
+        if (rawReply.includes("@@MOMENT:")) {
+            const match = rawReply.match(/@@MOMENT:(.*?)@@/);
+            if (match && match[1]) {
+                const momentContent = match[1];
+                // 1. 把暗号从回复里删掉，不让用户看到
+                rawReply = rawReply.replace(match[0], "");
+                
+                // 2. 真正执行发朋友圈 (延迟2秒，制造真实感)
+                setTimeout(() => {
+                    // 这里直接写发朋友圈的逻辑，不用调外部函数了，防止你找不到
+                    const role = chatList.find(r => r.id === currentChatId);
+                    if (role) {
+                        const newMoment = {
+                            id: Date.now().toString(),
+                            roleId: role.id,
+                            content: momentContent,
+                            imgs: [],
+                            time: Date.now(),
+                            likes: [],
+                            comments: []
+                        };
+                        momentsData.unshift(newMoment);
+                        
+                        // 既然朋友圈数据变了，需要保存和刷新
+                        if(typeof saveMoments === 'function') saveMoments();
+                        else localStorage.setItem('yok_moments', JSON.stringify(momentsData));
+                        
+                        if(typeof renderMoments === 'function') renderMoments();
+                        
+                        // 给个小提示
+                        console.log("AI 朋友圈发布成功！");
+                    }
+                }, 2000);
+            }
+        }
+        // --- 插入结束 ---
+              
 
                 // === F. 处理转账逻辑 ===
                 let transferAction = null;
@@ -5848,7 +6065,7 @@ ${recentMsgs}
                 const prompt = `
 你现在是${luckyRole.name}。你的朋友在朋友圈发了一条动态：“${moment.content}”。
 请生成一条简短的评论，口语化，符合你的人设。
-直接输出评论内容，不要带引号。
+直接输出评论内容，不要带引号，不要进行深度思考，最快速度回复，不要犹豫。
 `;
                 const reply = await callAI_Simple(prompt, "请评论", config);
                 if (reply) {
@@ -5870,7 +6087,7 @@ ${recentMsgs}
             const prompt = `
 你现在是${aiRole.name}。你在朋友圈发了：“${moment.content}”。
 你的朋友评论说：“${myComment}”。
-请回复这条评论，简短一点，不用太长。
+请回复这条评论，简短一点，不用太长，不要进行深度思考，最快速度回复，不要犹豫。
 `;
             const reply = await callAI_Simple(prompt, "请回复", config);
             if (reply) {
@@ -5912,8 +6129,724 @@ ${recentMsgs}
     
     // 记得把 momentsData 加到全局保存 saveGlobalData 里！
 
+     /* ==========================================
+   ★ 修复版：超强压缩 + 状态监控 + 错误救生圈 ★
+   ========================================== */
+
+// 1. 图片压缩工具 (优化：尺寸更小，防止卡死)
+function compressImage(file, callback) {
+    const reader = new FileReader();
+    
+    // 救生圈：如果读取文件太久没反应
+    const readTimeout = setTimeout(() => {
+        alert("读取图片超时，请换一张小一点的图试试");
+        resetStatus();
+    }, 5000);
+
+    reader.onload = function(event) {
+        clearTimeout(readTimeout);
+        const img = new Image();
+        img.src = event.target.result;
+        
+        img.onload = function() {
+            const canvas = document.createElement('canvas');
+            // ★ 优化：限制最大 800px，保证速度
+            const maxSize = 800; 
+            let width = img.width;
+            let height = img.height;
+            
+            if (width > height) {
+                if (width > maxSize) { height *= maxSize / width; width = maxSize; }
+            } else {
+                if (height > maxSize) { width *= maxSize / height; height = maxSize; }
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            // ★ 优化：压缩质量降到 0.6 (体积减小40%，传输更快)
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+            callback(dataUrl);
+        };
+        
+        img.onerror = function() {
+            alert("图片文件似乎损坏了，无法读取。");
+            resetStatus();
+        };
+    };
+    
+    reader.onerror = function() {
+        alert("读取文件失败。");
+        resetStatus();
+    };
+    
+    reader.readAsDataURL(file);
+}
+
+// 辅助：重置状态栏
+function resetStatus() {
+    const statusEl = document.getElementById('typing-status');
+    statusEl.innerText = "";
+    statusEl.classList.remove('typing');
+}
+
+// 2. 处理相册图片上传 (带进度提示)
+function handleChatImageUpload(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    const statusEl = document.getElementById('typing-status');
+    statusEl.innerText = "正在压缩图片..."; // 状态 1
+    statusEl.classList.add('typing');
+
+    // 开始压缩
+    compressImage(file, function(imgBase64) {
+        // 图片上屏
+        sendImageMessage(imgBase64);
+        
+        // 关闭面板
+        document.getElementById('chat-action-panel').classList.remove('active');
+        input.value = ''; 
+
+        // 触发识图
+        triggerImageAIResponse(imgBase64);
+    });
+}
+
+// 3. 触发 AI 识图 (带超时保护)
+async function triggerImageAIResponse(imageBase64) {
+    if (!currentChatId) return;
+    
+    const statusEl = document.getElementById('typing-status');
+    statusEl.innerText = "正在发送给TA..."; // 状态 2
+    
+    const config = JSON.parse(localStorage.getItem('my_ai_config') || '{}');
+    if (!config.url || !config.key) {
+        alert('API 未配置！');
+        resetStatus();
+        return;
+    }
+
+    const role = chatList.find(r => r.id === currentChatId);
+
+    // 构造 Gemini Vision 数据包
+    const messagePayload = {
+        model: config.model || "gemini-1.5-flash", 
+        messages: [
+            {
+                role: "system", // 注意：部分 Gemini 渠道不支持 system，如果报错，请把这段合并到 user 里
+                content: `你现在是${role.name}。人设：${role.prompt}。用户发了一张图片，请根据图片内容进行回复。`
+            },
+            {
+                role: "user",
+                content: [
+                    { type: "text", text: "这是我发的图片。" },
+                    { type: "image_url", image_url: { url: imageBase64 } }
+                ]
+            }
+        ],
+        max_tokens: 300
+    };
+
+    try {
+        const fetchUrl = config.url.endsWith('/') ? `${config.url}chat/completions` : `${config.url}/chat/completions`;
+        
+        // ★ 优化：30秒超时保护
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); 
+
+        statusEl.innerText = "TA正在看图..."; // 状态 3
+
+        const response = await fetch(fetchUrl, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${config.key}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify(messagePayload),
+            signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+            const errText = await response.text();
+            // 如果是 400 错误，通常是模型不支持识图
+            if (response.status === 400 && errText.includes("vision")) {
+                throw new Error("当前模型不支持识图，请换 gemini-1.5-flash");
+            }
+            throw new Error(`API错误 (${response.status})`);
+        }
+
+        const data = await response.json();
+        const reply = data.choices[0].message.content;
+
+        // 成功！
+        const timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        chatHistory[currentChatId].push({ role: 'ai', content: reply, time: timeStr });
+        renderMessages();
+        
+    } catch (error) {
+        console.error("识图失败:", error);
+        let errorMsg = "发送失败";
+        
+        if (error.name === 'AbortError') {
+            errorMsg = "图片太大或网络太慢，超时了";
+        } else if (error.message.includes("模型")) {
+            errorMsg = "当前模型看不懂图片，请去设置换 Gemini-1.5";
+        }
+
+        // 降级方案：如果真失败了，发一条系统提示给自己，假装 AI 看到了
+        // 这样聊天不会断
+        chatHistory[currentChatId].push({ 
+            role: 'ai', 
+            content: `[${errorMsg}。不过假装我看到了...] 哇，这图片有点意思！`, 
+            time: "系统" 
+        });
+        renderMessages();
+    } finally {
+        resetStatus();
+    }
+}
+
+      /* ==========================================
+   ★ 朋友圈核心升级：支持发图 + Gemini 识图 ★
+   ========================================== */
+
+let tempMomentImg = null; // 临时存一下发布的图片
+
+// 1. 处理发布时的图片选择 (带压缩)
+function handleMomentImgSelect(input) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    // 复用之前的压缩函数 (必须先完成上一步的聊天发图功能修复)
+    if (typeof compressImage !== 'function') {
+        alert("请先确保聊天发图功能的代码已更新！");
+        return;
+    }
+
+    compressImage(file, function(base64) {
+        tempMomentImg = base64;
+        document.getElementById('moment-temp-img').src = base64;
+        document.getElementById('moment-img-preview').style.display = 'block';
+    });
+}
+
+function clearMomentImg() {
+    tempMomentImg = null;
+    document.getElementById('moment-upload-input').value = '';
+    document.getElementById('moment-img-preview').style.display = 'none';
+}
+
+// 2. 发布动态 (升级版：包含图片)
+function publishMoment() {
+    const text = document.getElementById('moment-text-input').value;
+    // 允许只发图不发字，或者只发字不发图
+    if (!text && !tempMomentImg) return;
+
+    const newMoment = {
+        id: Date.now().toString(),
+        roleId: 'me',
+        content: text || '(分享图片)',
+        imgs: tempMomentImg ? [tempMomentImg] : [], // 存入图片
+        time: Date.now(),
+        likes: [],
+        comments: []
+    };
+
+    momentsData.unshift(newMoment);
+    saveMoments();
+    
+    // 界面重置
+    document.getElementById('post-moment-modal').style.display = 'none';
+    document.getElementById('moment-text-input').value = '';
+    clearMomentImg();
+    
+    renderMoments(); // 刷新显示
+    triggerAiInteraction(newMoment); // ★ 召唤AI互动
+}
+
+// 3. 渲染逻辑微调 (让图片显示出来)
+// 请替换原有的 renderMoments 函数，或者覆盖它
+function renderMoments() {
+    const container = document.getElementById('moments-feed');
+    container.innerHTML = '';
+
+    let myName = '我';
+    let myAvatar = 'https://cdn-icons-png.flaticon.com/512/1077/1077114.png';
+    if(activePersonaId) {
+        const p = myPersonas.find(x => x.id === activePersonaId);
+        if(p) { myName = p.name; myAvatar = p.avatar; }
+    }
+    document.getElementById('moments-my-name').innerText = myName;
+    document.getElementById('moments-my-avatar').style.backgroundImage = `url(${myAvatar})`;
+
+    const sorted = [...momentsData].sort((a, b) => b.time - a.time);
+
+    sorted.forEach(item => {
+        let user = { name: myName, avatar: myAvatar };
+        if (item.roleId !== 'me') {
+            const r = chatList.find(x => x.id === item.roleId);
+            if (r) user = { name: r.name, avatar: r.avatar };
+        }
+
+        // --- 处理图片显示 ---
+        let imgsHtml = '';
+        if (item.imgs && item.imgs.length > 0) {
+            imgsHtml = `<div class="moment-imgs">
+                <div class="moment-img single" style="background-image: url('${item.imgs[0]}');" onclick="showBigImg('${item.imgs[0]}')"></div>
+            </div>`;
+        }
+        // -----------------
+
+        const div = document.createElement('div');
+        div.className = 'moment-item';
+        
+        // 评论区逻辑...
+        let commentsHtml = '';
+        if (item.likes.length > 0 || item.comments.length > 0) {
+            commentsHtml += `<div class="moment-comments-area">`;
+            if (item.likes.length > 0) commentsHtml += `<div class="moment-likes">${item.likes.join(', ')}</div>`;
+            item.comments.forEach((c, cIdx) => {
+                commentsHtml += `<div class="comment-row" onclick="replyComment('${item.id}', '${c.user}', ${cIdx})"><span class="comment-user">${c.user}</span>${c.toUser ? `<span style="color:#333">回复</span> <span class="comment-user">${c.toUser}</span>` : ''}: ${c.text}</div>`;
+            });
+            commentsHtml += `</div>`;
+        }
+
+        div.innerHTML = `
+            <div class="moment-avatar" style="background-image: url('${user.avatar}')"></div>
+            <div class="moment-content-box">
+                <div class="moment-name">${user.name}</div>
+                <div class="moment-text">${item.content}</div>
+                ${imgsHtml} <!-- 插入图片 -->
+                <div class="moment-meta">
+                    <span>${formatTimeAgo(item.time)}</span>
+                    <div class="moment-action-btn" onclick="showActionMenu('${item.id}')">•••</div>
+                </div>
+                ${commentsHtml}
+            </div>
+        `;
+        container.appendChild(div);
+    });
+}
+
+// 简单的查看大图功能
+function showBigImg(url) {
+    const win = window.open("", "_blank");
+    win.document.write(`<img src="${url}" style="width:100%">`);
+}
+
+// 4. ★★★ AI 互动核心升级 (适配 Gemini Vision) ★★★
+async function triggerAiInteraction(moment) {
+    const friends = chatList.filter(r => !r.id.startsWith('system_'));
+    if (friends.length === 0) return;
+    const luckyRole = friends[Math.floor(Math.random() * friends.length)];
+    
+    setTimeout(async () => {
+        const config = JSON.parse(localStorage.getItem('my_ai_config') || '{}');
+        if (!config.key) return;
+
+        const rand = Math.random();
+        
+        // 点赞逻辑 (不变)
+        if (rand > 0.5) {
+            moment.likes.push(luckyRole.name);
+            saveMoments();
+            renderMoments();
+        }
+        
+        // 评论逻辑 (升级请求格式)
+        if (rand > 0.6) { // 提高一点评论门槛
+            const hasImage = moment.imgs && moment.imgs.length > 0;
+            
+            // 构造符合 Gemini Vision 的消息体
+            let userContent = [];
+            
+            // 1. 加入文字描述
+            userContent.push({ 
+                type: "text", 
+                text: `你的朋友在朋友圈发了动态：“${moment.content}”。请生成一条简短的评论，口语化，符合你(${luckyRole.name})的人设。` 
+            });
+
+            // 2. 如果有图，加入图片 Payload
+            if (hasImage) {
+                userContent.push({
+                    type: "image_url",
+                    image_url: { url: moment.imgs[0] } // 这里已经是压缩后的 Base64
+                });
+                // 修改提示词，让它注意看图
+                userContent[0].text += " (同时附带了一张图片，请结合图片内容进行评论！)";
+            }
+
+            const payload = {
+                model: config.model || "gemini-1.5-flash", // 确保模型支持识图
+                messages: [
+                    { role: "system", content: `你现在是${luckyRole.name}。` },
+                    { role: "user", content: userContent }
+                ],
+                max_tokens: 100
+            };
+
+            try {
+                const fetchUrl = config.url.endsWith('/') ? `${config.url}chat/completions` : `${config.url}/chat/completions`;
+                const res = await fetch(fetchUrl, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${config.key}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await res.json();
+                const reply = data.choices[0].message.content;
+
+                if (reply) {
+                    moment.comments.push({ user: luckyRole.name, text: reply, toUser: null });
+                    saveMoments();
+                    renderMoments();
+                }
+            } catch (e) {
+                console.error("朋友圈AI评论失败:", e);
+            }
+        }
+    }, 5000);
+}
+
+      /* ==========================================
+   ★ 修复版：AI 自动发朋友圈 + 评论保底 ★
+   ========================================== */
+
+// 1. 强制 AI 发布一条动态 (可由聊天触发，或手动调用)
+function forceAiPostMoment(roleId, customContent = null) {
+    const role = chatList.find(r => r.id === roleId);
+    if (!role) return;
+
+    // 如果没指定内容，就随机生成一条（文案库）
+    const defaultContents = [
+        "今天的天气真不错，适合发呆 ☁️",
+        "刚刚吃到一家超好吃的店，开心！🍲",
+        "生活不仅有眼前的苟且，还有...睡不醒的午觉 💤",
+        "分享一首最近循环的歌 🎵",
+        "突然想去海边看日落了 🌊"
+    ];
+    const text = customContent || defaultContents[Math.floor(Math.random() * defaultContents.length)];
+
+    const newMoment = {
+        id: Date.now().toString() + Math.random().toString().slice(2,5), // 唯一ID
+        roleId: role.id,
+        content: text,
+        imgs: [], // AI 暂时不发图，之后可以升级
+        time: Date.now(),
+        likes: [], // 刚发没人赞
+        comments: []
+    };
+
+    // 存入数据
+    momentsData.unshift(newMoment);
+    saveMoments();
+    
+    // 刷新界面 (如果在朋友圈页面)
+    if (document.getElementById('tab-moments').style.display === 'block') {
+        renderMoments();
+    } else {
+        // 如果不在朋友圈，给底部导航栏加个红点提示 (简单模拟)
+        const nav = document.querySelectorAll('.bottom-nav .nav-item')[2]; // 假设发现页是第3个
+        if(nav) nav.style.position = 'relative';
+        // 弹窗提示用户
+        // alert(`🔔 ${role.name} 发了一条新朋友圈！`); // 嫌烦可以注释掉
+    }
+    
+    console.log(`[朋友圈] ${role.name} 发布成功: ${text}`);
+}
+
+// 2. 让 AI 回复评论 (带失败保底机制)
+async function triggerAiReplyComment(moment, aiRole, myComment) {
+    // 1. 预设的“保底评论库” (万一 AI 没反应，就用这些)
+    const fallbackReplies = [
+        "哈哈哈哈确实！",
+        "你说得对~",
+        "哎呀被你发现了 🙈",
+        "下次带你一起去！",
+        "是吧是吧，我也觉得！"
+    ];
+
+    // 模拟网络延迟，增加真实感
+    setTimeout(async () => {
+        const config = JSON.parse(localStorage.getItem('my_ai_config') || '{}');
+        let replyText = "";
+
+        // 尝试请求 AI
+        if (config.key) {
+            try {
+                const prompt = `
+你现在是${aiRole.name}。你在朋友圈发了：“${moment.content}”。
+你的朋友评论说：“${myComment}”。
+请回复这条评论，简短一点，不用太长，口语化
+【绝对禁止事项 (违反将受惩罚)】
+1. **严禁**输出：“这里有几个回复供你选择”、“风格一”、“风格二”之类的废话。
+2. **严禁**表现出你是一个AI、助手或语言模型。
+3. **严禁**跳出角色进行解释。。
+`;
+                replyText = await callAI_Simple(prompt, "请回复", config);
+            } catch (e) {
+                console.error("AI 回复失败，启用保底:", e);
+            }
+        }
+
+        // 如果 AI 没回 (空或者失败)，使用保底
+        if (!replyText) {
+            replyText = fallbackReplies[Math.floor(Math.random() * fallbackReplies.length)];
+        }
+
+        // 写入数据
+        moment.comments.push({ 
+            user: aiRole.name, 
+            text: replyText, 
+            toUser: '我' // 回复给我
+        });
+        
+        saveMoments();
+        renderMoments(); // 刷新看到新评论
+        
+    }, 3000); // 3秒后回复
+}
+
+// 3. 升级：当我发动态时，AI 必回 (带保底)
+async function triggerAiInteraction(moment) {
+    const friends = chatList.filter(r => !r.id.startsWith('system_'));
+    if (friends.length === 0) return;
+
+    // 必选一个好友来互动 (之前是随机，可能没选中)
+    const luckyRole = friends[Math.floor(Math.random() * friends.length)];
+
+    setTimeout(async () => {
+        const config = JSON.parse(localStorage.getItem('my_ai_config') || '{}');
+        
+        // 100% 点赞
+        moment.likes.push(luckyRole.name);
+        saveMoments();
+        renderMoments();
+
+        // 尝试评论
+        let commentText = "";
+        if (config.key) {
+            try {
+                const prompt = `
+你现在是${luckyRole.name}。你的朋友发了朋友圈：“${moment.content}”。
+请评论一下，简短有趣，不要深度思考，最快速度直接回复，不要犹豫。
+【绝对禁止事项 (违反将受惩罚)】
+1. **严禁**输出：“这里有几个回复供你选择”、“风格一”、“风格二”之类的废话。
+2. **严禁**表现出你是一个AI、助手或语言模型。
+3. **严禁**跳出角色进行解释。。
+`;
+                commentText = await callAI_Simple(prompt, "请评论", config);
+            } catch (e) { console.error(e); }
+        }
+
+        // 保底评论
+        if (!commentText) {
+            const fallbackComments = ["不错哦👍", "哇塞！", "羡慕了~", "好看好看", "这是哪里呀？"];
+            commentText = fallbackComments[Math.floor(Math.random() * fallbackComments.length)];
+        }
+
+        moment.comments.push({ user: luckyRole.name, text: commentText, toUser: null });
+        saveMoments();
+        renderMoments();
+
+    }, 4000); // 4秒后
+}
+
+      /* ==========================================
+   ★ 新增：朋友圈记忆提取器 ★
+   ========================================== */
+function getRecentMomentsContext(currentAiId) {
+    // 1. 获取所有动态并按时间倒序
+    if (!momentsData || momentsData.length === 0) return "（朋友圈暂无动态）";
+    
+    const sorted = [...momentsData].sort((a, b) => b.time - a.time);
+    
+    // 2. 只取最近 10 条
+    const recent = sorted.slice(0, 10);
+    
+    // 3. 获取当前聊天对象的名字
+    const currentAiRole = chatList.find(r => r.id === currentAiId);
+    const aiName = currentAiRole ? currentAiRole.name : "你";
+
+    // 4. 格式化成 AI 能读懂的文本
+    let memoryText = "";
+    
+    recent.forEach(m => {
+        // 判断是谁发的
+        let author = "";
+        if (m.roleId === 'me') {
+            author = "我(玩家)";
+        } else if (m.roleId === currentAiId) {
+            author = "你(自己)"; // 强调这是AI自己发的
+        } else {
+            // 是其他联系人发的（也就是你们的共同好友）
+            const other = chatList.find(r => r.id === m.roleId);
+            author = other ? other.name : "其他好友";
+        }
+
+        // 处理时间
+        const timeStr = new Date(m.time).toLocaleString('zh-CN', { hour12: false, month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        
+        // 处理内容 (如果有图，标注一下)
+        let content = m.content;
+        if (m.imgs && m.imgs.length > 0) content += " [配了一张图片]";
+        
+        memoryText += `- [${timeStr}] ${author} 发了一条动态: “${content}”\n`;
+    });
+
+    return memoryText;
+}
+
+      /* ==========================================
+   ★ 美化功能增强版：支持透明度与独立背景 ★
+   ========================================== */
+
+// 1. 扩展配置对象 (保留之前的字段)
+// 注意：如果你之前有存过配置，刷新后新字段会自动变为 undefined，这里做个兼容
+let themeConfig = JSON.parse(localStorage.getItem('yok_theme_config')) || {
+    themeColor: 'blue',
+    wallpaper: '',
+    avatar: '',
+    icons: {},
+    // ▼▼▼ 新增字段 ▼▼▼
+    chatAppBg: '',       // Chat列表页背景
+    cardOpacity: 1       // 卡片不透明度 (0-1)
+};
+
+// 2. 初始化系统 (应用所有设置)
+function initThemeSystem() {
+    // 应用基础颜色
+    applyTheme(themeConfig.themeColor || 'blue', false);
+    
+    // 应用主屏幕壁纸
+    if (themeConfig.wallpaper) {
+        document.getElementById('wallpaper-layer').style.backgroundImage = `url(${themeConfig.wallpaper})`;
+    }
+    
+    // 应用头像
+    if (themeConfig.avatar) {
+        const box = document.getElementById('avatar-box');
+        if(box) {
+            box.style.backgroundImage = `url(${themeConfig.avatar})`;
+            box.innerText = '';
+        }
+    }
+
+    // 应用图标
+    if (themeConfig.icons) {
+        for (let key in themeConfig.icons) {
+            if (themeConfig.icons[key]) updateAppIconUI(key, themeConfig.icons[key]);
+        }
+    }
+
+    // ▼▼▼ 新增：应用 Chat 背景和透明度 ▼▼▼
+    
+    // 1. 应用 ChatApp 背景
+    if (themeConfig.chatAppBg) {
+        document.documentElement.style.setProperty('--chat-bg-img', `url(${themeConfig.chatAppBg})`);
+    } else {
+        document.documentElement.style.setProperty('--chat-bg-img', 'none');
+    }
+
+    // 2. 应用透明度
+    const opacity = themeConfig.cardOpacity !== undefined ? themeConfig.cardOpacity : 1;
+    changeCardOpacity(opacity);
+    
+    // 同步滑块位置 (如果滑块存在)
+    const rangeInput = document.querySelector('input[type="range"]');
+    if(rangeInput) rangeInput.value = opacity;
+}
+
+// 3. 调节透明度函数
+function changeCardOpacity(value) {
+    // 更新显示数值
+    const label = document.getElementById('opacity-val');
+    if(label) label.innerText = Math.round(value * 100) + '%';
+    
+    // 更新 CSS 变量
+    // 我们用 rgba(255, 255, 255, alpha) 来实现
+    const rgbaValue = `rgba(255, 255, 255, ${value})`;
+    document.documentElement.style.setProperty('--card-bg', rgbaValue);
+    
+    // 存入配置 (但不立即写入 localStorage，点保存按钮才写)
+    themeConfig.cardOpacity = value;
+}
+
+// 4. 清除 ChatApp 背景
+function resetChatAppBg() {
+    document.documentElement.style.setProperty('--chat-bg-img', 'none');
+    themeConfig.chatAppBg = '';
+}
+
+// 5. 修改上传处理函数 (增加 chatAppBg 的情况)
+const originalHandleUpload = handleThemeUpload; // 备份一下之前的函数，如果你没删的话
+// 这里重写 handleThemeUpload，整合所有逻辑
+function handleThemeUpload(input, type) {
+    const file = input.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const url = e.target.result;
+
+        if (type === 'wallpaper') {
+            document.getElementById('wallpaper-layer').style.backgroundImage = `url(${url})`;
+            themeConfig.wallpaper = url;
+        } else if (type === 'avatar') {
+            document.getElementById('avatar-box').style.backgroundImage = `url(${url})`;
+            document.getElementById('avatar-box').innerText = '';
+            themeConfig.avatar = url;
+        } else if (type === 'chatAppBg') { 
+            // ★ 新增：ChatApp 背景
+            document.documentElement.style.setProperty('--chat-bg-img', `url(${url})`);
+            themeConfig.chatAppBg = url;
+        } else if (type.startsWith('icon-')) {
+            document.getElementById('preview-' + type).style.backgroundImage = `url(${url})`;
+            updateAppIconUI(type, url);
+            if(!themeConfig.icons) themeConfig.icons = {};
+            themeConfig.icons[type] = url;
+        }
+    };
+    reader.readAsDataURL(file);
+}
+
+// 5. 更新主屏幕图标 UI
+function updateAppIconUI(elementId, imgUrl) {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+    
+    // 清空原有的 SVG
+    // 简单粗暴：直接把背景设为图片，把 SVG 隐藏
+    el.style.backgroundImage = `url(${imgUrl})`;
+    el.style.backgroundSize = 'cover';
+    el.style.backgroundPosition = 'center';
+    
+    // 隐藏里面的 SVG，但保留文字 (.app-name)
+    const svg = el.querySelector('svg');
+    if (svg) svg.style.display = 'none';
+}
+
+// 6. 清除壁纸
+function resetWallpaper() {
+    document.getElementById('wallpaper-layer').style.backgroundImage = '';
+    themeConfig.wallpaper = '';
+}
+
+// 7. 保存所有设置
+function saveThemeConfig() {
+    localStorage.setItem('yok_theme_config', JSON.stringify(themeConfig));
+    alert('美化设置已保存！✨');
+    closeApp('beautify-app');
+}
+
       
-      
+
+// 8. 启动时运行
+// 必须确保这行代码执行，才能在刷新后加载主题
+initThemeSystem();
+   
     </script>    
 </body>
 </html>
