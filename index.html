@@ -193,7 +193,46 @@
             margin-top: 10px;
         }
         .btn:active { opacity: 0.8; }
-        .btn-secondary { background-color: #E0E0E0; color: #666; margin-top: 0; width: auto; padding: 8px 15px;}
+       /* ==============================================
+   ★ 全局次要按钮美化 (btn-secondary) ★
+   ============================================== */
+
+.btn-secondary {
+    /* 1. 颜色与背景 */
+    background-color: #EAF2F8; /* ✨ 核心：浅白色带一点雾霾蓝 */
+    color: var(--text-main);   /* ✨ 用主题深灰蓝字体，更和谐 */
+    border: none;              /* 移除边框，更干净 */
+    
+    /* 2. 形状与大小 */
+    border-radius: 12px;       /* ✨ 核心：圆角按钮 */
+    padding: 8px 15px;         /* 保持舒适的内边距 */
+    font-size: 13px;           /* 可以微调字体大小 */
+    font-weight: bold;         /* 加粗，更清晰 */
+    
+    /* 3. 交互效果 */
+    cursor: pointer;
+    transition: all 0.2s ease; /* 平滑过渡效果 */
+}
+
+/* 鼠标悬浮时变色 */
+.btn-secondary:hover {
+    background-color: #DDE7F0; /* 悬浮时颜色加深一点点 */
+}
+
+/* 点击时的按压效果 */
+.btn-secondary:active {
+    transform: scale(0.98);    /* 点击时微微缩小 */
+    opacity: 0.9;              /* 透明度降低，模拟按压感 */
+}
+
+/* ★ 特殊处理：让红色的“清除”按钮也变好看 ★ */
+.btn-secondary[style*="color:#F56C6C"] {
+    background-color: #FEF0F0; /* 淡红色背景 */
+    color: #F56C6C !important;  /* 确保文字是红色 */
+}
+.btn-secondary[style*="color:#F56C6C"]:hover {
+    background-color: #FDE2E2; /* 悬浮时红色加深 */
+} 
 
         /* 隐藏的文件上传Input */
         .hidden-input { display: none; }
@@ -643,34 +682,37 @@
         .bubble-sharp { border-radius: 4px; }  /* 仿微信小尖角 (简化版) */
         .bubble-default { border-radius: 12px; } /* 默认 */
 
-        /* 底部输入栏 (精致小巧) */
-        /* --- ▼▼▼ 请替换成这个 ▼▼▼ --- */
+        /* --- ▼▼▼ 请替换成这段新的代码 ▼▼▼ --- */
+
 .room-footer {
     background: white;
-    padding: 8px 12px; /* 上下左右的边距都改小了 */
-    padding-bottom: 30px; /* 适配全面屏底部 */
-    display: flex; align-items: flex-end; gap: 8px; /* 元素间距也改小 */
+    padding: 8px 12px;          /* ✅ 左右边距不变 */
+    padding-bottom: 25px;       /* ✅ 底部安全区稍微缩小一点点 */
+    display: flex;
+    align-items: center;        /* ✨ 核心修改：让所有东西垂直居中，而不是底部对齐 */
+    gap: 8px;
     box-shadow: 0 -2px 10px rgba(0,0,0,0.02);
 }
         
-        /* --- ▼▼▼ 请替换成这个 ▼▼▼ --- */
 .chat-input-box {
     flex: 1;
     background: #F2F2F2;
-    border-radius: 18px; /* 圆角改小一点 */
-    padding: 8px 15px; /* 上下内边距改小 */
+    border-radius: 16px;       /* ✅ 圆角稍微变小，更精致 */
+    padding: 6px 15px;         /* ✨ 核心修改：上下内边距改小，让输入框变“扁” */
     max-height: 100px;
     overflow-y: auto;
     font-size: 14px;
-    border: none; outline: none;
-    resize: none; /* 禁止拖拽 */
+    border: none;
+    outline: none;
+    resize: none;
 }
-
-        /* --- ▼▼▼ 请替换成这个 ▼▼▼ --- */
+     
 .action-btn {
-    width: 36px; height: 36px; /* 按钮整体变小 */
+    width: 32px; height: 32px;  /* ✨ 核心修改：按钮整体再小一点 */
     border-radius: 50%;
-    display: flex; justify-content: center; align-items: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     cursor: pointer;
     transition: transform 0.1s;
     flex-shrink: 0;
@@ -2214,11 +2256,325 @@
 /* 设置选中状态 */
 .freq-check { display: none; color: var(--accent); font-weight: bold; }
 .setting-item.active .freq-check { display: block; }
+
+      /* ==============================================
+   ★ 聊天室功能面板 UI 美化 (低饱和度版) ★
+   ============================================== */
+
+/* 1. 主面板 (白色大圆角卡片) */
+#chat-action-panel {
+    background: #FFFFFF !important;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.06); /* 更有层次感的阴影 */
+    border-radius: 28px 28px 0 0;
+}
+
+/* 2. 图标网格 (让5个图标排列更均匀) */
+.ins-grid {
+    justify-content: space-around !important; /* 让间距更舒服 */
+}
+
+/* 3. ★ 核心修改：图标按钮样式 ★ */
+.ins-icon-circle {
+    /* 强制移除所有旧的渐变背景 */
+    background: none !important; 
+    background-image: none !important;
+    
+    /* 应用新的“低饱和度浅黄”背景 */
+    background-color: #FFFBEB !important; 
+    
+    /* 尺寸和形状 (小巧的方形圆角) */
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    
+    /* SVG 图标的颜色 (暖橙色) */
+    color: #F8C471 !important;
+    
+    /* 新的、配合主题色的柔和阴影 */
+    box-shadow: 0 6px 15px rgba(248, 196, 113, 0.2) !important;
+}
+
+/* 4. 标签文字样式 (可以稍微淡一点) */
+.ins-label {
+    color: #999;
+}
+
+      /* ==============================================
+   ★ 美化版滑块 (input[type="range"]) ★
+   ============================================== */
+
+/* 1. 先重置滑块的基础样式，去掉浏览器默认的丑样子 */
+input[type="range"] {
+    -webkit-appearance: none; /* 针对 Chrome, Safari, Edge */
+    appearance: none;
+    width: 100%;
+    height: 24px; /* 给滑块留出足够的垂直空间 */
+    background: transparent; /* 轨道背景我们自己画 */
+    outline: none;
+    cursor: pointer;
+}
+
+/* 2. 定义轨道的样式 (浅白色部分) */
+input[type="range"]::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 8px;
+    background: #EAF2F8; /* ✨ 核心：你想要的“浅白色加浅雾霾蓝” */
+    border-radius: 4px; /* 让轨道本身也变成圆角 */
+    /* ✨ 层次感来源之一：给轨道一个微微凹陷的内阴影 */
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.08);
+}
+input[type="range"]::-moz-range-track { /* 适配 Firefox 浏览器 */
+    width: 100%;
+    height: 8px;
+    background: #EAF2F8;
+    border-radius: 4px;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.08);
+}
+
+
+/* 3. 定义滑块的样式 (雾霾蓝色的小圆点) */
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    /* ✨ 层次感来源之二：让滑块垂直居中，像浮在轨道上 */
+    margin-top: -6px; /* (滑块高度20 - 轨道高度8) / 2 = 6 */
+    
+    width: 20px;
+    height: 20px;
+    background: var(--accent); /* ✨ 核心：使用我们的主题雾霾蓝 */
+    border-radius: 50%; /* 变成完美的圆形 */
+    border: 2px solid white; /* 加一圈白色描边，更精致 */
+    
+    /* ✨ 层次感来源之三：给滑块一个漂亮的悬浮阴影 */
+    box-shadow: 0 2px 5px rgba(127, 166, 200, 0.4);
+    transition: transform 0.2s; /* 点击时有动画 */
+}
+input[type="range"]::-moz-range-thumb { /* 适配 Firefox 浏览器 */
+    width: 20px;
+    height: 20px;
+    background: var(--accent);
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 2px 5px rgba(127, 166, 200, 0.4);
+}
+
+/* 4. 点击滑块时的交互效果 */
+input[type="range"]::-webkit-slider-thumb:active {
+    transform: scale(1.1); /* 点击时放大一点点 */
+}
+input[type="range"]::-moz-range-thumb:active {
+    transform: scale(1.1);
+}
+
+      /* ==============================================
+   ★ 在线状态 UI 美化 ★
+   ============================================== */
+
+/* 1. 浅绿色在线小圆点 */
+#online-status-dot {
+    width: 8px;
+    height: 8px;
+    background-color: #67C23A; /* 浅绿色 */
+    border-radius: 50%;
+    margin-right: 6px;
+    /* ✨ 层次感：加一点柔和的发光效果 */
+    box-shadow: 0 0 5px rgba(103, 194, 58, 0.7);
+    transition: background-color 0.5s;
+}
+
+/* 2. 状态文字样式 */
+#online-status-text {
+    font-size: 11px;
+    color: #888;
+    font-weight: 500;
+}
+
+/* 3. 设置页面里，被选中的选项样式 */
+.setting-item .freq-check {
+    display: none; /* 默认隐藏所有✓ */
+}
+.setting-item.active .freq-check {
+    display: block; /* 被选中的才显示✓ */
+    color: var(--accent);
+    font-weight: bold;
+}
+
+      /* ==============================================
+   ★ 消息通知弹窗 (Toast Notification) UI ★
+   ============================================== */
+
+/* 1. 通知发射台 (容器) */
+#notification-container {
+    position: fixed;
+    top: 40px; /* 避开顶部的状态栏 */
+    left: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column; /* 让多个通知垂直排列 */
+    align-items: center; /* 居中显示 */
+    gap: 8px; /* 通知之间的间距 */
+    z-index: 9999; /* 确保在最顶层 */
+    pointer-events: none; /* 让鼠标可以点穿这个透明的容器 */
+}
+
+/* 2. 单个通知卡片 (核心美化) */
+.notification-toast {
+    pointer-events: auto; /* 恢复卡片本身的点击 */
+    width: 90%;
+    max-width: 400px; /* 在电脑上也不会太宽 */
+    background: rgba(255, 255, 255, 0.95); /* ✨ 带一点透明的纯白 */
+    backdrop-filter: blur(10px); /* ✨ 核心：毛玻璃效果，更有层次感 */
+    border-radius: 16px; /* ✨ 核心：你想要的大圆角 */
+    box-shadow: 0 8px 20px rgba(127, 166, 200, 0.2); /* ✨ 柔和的雾霾蓝阴影 */
+    padding: 10px 15px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    /* ✨ 核心：入场和出场动画 */
+    animation: slideDownToast 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards,
+               fadeOutToast 0.5s 4.5s forwards; /* 停留4.5秒后开始消失 */
+}
+
+/* 3. 卡片内部元素 */
+.toast-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px; /* 方形圆角头像 */
+    background-size: cover;
+    background-position: center;
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+.toast-content {
+    flex: 1;
+    overflow: hidden;
+}
+.toast-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    font-weight: bold;
+    color: var(--text-main);
+}
+.toast-time {
+    font-size: 11px;
+    color: var(--text-light);
+}
+.toast-message {
+    font-size: 13px;
+    color: #666;
+    white-space: nowrap; /* 强制不换行 */
+    overflow: hidden;
+    text-overflow: ellipsis; /* 超出部分显示... */
+    margin-top: 3px;
+}
+
+/* 4. 定义动画效果 */
+@keyframes slideDownToast {
+    from {
+        transform: translateY(-150%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+@keyframes fadeOutToast {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-20px); /* 消失时微微上浮 */
+    }
+}
+
+      /* ==============================================
+   ★ 日常页面 (Daily Routine) 样式 ★
+   ============================================== */
+
+/* 单条日常的大卡片 */
+.routine-card {
+    background: white;
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 20px;
+    position: relative;
+    /* ✨ 核心：浅雾霾蓝的柔和阴影 */
+    box-shadow: 0 10px 30px rgba(127, 166, 200, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    animation: slideUp 0.4s ease;
+}
+
+/* 左侧的时间轴装饰线 */
+.routine-card::before {
+    content: '';
+    position: absolute;
+    top: 25px; bottom: 25px; left: 20px;
+    width: 2px;
+    background: #EAF2F8; /* 极浅的蓝色 */
+    border-radius: 2px;
+}
+
+/* 单个时间点条目 */
+.routine-item {
+    position: relative;
+    padding-left: 25px; /* 给圆点留位置 */
+    margin-bottom: 15px;
+}
+.routine-item:last-child { margin-bottom: 0; }
+
+/* 时间点圆点 */
+.routine-item::after {
+    content: '';
+    position: absolute;
+    left: -6px; top: 6px; /* 对齐文字 */
+    width: 10px; height: 10px;
+    background: white;
+    border: 3px solid #B0C4DE; /* 雾霾蓝边框 */
+    border-radius: 50%;
+    z-index: 2;
+}
+
+/* 时间文字 */
+.routine-time {
+    font-size: 12px;
+    font-weight: bold;
+    color: #7FA6C8;
+    margin-bottom: 4px;
+    font-family: monospace;
+}
+
+/* 内容文字 */
+.routine-content {
+    font-size: 14px;
+    color: #5A6A7E;
+    line-height: 1.6;
+    text-align: justify;
+}
+
+/* 历史记录里的折叠卡片 */
+.history-folder {
+    background: white;
+    border-radius: 16px;
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    cursor: pointer;
+}
+.history-date { font-weight: bold; color: #333; }
+.history-preview { font-size: 12px; color: #999; margin-top: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       
     </style>
 </head>
   
 <body>
+
+  <!-- ▼▼▼▼▼ 新增：通知弹窗的容器 ▼▼▼▼▼ -->
+<div id="notification-container"></div>
+<!-- ▲▲▲▲▲ 新增结束 ▲▲-▲▲▲▲ -->
 
   <!-- 关注列表选择弹窗 (暴力修复版) -->
 <div id="wb-follow-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; display: none; justify-content: center; align-items: center;">
@@ -2319,18 +2675,21 @@
     <div class="api-content-scroll">
         
         <!-- 1. 主题色选择 -->
-        <div class="settings-card">
-            <div class="setting-label">界面主题色</div>
-            <div style="display: flex; gap: 15px; margin-top: 15px;">
-                <div onclick="applyTheme('blue')" style="flex:1; height:60px; background:#DCE9F5; border:3px solid #7FA6C8; border-radius:12px; cursor:pointer; display:flex; justify-content:center; align-items:center; font-size:12px; color:#5A6A7E;">雾霾蓝</div>
-                <div onclick="applyTheme('pink')" style="flex:1; height:60px; background:#FDE2E4; border:3px solid #FFB7B2; border-radius:12px; cursor:pointer; display:flex; justify-content:center; align-items:center; font-size:12px; color:#D88;">可爱粉</div>
-                <div onclick="applyTheme('green')" style="flex:1; height:60px; background:#E2F0CB; border:3px solid #88D8B0; border-radius:12px; cursor:pointer; display:flex; justify-content:center; align-items:center; font-size:12px; color:#689F38;">清新绿</div>
-            </div>
-        </div>
+        <!-- ▼▼▼▼▼ 替换成这段新的代码 ▼▼▼▼▼ -->
+<div class="settings-card">
+    <div class="setting-label">界面主题色</div>
+    <div style="display: flex; gap: 10px; margin-top: 15px;">
+        <!-- ✨ 核心修改：给每个按钮都加上了 class="btn-secondary" ✨ -->
+        <div class="btn-secondary" onclick="applyTheme('blue')" style="flex:1; background-color: #DCE9F5;">雾霾蓝</div>
+        <div class="btn-secondary" onclick="applyTheme('pink')" style="flex:1; background-color: #FDE2E4;">可爱粉</div>
+        <div class="btn-secondary" onclick="applyTheme('green')" style="flex:1; background-color: #E2F0CB;">清新绿</div>
+    </div>
+</div>
+<!-- ▲▲▲▲▲ 新代码结束 ▲▲▲▲▲ -->
 
         <!-- 2. 壁纸与头像 -->
         <div class="settings-card">
-            <div class="setting-label">🖼️ 壁纸与头像</div>
+            <div class="setting-label">壁纸与头像</div>
             
             <div class="input-row" style="margin-top:15px; display:flex; justify-content:space-between; align-items:center;">
                 <span style="font-size:14px;">主屏幕壁纸</span>
@@ -2426,7 +2785,7 @@
 
       <!-- ▼▼▼ 新增：手动备份区域 ▼▼▼ -->
 <div class="settings-card" style="border: 1px solid #7FA6C8;">
-    <div class="setting-label">💾 存档管理 (防丢失神器)</div>
+    <div class="setting-label">存档管理 (防丢失神器)</div>
     <div class="helper-text" style="margin-top:0; margin-bottom:15px;">
         如果浏览器清空了缓存，所有数据都会消失！<br>
         建议定期导出备份文件到手机/电脑里。
@@ -2757,7 +3116,9 @@
     <!-- ▼▼▼ 修改 onclick ▼▼▼ -->
     <div class="me-item" onclick="openMeSubPage('me-persona-page')">
         <div class="me-item-title">
-            <span>🎭</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M14 4h-4C6.229 4 4.343 4 3.172 5.172S2 8.229 2 12s0 5.657 1.172 6.828S6.229 20 10 20h4c3.771 0 5.657 0 6.828-1.172S22 15.771 22 12s0-5.657-1.172-6.828S17.771 4 14 4" opacity=".5"/><path fill="currentColor" d="M13.25 9a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75m1 3a.75.75 0 0 1 .75-.75h4a.75.75 0 0 1 0 1.5h-4a.75.75 0 0 1-.75-.75m1 3a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 0 1.5h-3a.75.75 0 0 1-.75-.75M9 11a2 2 0 1 0 0-4a2 2 0 0 0 0 4m0 6c4 0 4-.895 4-2s-1.79-2-4-2s-4 .895-4 2s0 2 4 2"/>
+    </svg>
             <span>我的人设</span>
         </div>
         <div class="arrow">&gt;</div>
@@ -2765,7 +3126,9 @@
      <!-- ▼▼▼ 修改 onclick ▼▼▼ -->
     <div class="me-item" onclick="openMeSubPage('me-anniversary-page')">
         <div class="me-item-title">
-            <span>💖</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+        <path d="m12 21.35l-1.45-1.32C5.4 15.36 2 12.27 2 8.5C2 5.41 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.08C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.41 22 8.5c0 3.77-3.4 6.86-8.55 11.53z"/>
+    </svg>
             <span>我们的纪念日</span>
         </div>
         <div class="arrow">&gt;</div>
@@ -2776,7 +3139,9 @@
             <!-- 修改钱包入口 -->
             <div class="me-item" onclick="openMeSubPage('me-wallet-page')">
                 <div class="me-item-title">
-                    <span>💰</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M15.995 13A1 1 0 0 0 15 14c0 .552.445 1 .995 1h.01c.55 0 .995-.448.995-1s-.445-1-.995-1z"/><path fill="currentColor" fill-rule="evenodd" d="M16.448 2h.042C18.38 2 20 3.458 20 5.38v.923c1.178.535 2 1.723 2 3.097v9.2c0 1.872-1.528 3.4-3.4 3.4H5.4A3.407 3.407 0 0 1 2 18.6V5.5A2.5 2.5 0 0 1 4.453 3zM18 5.38V6H4.5a.5.5 0 0 1-.5-.5c0-.278.222-.5.5-.5h.042l11.985-1c.87.018 1.473.672 1.473 1.38M21 11h-6.286c-.947 0-1.714.716-1.714 1.6v2.8c0 .884.768 1.6 1.714 1.6H21z"/>
+    </svg>
                     <span>我的钱包</span>
                 </div>
                  <div class="arrow">&gt;</div>
@@ -2784,7 +3149,9 @@
             <!-- 修改表情包入口 -->
             <div class="me-item" onclick="openMeSubPage('me-sticker-page')">
                 <div class="me-item-title">
-                    <span>😂</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M3.996 7.996a4 4 0 0 0 3.456-6.015A11 11 0 0 1 12 1c6.075 0 11 4.925 11 11s-4.925 11-11 11S1 18.075 1 12c0-1.622.351-3.162.981-4.548a4 4 0 0 0 2.015.544m12.52.938h-2.004v2.003h2.004zm-6.118 5.124l-.489-.872l-1.745.977l.489.872a3.834 3.834 0 0 0 6.696 0l.488-.872l-1.745-.977l-.488.872a1.834 1.834 0 0 1-3.206 0M7.463 8.934v2.004h2.004V8.934z"/><path fill="currentColor" d="M3.996.695L5.094 2.9l2.204 1.097l-2.204 1.097l-1.098 2.204L2.9 5.093L.695 3.996L2.9 2.9zm16.835 20.124l-1.569.78l1.57.782l.78 1.569l.781-1.57l1.569-.78l-1.569-.781l-.78-1.569z"/>
+    </svg>
                     <span>表情包库</span>
                 </div>
                  <div class="arrow">&gt;</div>
@@ -2797,7 +3164,9 @@
          <!-- 海龟汤 (这是原本有的) -->
          <div class="me-item" onclick="openSoupLobby()">
             <div class="me-item-title">
-                <span>🐢</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M19.31 5.6c-1.22-.04-2.43.9-2.81 2.4c-.5 2-.5 2-1.5 3c-2 2-5 3-11 4c-1 .16-1.5.5-2 1c2 0 4 0 2.5 1.5L3 19h3l2-2c2 1 3.33 1 5.33 0l.67 2h3l-1-3s1-4 2-5s1 0 2 0s2-1 2-2.5C22 8 22 7 20.5 6c-.35-.24-.76-.38-1.19-.4M9 6a6 6 0 0 0-6 6c0 .6.13 1.08.23 1.6c5.92-.98 9.06-2.01 10.7-3.66l.5-.5A6.01 6.01 0 0 0 9 6"/>
+    </svg>
                 <span>海龟汤游戏</span>
             </div>
              <div class="arrow">&gt;</div>
@@ -2806,7 +3175,9 @@
         <!-- ▼▼▼ 把世界书放在这里 (注意：它被包在 me-section 里面了) ▼▼▼ -->
         <div class="me-item" onclick="openWorldBookPage()">
             <div class="me-item-title">
-                <span>🌍</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M8 16q.425 0 .713-.288T9 15V5q0-.425-.288-.712T8 4t-.712.288T7 5v10q0 .425.288.713T8 16m11 6H6q-1.25 0-2.125-.875T3 19V5q0-1.25.875-2.125T6 2h6.8q-.85.875-1.325 2.025T11 6.5q0 2.575 1.738 4.425T17 12.975V16q0 .825-.587 1.413T15 18H6q-.425 0-.712.288T5 19t.288.713T6 20h13v-7.175q.55-.125 1.05-.337t.95-.513V20q0 .825-.587 1.413T19 22m-1.5-10q0-2.3 1.6-3.9T23 6.5q-2.3 0-3.9-1.6T17.5 1q0 2.3-1.6 3.9T12 6.5q2.3 0 3.9 1.6t1.6 3.9"/>
+    </svg>
                 <span>世界书 (补充设定)</span>
             </div>
             <div class="arrow">&gt;</div>
@@ -3136,10 +3507,18 @@
             <div onclick="closeChatRoom()" style="padding: 10px; cursor: pointer;">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
             </div>
-            <div class="room-info">
-                <div class="room-name" id="current-chat-name">角色名</div>
-                <div class="room-status" id="typing-status">对方正在输入...</div>
-            </div>
+            <!-- ▼▼▼▼▼ 替换成这段新的 room-info ▼▼▼▼▼ -->
+<div class="room-info">
+    <div class="room-name" id="current-chat-name">角色名</div>
+    <!-- ✨ 这是我们新增的在线状态容器 ✨ -->
+    <div id="online-status-container" style="display: flex; align-items: center; justify-content: center; height: 14px; margin-top: 2px;">
+        <div id="online-status-dot"></div>
+        <div id="online-status-text">在线</div>
+    </div>
+    <!-- 这是原来就有的“正在输入”提示，我们把它藏起来，需要时再显示 -->
+    <div class="room-status" id="typing-status" style="display: none;">对方正在输入...</div>
+</div>
+<!-- ▲▲▲▲▲ 新代码结束 ▲▲▲▲▲ -->
             <!-- 设置按钮 (非齿轮，更优雅的菜单图标) -->
             <div onclick="openChatSettings()" style="padding: 10px; cursor: pointer;">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -3171,55 +3550,56 @@
         
             
             <!-- ▼▼▼ 新版 INS 风多功能面板 ▼▼▼ -->
-        <!-- ▼▼▼ 新版 INS 风多功能面板 (已添加图片功能) ▼▼▼ -->
+        <!-- ▼▼▼▼▼ 新版：纯白圆角功能面板 ▼▼▼▼▼ -->
 <div id="chat-action-panel">
     <!-- 顶部小横条 -->
     <div class="panel-handle"></div>
 
-    <!-- 图标按钮网格 -->
+    <!-- 全新的图标按钮网格 -->
     <div class="ins-grid">
-        <!-- 1. 相册 (新功能) -->
+        
+        <!-- 1. 相册 -->
         <div class="ins-btn" onclick="document.getElementById('chat-image-upload').click()">
-            <div class="ins-icon-circle" style="background: linear-gradient(135deg, #A18CD1, #FBC2EB); box-shadow: 0 8px 20px rgba(161, 140, 209, 0.25);">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+            <div class="ins-icon-circle">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
             </div>
             <span class="ins-label">相册</span>
         </div>
 
-        <!-- 2. 脑洞图 (新功能：文字转图片描述) -->
+        <!-- 2. 脑洞图 -->
         <div class="ins-btn" onclick="sendTextDescriptionImg()">
-            <div class="ins-icon-circle" style="background: linear-gradient(135deg, #84fab0, #8fd3f4); box-shadow: 0 8px 20px rgba(132, 250, 176, 0.25);">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+            <div class="ins-icon-circle">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
             </div>
             <span class="ins-label">脑洞图</span>
         </div>
 
-        <!-- 3. 转账 (原有) -->
+        <!-- 3. 转账 -->
         <div class="ins-btn" onclick="switchPanelTab('transfer')">
-            <div class="ins-icon-circle bg-green">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+            <div class="ins-icon-circle">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
             </div>
             <span class="ins-label">转账</span>
         </div>
 
-        <!-- 4. 读心 (原有) -->
+        <!-- 4. 读心 -->
         <div class="ins-btn" onclick="checkRoleStatus()">
-            <div class="ins-icon-circle bg-pink">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+            <div class="ins-icon-circle">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
             </div>
             <span class="ins-label">读心</span>
         </div>
         
-         <!-- 5. 一起听 (原有) -->
+        <!-- 5. 一起听 -->
         <div class="ins-btn" onclick="openMusicPlayer()">
-            <div class="ins-icon-circle bg-purple">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+            <div class="ins-icon-circle">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
             </div>
             <span class="ins-label">一起听</span>
         </div>
     </div>
 
-    <!-- 内容展示区 -->
+    <!-- 内容展示区 (保持不变) -->
     <div id="panel-content-area">
         <div id="panel-transfer-box" style="display: none; text-align: center; padding: 10px;">
             <div style="margin-bottom:10px; color:#888; font-size:13px;">请输入金额</div>
@@ -3231,6 +3611,7 @@
         </div>
     </div>
 </div>
+<!-- ▲▲▲▲▲ 新版面板结束 ▲▲▲▲▲ -->
         
         <!-- === 🎵 音乐播放器界面 === -->
     <div id="music-player-modal">
@@ -3420,9 +3801,13 @@
         <div style="width: 24px;"></div>
     </div>
 
-    <div id="gen-album-list" class="polaroid-grid">
-        <!-- 照片卡片会生成在这里 -->
+    <!-- ▼▼▼▼▼▼ 核心修复：在这里加一个带 me-page-content 类的包裹层 ▼▼▼▼▼▼ -->
+    <div class="me-page-content" style="padding: 0;">
+        <div id="gen-album-list" class="polaroid-grid">
+            <!-- 照片卡片会生成在这里 -->
+        </div>
     </div>
+    <!-- ▲▲▲▲▲▲ 修复结束 ▲▲▲▲▲▲ -->
     
     <!-- 加载动画 -->
     <div id="gen-album-loading" style="position:absolute; top:40%; left:50%; transform:translate(-50%, -50%); text-align:center; display:none;">
@@ -3435,6 +3820,53 @@
         ↻
     </div>
 </div>
+
+      <!-- ▼▼▼▼▼ 新增：日常页面 (Daily Routine) ▼▼▼▼▼ -->
+<div id="daily-routine-page" class="me-page" style="background-color: #F7F9FC;">
+    <!-- 顶部导航 -->
+    <div class="api-header" style="background: transparent; box-shadow: none;">
+        <div class="api-back-btn" onclick="document.getElementById('daily-routine-page').style.display='none'">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#5A6A7E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </div>
+        <h2 style="color: #5A6A7E;">TA 的日常</h2>
+        <!-- 历史记录按钮 -->
+        <div style="font-size: 12px; color: #7FA6C8; font-weight: bold; cursor: pointer; border: 1px solid #7FA6C8; padding: 4px 10px; border-radius: 12px;" onclick="openRoutineHistory()">
+            往昔
+        </div>
+    </div>
+
+    <!-- 内容滚动区 -->
+    <div id="routine-scroll-area" style="flex: 1; overflow-y: auto; padding: 20px;">
+        
+        <!-- 日期大标题 -->
+        <div id="routine-date-header" style="font-size: 24px; font-weight: bold; color: #333; margin-bottom: 5px; padding-left: 10px;"></div>
+        <div id="routine-weather-info" style="font-size: 12px; color: #888; margin-bottom: 20px; padding-left: 12px;">正在获取天气感知...</div>
+
+        <!-- 列表容器 -->
+        <div id="routine-list">
+            <!-- JS 会在这里生成卡片 -->
+        </div>
+        
+        <div style="height: 60px;"></div>
+    </div>
+
+    <!-- 底部刷新按钮 -->
+    <div class="fab-btn" onclick="updateDailyRoutine()" title="看看TA现在在干嘛" style="background: white; color: #7FA6C8;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+    </div>
+</div>
+
+<!-- 历史记录弹窗 -->
+<div id="routine-history-modal" class="modal" style="z-index: 150;">
+    <div class="api-header">
+        <div class="api-back-btn" onclick="document.getElementById('routine-history-modal').style.display='none'">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+        </div>
+        <h2>往昔日常</h2>
+    </div>
+    <div id="routine-history-list" class="api-content-scroll" style="background: #F7F9FC;"></div>
+</div>
+<!-- ▲▲▲▲▲ 新增结束 ▲▲▲▲▲ -->
     
     <!-- === 世界书列表页面 === -->
 <div id="world-book-page" class="me-page">
@@ -3569,29 +4001,27 @@
     <input type="checkbox" id="avatar-round-switch" onchange="updateAvatarSettings()" style="width: 20px; height: 20px; accent-color: var(--accent);">
 </div>
 
-<div class="setting-item" style="flex-direction: column; align-items: flex-start;">
-    <div style="display:flex; justify-content:space-between; width:100%; margin-bottom:5px;">
-        <span class="setting-title">头像大小</span>
-        <span style="font-size:12px; color:#999;" id="avatar-size-val">40px</span>
-    </div>
-    <!-- 范围：30px 到 60px -->
-    <input type="range" id="avatar-size-range" min="30" max="60" value="40" 
-           style="width:100%; accent-color: var(--accent);" oninput="updateAvatarSettings()">
+<!-- ▼▼▼▼▼ 替换成这段新的代码 ▼▼▼▼▼ -->
+<div class="setting-item">
+    <span class="setting-title">头像大小 (30-60px)</span>
+    <!-- ✨ 看，这里变成了 number 输入框，并用了 cute-input 样式 ✨ -->
+    <input type="number" id="avatar-size-input" min="30" max="60" value="32" 
+           class="cute-input" style="width: 70px; padding: 5px; text-align: center;" 
+           onchange="updateAvatarSettings()">
 </div>
 
-<div class="setting-item" style="flex-direction: column; align-items: flex-start;">
-    <div style="display:flex; justify-content:space-between; width:100%; margin-bottom:5px;">
-        <span class="setting-title">气泡边距 (头像距离)</span>
-        <span style="font-size:12px; color:#999;" id="avatar-gap-val">8px</span>
-    </div>
-    <!-- 范围：0px 到 20px -->
-    <input type="range" id="avatar-gap-range" min="0" max="20" value="8" 
-           style="width:100%; accent-color: var(--accent);" oninput="updateAvatarSettings()">
+<div class="setting-item">
+    <span class="setting-title">气泡边距 (0-20px)</span>
+    <!-- ✨ 这个也一样 ✨ -->
+    <input type="number" id="avatar-gap-input" min="0" max="20" value="4" 
+           class="cute-input" style="width: 70px; padding: 5px; text-align: center;" 
+           onchange="updateAvatarSettings()">
 </div>
+<!-- ▲▲▲▲▲ 新代码结束 ▲▲▲▲▲ -->
 <!-- ▲▲▲ 新增结束 ▲▲▲ -->
 
             <!-- 颜色设置 -->
-            <div style="margin: 20px 20px 10px 20px; font-size: 12px; color: #999; font-weight: bold;">气泡配色 (捡手机文学风)</div>
+            <div style="margin: 20px 20px 10px 20px; font-size: 12px; color: #999; font-weight: bold;">气泡配色</div>
             <div class="setting-section">
                 <div class="setting-item">
                     <span class="setting-title">对方气泡 (AI)</span>
@@ -3602,6 +4032,24 @@
                     <input type="color" id="color-user" value="#FFE6E6" onchange="updateChatColors()">
                 </div>
             </div>
+
+          <!-- ▼▼▼▼▼ 新增：在线状态刷新频率设置卡片 ▼▼▼▼▼ -->
+<div style="margin: 20px 20px 10px 20px; font-size: 12px; color: #999; font-weight: bold;">在线状态</div>
+<div class="setting-section">
+    <div class="setting-item" onclick="setStatusFrequency('low')">
+        <span class="setting-title">低频率 (5-8分钟)</span>
+        <span class="freq-check" id="freq-status-low">✓</span>
+    </div>
+    <div class="setting-item" onclick="setStatusFrequency('mid')">
+        <span class="setting-title">中频率 (3-5分钟)</span>
+        <span class="freq-check" id="freq-status-mid">✓</span>
+    </div>
+    <div class="setting-item" onclick="setStatusFrequency('high')">
+        <span class="setting-title">高频率 (2-3分钟)</span>
+        <span class="freq-check" id="freq-status-high">✓</span>
+    </div>
+</div>
+<!-- ▲▲▲▲▲ 新增结束 ▲▲▲▲▲ -->
             
             <!-- ▼▼▼▼▼ 请把这段插入到 <div id="chat-settings-page"> 里 ▼▼▼▼▼ -->
 <!-- 建议放在 "外观样式" 的上面 -->
@@ -3653,6 +4101,13 @@
     <span class="setting-title">翻看TA的相册</span>
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
 </div> 
+
+              <!-- ▼▼▼ 新增：查看日常入口 ▼▼▼ -->
+<div class="setting-item" onclick="openDailyRoutinePage()">
+    <span class="setting-title">查看TA的今日日常</span>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+</div>
+<!-- ▲▲▲ 新增结束 ▲▲▲ -->
               
             </div>
 
@@ -3908,6 +4363,9 @@ localforage.config({
                 
                 // 朋友圈页面需要占据剩余空间
                 if(targetTab) targetTab.style.flex = '1';
+
+initMoments(); // ★★★ 就是加上这一行！★★★
+              
             } else {
                 // 【如果是其他页面】：恢复显示顶部蓝条
                 if(headerBar) headerBar.style.display = 'flex';
@@ -4218,11 +4676,23 @@ function initChatSettings() {
             }
 
             // 构造上下文 (带记忆限制)
-            const limit = parseInt(chatSettings.memoryLimit) || 30;
-            const recentMsgs = msgs.slice(-limit).map(m => ({
-                role: m.role === 'user' ? 'user' : 'assistant',
-                content: m.content
-            }));
+const limit = parseInt(chatSettings.memoryLimit) || 30;
+
+// ▼▼▼▼▼▼ 核心修复开始 ▼▼▼▼▼▼
+// 创建一个“智能过滤器”，把图片和卡片换成文字描述
+const recentMsgs = msgs.slice(-limit).map(m => {
+    const role = m.role === 'user' ? 'user' : 'assistant';
+
+    // 检查消息内容是不是图片或转账卡片
+    if (m.content.includes('<img') || m.content.includes('transfer-card')) {
+        // 如果是，就替换成简单的文字描述发给AI
+        return { role: role, content: '[用户发送了一张图片或卡片]' };
+    }
+    
+    // 如果是普通文字，就正常发送
+    return { role: role, content: m.content };
+});
+// ▲▲▲▲▲▲ 核心修复结束 ▲▲▲▲▲▲
 
             // 加入人设 System Prompt
             const systemPrompt = {
@@ -5272,9 +5742,6 @@ function resetBalance() {
         const userPrompt = `请生成一个关于“${topic}”的海龟汤。`;
 
         try {
-            // 3. 发起请求 (增加 30秒 超时控制)
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 60000); // 30秒后超时
 
             const fetchUrl = config.url.endsWith('/') ? `${config.url}chat/completions` : `${config.url}/chat/completions`;
             
@@ -6180,26 +6647,22 @@ async function migrateFromOldStorage() {
         });
     }
 
-    // 4. 生成新的备忘录 (核心逻辑)
+    // 4. 生成新的备忘录 (核心逻辑 - ★★★ 金钟罩升级版 ★★★)
     async function generateNewMemo() {
         if (!currentChatId) return;
         
         const role = chatList.find(r => r.id === currentChatId);
         const loadingEl = document.getElementById('memo-loading-tip');
-        
-        // 显示加载动画
-        loadingEl.style.display = 'block';
-        // 滚动到底部以便看到加载提示
         const container = document.getElementById('memo-container');
+        
+        loadingEl.style.display = 'block';
         container.scrollTop = container.scrollHeight;
 
-        // 1. 获取最近50条聊天记录作为上下文
         const historyList = chatHistory[currentChatId] || [];
         const recentMsgs = historyList.slice(-50).map(m => 
             `${m.role === 'user' ? '我' : role.name}: ${m.content}`
         ).join('\n');
 
-        // 2. 构造 Prompt (提示词)
         const config = JSON.parse(localStorage.getItem('my_ai_config') || '{}');
         if (!config.url || !config.key) {
             alert('请先配置 API！');
@@ -6210,80 +6673,69 @@ async function migrateFromOldStorage() {
         const systemPrompt = `
 你现在是${role.name}。人设：${role.prompt || '无'}。
 请根据我们最近的聊天记录（Context），写一份你今天的【手机备忘录】。
-
 要求：
 1. 包含 10 到 12 条内容。
 2. **不要**输出任何开场白或结束语，直接输出备忘录内容，每一条占一行。
 3. **风格**：必须非常生活化、口语化，要有“男友感/女友感”，可以包含对“我”的想念、生活琐事、工作吐槽等。
-4. **趣味性**：必须使用颜文字 (如 o(*￣▽￣*)o,  (｡•ˇ‸ˇ•｡) 等) 或 Emoji。
+4. **趣味性**：可以使用颜文字 (如 o(*￣▽￣*)o,  (｡•ˇ‸ˇ•｡) 等)或emoji 。
 5. 内容要结合聊天记录的语境，如果没有聊天记录，就自由发挥想象日常生活。
 6. 每一条前面不要加序号，直接写内容。
 7. 不要深度思考，最快速度回复，不要犹豫。
 `;
-
-        const userPrompt = `
-[最近聊天记录参考]:
-${recentMsgs}
-
-请生成今天的备忘录：
-`;
-
+        const userPrompt = `[最近聊天记录参考]:\n${recentMsgs}\n\n请生成今天的备忘录：`;
+      
         try {
-            // 3. 调用 API
             const fetchUrl = config.url.endsWith('/') ? `${config.url}chat/completions` : `${config.url}/chat/completions`;
-            
+          // ▼▼▼ 在这里添加 ▼▼▼
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 300000); // 300秒超时
+        // ▲▲▲ 添加结束 ▲▲▲
             const res = await fetch(fetchUrl, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${config.key}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     model: config.model || 'gpt-3.5-turbo',
-                    messages: [
-                        { role: 'system', content: systemPrompt },
-                        { role: 'user', content: userPrompt }
-                    ],
-                    temperature: 0.8 // 稍微高一点，增加创意
-                })
+                    messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }],
+                    temperature: 0.8
+                }),
+                signal: controller.signal
             });
+            clearTimeout(timeoutId);
+
+            if (!res.ok) throw new Error(`API 请求失败 (${res.status})`);
 
             const data = await res.json();
-            const content = data.choices[0].message.content;
+            const rawContent = data.choices[0].message.content;
 
-            // 4. 存入数据
-            if (!memoHistory[currentChatId]) {
-                memoHistory[currentChatId] = [];
-            }
+            // ★ 新增：智能文本清洗
+            const lines = rawContent.split('\n')
+                .map(line => line.trim())
+                .filter(line => line.length > 0 && !line.startsWith("好的") && !line.startsWith("这是"))
+                .map(line => line.replace(/^[\d\.\-\*]+/, '').trim()); // 去掉前面的序号
             
-            // 获取当前时间格式
+            if (lines.length === 0) throw new Error("AI 返回了空内容");
+
+            const content = lines.join('\n');
+
+            if (!memoHistory[currentChatId]) memoHistory[currentChatId] = [];
             const now = new Date();
             const dateStr = `${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()}`;
             const timeStr = `${now.getHours()}:${now.getMinutes().toString().padStart(2,'0')}`;
 
-            // 存入数组 (content 是纯文本)
-            memoHistory[currentChatId].push({
-                date: dateStr,
-                timeStr: timeStr,
-                content: content
-            });
-
-            // 保存到本地存储
+            memoHistory[currentChatId].push({ date: dateStr, timeStr: timeStr, content: content });
             saveGlobalData();
-            
-            // 5. 重新渲染
             renderMemoList();
-            
-            // 滚回到顶部看最新的
             container.scrollTop = 0;
 
         } catch (e) {
             console.error(e);
-            alert('生成失败，请检查网络或API设置');
+            let errorMsg = "生成失败...";
+            if (e.name === 'AbortError') errorMsg = "生成超时了，请稍后重试。";
+            alert(errorMsg);
         } finally {
             loadingEl.style.display = 'none';
         }
     }
-    
-    // 记得把 memoHistory 加入到 saveGlobalData 里去 (防止自动保存覆盖)
-    // 请找到最下面的 saveGlobalData 函数，加入 memoHistory 的保存逻辑
 
       /* ==========================================
        ★ 新增功能：智能足迹时间轴 (分线图) ★
@@ -6338,6 +6790,7 @@ ${recentMsgs}
         }, 100);
     }
 
+    // ★★★ 金钟罩升级版 ★★★
     async function updateFootprints() {
         if (!currentChatId) return;
         const role = chatList.find(r => r.id === currentChatId);
@@ -6345,39 +6798,26 @@ ${recentMsgs}
         
         loadingEl.style.display = 'block';
 
-        // 1. 确定时间范围
         const now = new Date();
         let startCalcDate;
-        let isFirstTime = false;
-
-        // 获取现有记录
         let currentList = footprintHistory[currentChatId] || [];
         
         if (currentList.length === 0) {
-            // 没记录 -> 生成过去24小时的
-            isFirstTime = true;
             startCalcDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
         } else {
-            // 有记录 -> 从最后一条记录的时间开始，补全到现在
-            // 找到最大的时间戳
             const lastTs = Math.max(...currentList.map(i => i.timestamp));
             startCalcDate = new Date(lastTs);
-            
-            // 如果最后记录距离现在小于 10分钟，就不生成了，避免太频繁
             if (now.getTime() - lastTs < 10 * 60 * 1000) {
-                alert('刚刚才更新过足迹，TA现在还在发呆呢，过会儿再来看看吧~');
+                alert('刚刚才更新过足迹，过会儿再来看看吧~');
                 loadingEl.style.display = 'none';
                 return;
             }
         }
 
-        // 格式化时间用于 Prompt
         const timeFormat = (d) => `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日 ${d.getHours()}:${d.getMinutes().toString().padStart(2,'0')}`;
         const startStr = timeFormat(startCalcDate);
         const endStr = timeFormat(now);
 
-        // 2. 准备上下文
-        // 聊天记录辅助
         const historyData = chatHistory[currentChatId] || [];
         const chatContext = historyData.slice(-30).map(m => `${m.role==='user'?'我':role.name}: ${m.content}`).join('\n');
 
@@ -6386,7 +6826,6 @@ ${recentMsgs}
         const systemPrompt = `
 你现在是${role.name}。人设：${role.prompt || '无'}。
 请根据时间段 [${startStr} 至 ${endStr}]，结合你的性格和最近的聊天记录，生成你的行动足迹。
-
 【要求】
 1. 严格输出 JSON 数组格式，不要 Markdown，不要废话。
 2. 这是一个时间轴数据。请把这段时间拆分成 2-5 个时间段（如果是第一次生成24小时，则生成 6-8 个时间段）。
@@ -6394,21 +6833,18 @@ ${recentMsgs}
 4. "content" 是你在哪里做什么（简短）。
 5. "note" 是随笔（你的内心独白、碎碎念、或者对“我”的想念），要浅蓝色背景风格的文字，**一定要有男友感/女友感，生活化**。
 6. 时间格式必须严格： "MM-DD HH:mm"。
-7. **响应速度要求**：不要深度思考，最快给出回复，不要犹豫，直接回复。
-
+7. **响应速度要求**：不要深度思考，最快给出回复，不要犹豫。
 【JSON 格式示例】
-[
-  {
-    "startTime": "10-24 08:00",
-    "endTime": "10-24 09:30",
-    "content": "在家，刚醒，赖床刷牙",
-    "note": "困死了...梦到笨蛋了，嘿嘿。"
-  },
-  ...
-]
+[{"startTime": "10-24 08:00", "endTime": "10-24 09:30", "content": "在家，刚醒，赖床刷牙", "note": "困死了...梦到笨蛋了，嘿嘿。"}, ...]
 `;
         
+
         try {
+// ▼▼▼ 在这里添加 ▼▼▼
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 300000); // 30秒超时
+        // ▲▲▲ 添加结束 ▲▲▲
+          
             const res = await fetch(config.url.endsWith('/') ? `${config.url}chat/completions` : `${config.url}/chat/completions`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${config.key}`, 'Content-Type': 'application/json' },
@@ -6419,42 +6855,34 @@ ${recentMsgs}
                         { role: 'user', content: `参考聊天记录：\n${chatContext}\n\n请补全 ${startStr} 到 ${endStr} 的足迹。` }
                     ],
                     temperature: 0.85
-                })
+                }),
+                signal: controller.signal
             });
+            clearTimeout(timeoutId);
+
+            if (!res.ok) throw new Error(`API 请求失败 (${res.status})`);
 
             const data = await res.json();
             let raw = data.choices[0].message.content;
             
-            // 简单的 JSON 提取
+            // ★ 新增：智能JSON清洗
             const firstBracket = raw.indexOf('[');
             const lastBracket = raw.lastIndexOf(']');
-            if(firstBracket === -1 || lastBracket === -1) throw new Error('格式错误');
+            if(firstBracket === -1 || lastBracket === -1) throw new Error('AI 返回内容中未找到有效的 JSON 数组');
             
-            const jsonArr = JSON.parse(raw.substring(firstBracket, lastBracket+1));
+            const jsonStr = raw.substring(firstBracket, lastBracket + 1);
+            const jsonArr = JSON.parse(jsonStr);
             
-            // 处理数据并存入
             if (!footprintHistory[currentChatId]) footprintHistory[currentChatId] = [];
 
             jsonArr.forEach(item => {
-                // 给每个条目打上生成时的时间戳（用endTime估算，或者直接用当前生成的批次时间）
-                // 为了排序方便，我们尝试解析 startTime 字符串，或者简单点，直接追加
-                // 这里为了排序严谨，手动把 "MM-DD HH:mm" 转成当前年份的时间戳
-                // 注意跨年的坑，这里简化处理，默认当年
                 const currentYear = new Date().getFullYear();
-                // 解析 startTime 如 "10-24 08:00"
                 const parts = item.endTime.match(/(\d+)-(\d+)\s+(\d+):(\d+)/);
                 let sortTs = Date.now();
                 if(parts) {
                     sortTs = new Date(currentYear, parseInt(parts[1])-1, parseInt(parts[2]), parseInt(parts[3]), parseInt(parts[4])).getTime();
                 }
-
-                footprintHistory[currentChatId].push({
-                    startTime: item.startTime,
-                    endTime: item.endTime,
-                    content: item.content,
-                    note: item.note,
-                    timestamp: sortTs
-                });
+                footprintHistory[currentChatId].push({...item, timestamp: sortTs});
             });
 
             saveGlobalData();
@@ -6462,12 +6890,14 @@ ${recentMsgs}
 
         } catch (e) {
             console.error(e);
-            alert('定位失败：' + e.message);
+            let errorMsg = "定位失败...";
+            if (e.name === 'AbortError') errorMsg = "定位超时，请稍后重试。";
+            alert(errorMsg);
         } finally {
             loadingEl.style.display = 'none';
         }
     }
-
+      
     // 最后，把 footprintHistory 加入到 saveGlobalData 和 loadGlobalData 中 (防止刷新丢失)
     // 请务必在 saveGlobalData 函数里加上: footprintHistory: footprintHistory
     // 在 loadGlobalData 函数里加上: if(parsedData.footprintHistory) footprintHistory = parsedData.footprintHistory;
@@ -6518,14 +6948,14 @@ ${recentMsgs}
         });
     }
 
-    // 核心：调用API生成 (修复版)
+    // 核心：调用API生成 (★★★ 金钟罩升级版 ★★★)
     async function refreshNotes() {
         if (!currentChatId) return;
         const role = chatList.find(r => r.id === currentChatId);
         const loadingEl = document.getElementById('note-loading');
         const container = document.getElementById('note-list');
         
-        container.innerHTML = ''; // 清空旧的
+        container.innerHTML = '';
         loadingEl.style.display = 'block';
 
         const config = JSON.parse(localStorage.getItem('my_ai_config') || '{}');
@@ -6538,22 +6968,23 @@ ${recentMsgs}
         const historyData = chatHistory[currentChatId] || [];
         const chatContext = historyData.slice(-30).map(m => `${m.role==='user'?'我':role.name}: ${m.content}`).join('\n');
 
-        // 提示词微调：强调只输出内容
         const systemPrompt = `
 你现在是${role.name}。
 请生成 **8 到 10 条** 你的内心独白（碎碎念）。
-
-      **响应速度要求**：不要深度思考，最快给出回复，不要犹豫，直接回复。
-
 【重要格式要求】
-请直接输出内容，每一条独白占一行，或者用 "|||" 隔开。
-不要输出任何 "好的"、"以下是内容" 之类的废话。
-不要带序号。
-
+请直接输出内容，每一条独白用 "|||" 隔开。不要输出任何废话，不要带序号。
 风格要求：生活化、口语化、有强烈的“男友感/女友感”，结合刚才的聊天记录。
+响应速度要求：不要深度思考，最快给出回复，不要犹豫。
 `;
 
+        
+
         try {
+// ▼▼▼ 在这里添加 ▼▼▼
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 300000); // 300秒超时
+        // ▲▲▲ 添加结束 ▲▲▲
+      
             const res = await fetch(config.url.endsWith('/') ? `${config.url}chat/completions` : `${config.url}/chat/completions`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${config.key}`, 'Content-Type': 'application/json' },
@@ -6564,45 +6995,35 @@ ${recentMsgs}
                         { role: 'user', content: `参考聊天记录：\n${chatContext}\n\n请开始碎碎念：` }
                     ],
                     temperature: 0.9
-                })
+                }),
+                signal: controller.signal
             });
+            clearTimeout(timeoutId);
             
             if (!res.ok) throw new Error('API请求失败');
 
             const data = await res.json();
             let raw = data.choices[0].message.content.trim();
 
-            // === 强壮的清洗逻辑 ===
+            // ★ 新增：智能文本清洗
             let notes = [];
-            
-            // 1. 尝试用 ||| 分割
             if (raw.includes('|||')) {
                 notes = raw.split('|||');
-            } 
-            // 2. 否则尝试用换行符分割
-            else {
+            } else {
                 notes = raw.split('\n');
             }
+            notes = notes.map(s => s.trim().replace(/^[\d\.\-\*]+/, '').trim()).filter(s => s.length > 0);
             
-            // 3. 过滤和清洗
-            notes = notes
-                .map(s => s.trim())
-                // 去掉开头的序号 (如 "1. ", "- ")
-                .map(s => s.replace(/^[\d\.\-\*]+/, '').trim()) 
-                // 去掉空行
-                .filter(s => s.length > 0);
+            if (notes.length === 0) throw new Error("AI 未返回有效内容");
 
-            // 4. 兜底：如果 AI 还是只吐了一大段话没分割，那就把它当成一条
-            if (notes.length === 0 && raw.length > 0) {
-                notes = [raw];
-            }
-            
             tempNotesCache = notes;
             renderNotes(notes);
 
         } catch (e) {
             console.error(e);
-            alert('偷听失败了...可能是网络问题或API设置不对');
+            let errorMsg = "偷听失败了...";
+            if (e.name === 'AbortError') errorMsg = "偷听超时，TA可能在想一些复杂的事情...";
+            alert(errorMsg);
         } finally {
             loadingEl.style.display = 'none';
         }
@@ -7145,9 +7566,7 @@ async function triggerImageAIResponse(imageBase64) {
         // 2. 如果是 Gemini，必须把 system 角色伪装成 user，否则会报错卡死！
         const systemRole = isGemini ? 'user' : 'system';
 
-        // 3. 发起请求 (加了 45秒 超时防止死等)
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 45000);
+        
 
         const response = await fetch(fetchUrl, {
             method: 'POST',
@@ -8492,96 +8911,23 @@ window.renderMessages = function(keepScroll) {
     }
 };
 
-/* ==========================================
-   ★ 脑洞图功能修复补丁 ★
-   解决点击“脑洞图”图标无反应的问题
-   ========================================== */
-
+// ★★★ 升级版：调用统一画师 ★★★
 window.sendTextDescriptionImg = function() {
-    // 1. 弹窗询问用户想画什么
-    const text = prompt("请输入画面描述 (脑洞)：\n例如：一只在太空中吃披萨的猫", "一只在太空中吃披萨的猫");
-    
-    // 如果用户点了取消或没填，就退出
+    const text = prompt("请输入画面描述 (脑洞)：", "一只在太空中吃披萨的猫");
     if (!text) return;
 
-    // 2. 生成一张“假装是AI画的”图片 (用 Canvas 生成纯色背景+文字)
-    // 因为真正的 AI 绘图 API (如 DALL-E) 需要额外付费且复杂，
-    // 这里我们用“文字转图片”来模拟，或者你可以理解为“生成一张提示卡”。
+    // 1. ✨ 直接调用我们的新“画师”来生成图片
+    const imgUrl = createStyledTextCard(text);
     
-    const canvas = document.createElement('canvas');
-    const width = 512;
-    const height = 512;
-    canvas.width = width;
-    canvas.height = height;
-    const ctx = canvas.getContext('2d');
+    // 2. 发送到聊天室
+    sendImageMessage(imgUrl);
 
-    // --- A. 画背景 (随机渐变色) ---
-    const gradient = ctx.createLinearGradient(0, 0, width, height);
-    const colors = ['#ff9a9e', '#fad0c4', '#a18cd1', '#fbc2eb', '#84fab0', '#8fd3f4'];
-    const color1 = colors[Math.floor(Math.random() * colors.length)];
-    const color2 = colors[Math.floor(Math.random() * colors.length)];
-    gradient.addColorStop(0, color1);
-    gradient.addColorStop(1, color2);
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, width, height);
-
-    // --- B. 画文字 (自动换行) ---
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 30px "Microsoft YaHei", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    
-    // 简单的换行逻辑
-    const maxWidth = 400;
-    const lineHeight = 40;
-    const words = text.split('');
-    let line = '';
-    let lines = [];
-    
-    for(let i = 0; i < words.length; i++) {
-        const testLine = line + words[i];
-        const metrics = ctx.measureText(testLine);
-        if (metrics.width > maxWidth && i > 0) {
-            lines.push(line);
-            line = words[i];
-        } else {
-            line = testLine;
-        }
-    }
-    lines.push(line);
-
-    // 绘制每一行
-    const startY = (height - (lines.length * lineHeight)) / 2;
-    lines.forEach((l, i) => {
-        ctx.fillText(l, width / 2, startY + (i * lineHeight));
-    });
-
-    // --- C. 添加水印 ---
-    ctx.font = '20px sans-serif';
-    ctx.fillStyle = 'rgba(255,255,255,0.6)';
-    ctx.fillText('✨ 脑洞生成 ✨', width / 2, height - 30);
-
-    // 3. 导出图片并发送
-    const imgUrl = canvas.toDataURL('image/jpeg', 0.8);
-    
-    // 发送到聊天室
-    if (typeof sendImageMessage === 'function') {
-        sendImageMessage(imgUrl);
-    } else {
-        // 如果 sendImageMessage 也没定义，手动发
-        if (!currentChatId) return;
-        const imgTag = `<img src="${imgUrl}" style="width: 200px; border-radius: 8px;">`;
-        chatHistory[currentChatId].push({ role: 'user', content: imgTag, time: new Date().toLocaleTimeString() });
-        renderMessages();
-    }
-
-    // 4. 关闭面板
+    // 3. 关闭面板
     const panel = document.getElementById('chat-action-panel');
     if (panel) panel.classList.remove('active');
 
-    // 5. 触发 AI 评价
+    // 4. 触发 AI 评价
     if (typeof triggerAIResponse === 'function') {
-        // 告诉 AI 用户发了一张什么图
         triggerAIResponse(`(系统提示：用户发送了一张脑洞图，内容描述是：“${text}”。请根据这个描述进行吐槽或评价。)`);
     }
 };
@@ -8657,53 +9003,15 @@ window.handleAiSpecialTags = function(text, roleId) {
     return cleanText;
 };
 
-// 2. 辅助函数：生成 AI 的手写图
+// ★★★ 升级版：AI 也调用统一画师 ★★★
 window.generateAiTextImg = function(text, roleId) {
-    const canvas = document.createElement('canvas');
-    const width = 300;
-    const height = 160; 
-    canvas.width = width;
-    canvas.height = height;
-    const ctx = canvas.getContext('2d');
+    // 1. ✨ AI 也来调用我们的新“画师”
+    const imgUrl = createStyledTextCard(text);
     
-    // 背景：淡粉色便利贴 (区分于用户的淡黄色)
-    ctx.fillStyle = '#F8BBD0'; 
-    ctx.fillRect(0, 0, width, height);
-
-    // 文字设置
-    ctx.fillStyle = '#880E4F'; 
-    ctx.font = `bold 22px "Microsoft YaHei"`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
-
-    // 自动换行逻辑
-    const maxWidth = 260;
-    const lineHeight = 30;
-    const lines = [];
-    let currentLine = '';
-
-    for (let i = 0; i < text.length; i++) {
-        const char = text[i];
-        const testLine = currentLine + char;
-        if (ctx.measureText(testLine).width > maxWidth && i > 0) {
-            lines.push(currentLine);
-            currentLine = char;
-        } else {
-            currentLine = testLine;
-        }
-    }
-    lines.push(currentLine);
-
-    const startY = (height - (lines.length * lineHeight)) / 2;
-    for (let k = 0; k < lines.length; k++) {
-        ctx.fillText(lines[k], width / 2, startY + (k * lineHeight));
-    }
-
-    const imgUrl = canvas.toDataURL('image/png');
-    
-    // 插入聊天记录
+    // 2. 把画好的图片插入聊天记录
     setTimeout(() => {
-        const imgTag = `<img src="${imgUrl}" style="width: 150px; border-radius: 8px; box-shadow: 2px 2px 5px rgba(0,0,0,0.1);">`;
+        // ✨ 注意：我们给 AI 的图片加一个更好看的样式
+        const imgTag = `<img src="${imgUrl}" style="max-width: 180px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">`;
         chatHistory[roleId].push({ role: 'ai', content: imgTag, time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) });
         renderMessages();
     }, 800);
@@ -8874,8 +9182,13 @@ ${contextInfo ? `[系统事件]: ${contextInfo}` : ''}
         // ==========================================
 
         const fetchUrl = config.url.endsWith('/') ? `${config.url}chat/completions` : `${config.url}/chat/completions`;
+
+       // ▼▼▼▼▼▼ 修复补丁开始 ▼▼▼▼▼▼
+        // 定义超时控制器 (这就是报错缺少的 controller)
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 45000);
+        const timeoutId = setTimeout(() => controller.abort(), 200000); // 设置200秒超时
+        // ▲▲▲▲▲▲ 修复补丁结束 ▲▲▲▲▲▲
+        
 
         const response = await fetch(fetchUrl, {
             method: 'POST',
@@ -8959,16 +9272,34 @@ ${contextInfo ? `[系统事件]: ${contextInfo}` : ''}
         if (splitMsgs.length === 0 && rawReply.trim()) splitMsgs = [rawReply];
 
         for (let i = 0; i < splitMsgs.length; i++) {
-            if(splitMsgs[i]) {
-                chatHistory[currentChatId].push({ 
-                    role: 'ai', 
-                    content: splitMsgs[i], 
-                    time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
-                });
-                renderMessages(); 
-                if (i < splitMsgs.length - 1) await new Promise(r => setTimeout(r, 1000));
+        const messageText = splitMsgs[i];
+        if(messageText) {
+          // ▼▼▼ 修正就在这里 ▼▼▼
+                // 安全检查：确保当前聊天的历史记录数组存在。
+                // 把错误的 'originalRoleId' 换成了正确的 'currentChatId'。
+                if (!chatHistory[currentChatId]) {
+                    chatHistory[currentChatId] = [];
+                }
+                // ▲▲▲ 修正完毕 ▲▲▲
+            chatHistory[currentChatId].push({ 
+                role: 'ai', 
+                content: messageText, 
+                time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
+            });
+
+            // ★★★ 核心判断：如果不在当前聊天室，就弹窗！★★★
+            const chatRoom = document.getElementById('chat-room-page');
+            if (currentChatId !== role.id || chatRoom.style.display !== 'flex') {
+                // 用一个小的延迟，让多条消息可以错开弹出
+                setTimeout(() => {
+                    showNotificationToast(role.id, messageText);
+                }, i * 600);
             }
+            
+            renderMessages(); 
+            if (i < splitMsgs.length - 1) await new Promise(r => setTimeout(r, 1000));
         }
+    }
         
         if(typeof saveGlobalData === 'function') saveGlobalData();
 
@@ -9173,29 +9504,33 @@ window.removeCustomCssFromPage = function() {
 };
 
 // ==========================================
-// ★ 头像样式设置逻辑 ★
+// ★ 头像样式设置逻辑 (输入框版) ★
 // ==========================================
 
-// 默认值
+// 默认值 (✨ 把默认值改成你想要的 32 和 4 ✨)
 let avatarSettings = {
     isRound: false,
-    size: 40,
-    gap: 8
+    size: 32,
+    gap: 4
 };
 
-// 初始化：读取并应用
+// 初始化：读取并应用 (现在是读取到输入框里)
 function initAvatarSettings() {
     const saved = localStorage.getItem('yok_avatar_settings');
-    if (saved) avatarSettings = JSON.parse(saved);
+    if (saved) {
+        // 如果有存档，用存档覆盖默认值
+        const savedSettings = JSON.parse(saved);
+        avatarSettings = { ...avatarSettings, ...savedSettings };
+    }
 
     // 回显到界面
     const roundSwitch = document.getElementById('avatar-round-switch');
-    const sizeRange = document.getElementById('avatar-size-range');
-    const gapRange = document.getElementById('avatar-gap-range');
+    const sizeInput = document.getElementById('avatar-size-input'); // ✨ 改成了新的 ID
+    const gapInput = document.getElementById('avatar-gap-input');   // ✨ 改成了新的 ID
 
     if(roundSwitch) roundSwitch.checked = avatarSettings.isRound;
-    if(sizeRange) sizeRange.value = avatarSettings.size;
-    if(gapRange) gapRange.value = avatarSettings.gap;
+    if(sizeInput) sizeInput.value = avatarSettings.size;
+    if(gapInput) gapInput.value = avatarSettings.gap;
 
     // 立即应用样式
     applyAvatarStyles();
@@ -9204,39 +9539,41 @@ function initAvatarSettings() {
 // 核心：把设置应用到 CSS 变量
 function applyAvatarStyles() {
     const root = document.documentElement;
-    
-    // 1. 设置圆角：如果是圆形模式，就设为 50%，否则设为 8px (圆角方形)
     const radius = avatarSettings.isRound ? '50%' : '8px';
     root.style.setProperty('--avatar-radius', radius);
-
-    // 2. 设置大小
     root.style.setProperty('--avatar-size', avatarSettings.size + 'px');
-    document.getElementById('avatar-size-val').innerText = avatarSettings.size + 'px';
-
-    // 3. 设置边距
     root.style.setProperty('--avatar-gap', avatarSettings.gap + 'px');
-    document.getElementById('avatar-gap-val').innerText = avatarSettings.gap + 'px';
+    
+    // 我们不再需要那两个显示数值的 span 标签了
+    // const sizeVal = document.getElementById('avatar-size-val');
+    // if(sizeVal) sizeVal.innerText = avatarSettings.size + 'px';
+    // const gapVal = document.getElementById('avatar-gap-val');
+    // if(gapVal) gapVal.innerText = avatarSettings.gap + 'px';
 }
 
-// 界面操作：滑块拖动时触发
+// 界面操作：输入框内容改变时触发
 function updateAvatarSettings() {
-    avatarSettings.isRound = document.getElementById('avatar-round-switch').checked;
-    avatarSettings.size = document.getElementById('avatar-size-range').value;
-    avatarSettings.gap = document.getElementById('avatar-gap-range').value;
+    // ✨ 从新的 ID 读取数值 ✨
+    const sizeValue = parseInt(document.getElementById('avatar-size-input').value) || 32;
+    const gapValue = parseInt(document.getElementById('avatar-gap-input').value) || 4;
 
+    // ✨ 加上最大最小限制，防止用户乱填 ✨
+    avatarSettings.isRound = document.getElementById('avatar-round-switch').checked;
+    avatarSettings.size = Math.max(30, Math.min(60, sizeValue)); // 限制在 30-60
+    avatarSettings.gap = Math.max(0, Math.min(20, gapValue));   // 限制在 0-20
+    
     // 保存
-    localStorage.setItem('yok_avatar_settings', JSON.stringify(avatarSettings));
+    saveGlobalData(); // 改成调用全局保存
     
     // 应用
     applyAvatarStyles();
-}      
+}
 
-/* ==============================================
-   ★ 聊天气泡渲染引擎 (智能宽松最终版) ★
-   功能：生成简洁、固定的HTML结构，完美适配任何CSS
-   ============================================== */
+// ==============================================
+// ★ 终极渲染引擎 (已读状态增强版) ★
+// ==============================================
 window.renderMessages = function(keepScroll) {
-    // 0. 安全检查
+    // 1. 安全检查
     if (!currentChatId || !chatHistory[currentChatId]) return;
     
     const container = document.getElementById('message-container');
@@ -9245,13 +9582,13 @@ window.renderMessages = function(keepScroll) {
     
     container.innerHTML = ''; 
     
-    // 1. 获取消息
+    // 2. 获取消息并切片
     const allMsgs = chatHistory[currentChatId];
     const count = (typeof visibleMsgCount !== 'undefined') ? visibleMsgCount : 30;
     const startIndex = Math.max(0, allMsgs.length - count);
     const displayMsgs = allMsgs.slice(startIndex);
 
-    // 2. "加载更多"按钮
+    // 3. "加载更多"按钮
     if (startIndex > 0) {
         const btn = document.createElement('div');
         btn.className = 'load-more-btn';
@@ -9260,7 +9597,7 @@ window.renderMessages = function(keepScroll) {
         container.appendChild(btn);
     }
 
-    // 3. 准备头像
+    // 4. 准备头像
     const aiRole = chatList.find(r => r.id === currentChatId);
     const aiAvatar = aiRole ? aiRole.avatar : '';
     let userAvatar = 'https://cdn-icons-png.flaticon.com/512/1077/1077114.png';
@@ -9269,15 +9606,14 @@ window.renderMessages = function(keepScroll) {
         if (p) userAvatar = p.avatar;
     }
 
-    // 4. 循环生成每一条消息
+    // 5. 循环生成每一条消息
     displayMsgs.forEach((msg, i) => {
         const row = document.createElement('div');
         
-        // A. 系统通知
         if (msg.role === 'system_notice' || (msg.content && msg.content.includes('msg-system-row'))) {
             row.innerHTML = msg.content;
             container.appendChild(row);
-            return;
+            return; 
         }
         
         row.className = `msg-row ${msg.role === 'user' ? 'right' : 'left'}`;
@@ -9288,26 +9624,51 @@ window.renderMessages = function(keepScroll) {
                 <div class="msg-timestamp">${msg.time || ''}</div>
             </div>`;
 
-        // ★★★ 终极核心：永远只生成这一种简洁、宽松、固定的HTML结构 ★★★
+        // --- C. 钩钩逻辑 (★★★ 核心修改在这里！★★★) ---
+        let tickHtml = '';
+        let hasTickClass = ''; 
+        // 旧规则：if (msg.role === 'user' && typeof readSettings !== 'undefined' && readSettings.show)
+        // 新规则：我们直接去掉了 msg.role === 'user' 的判断！
+        if (typeof readSettings !== 'undefined' && readSettings.show) {
+            const tickSymbol = readSettings.double ? '✓✓' : '✓';
+            const letterSpacing = readSettings.double ? '-2px' : 'normal';
+            tickHtml = `
+                <div class="read-tick-container pos-${readSettings.position}" style="color: ${readSettings.color};">
+                    <span class="read-tick-icon" style="letter-spacing: ${letterSpacing};">${tickSymbol}</span>
+                </div>
+            `;
+            if (readSettings.position === 'in') hasTickClass = 'has-tick-in';
+        }
+
+        // --- D. 气泡样式判断 ---
         const roleClass = msg.role === 'user' ? 'user' : 'ai';
         const shapeClass = (typeof chatSettings !== 'undefined' && chatSettings.bubbleShape) ? chatSettings.bubbleShape : 'bubble-default';
         const isSpecialContent = msg.content.includes('<img') || msg.content.includes('transfer-card');
         const specialClass = isSpecialContent ? 'bubble-transparent' : '';
+        let bubbleStyle = '';
+        const safeSettings = (typeof chatSettings !== 'undefined') ? chatSettings : { userColor: '#FFE6E6', aiColor: '#FFFFFF' };
+        
+        if (!isSpecialContent) {
+            if (msg.role === 'user') {
+                bubbleStyle = `background-color: ${safeSettings.userColor || '#FFE6E6'}; color: #333;`;
+            } else {
+                bubbleStyle = `background-color: ${safeSettings.aiColor || '#FFFFFF'}; color: #333;`;
+            }
+        }
 
-        // 注意：这里不再有 style="..."，所有外观都交给CSS处理！
         const bubbleHtml = `
-            <div class="msg-bubble ${roleClass} ${shapeClass} ${specialClass}">
+            <div class="msg-bubble ${roleClass} ${shapeClass} ${specialClass} ${hasTickClass}" style="${bubbleStyle}">
                 ${msg.content}
+                ${tickHtml} 
             </div>`;
 
-        // 组合
+        // --- E. 左右排列 ---
         if (msg.role === 'user') {
             row.innerHTML = bubbleHtml + avatarHtml;
         } else {
             row.innerHTML = avatarHtml + bubbleHtml;
         }
 
-        // 绑定长按菜单
         const bubbleEl = row.querySelector('.msg-bubble');
         if (bubbleEl && typeof addLongPressEvent === 'function') {
             addLongPressEvent(bubbleEl, startIndex + i);
@@ -9316,7 +9677,7 @@ window.renderMessages = function(keepScroll) {
         container.appendChild(row);
     });
 
-    // 5. 滚动
+    // 6. 保持滚动位置
     if (keepScroll) {
         container.scrollTop = container.scrollHeight - oldScrollHeight + oldScrollTop;
     } else {
@@ -9395,12 +9756,16 @@ function clearCustomFont() {
 // ★ 微博 AI 生成器 (三层防御健壮版) ★
 // ==========================================
 async function generateWeiboContent() {
+  // 探针 1: 确认函数被成功触发
+    console.log("===== 微博刷新探针启动 =====");
+    console.log("【探针 1】: generateWeiboContent 函数已执行。");
     const container = document.getElementById('wb-feed-container');
     const followedRoles = chatList.filter(r => (weiboData.user.following || []).includes(r.id));
     const followedStr = followedRoles.map(r => r.name).join('、');
 
     const config = JSON.parse(localStorage.getItem('my_ai_config') || '{}');
     if (!config.key) {
+      console.warn("【探针 警告】: 未配置API Key，无法刷新，将使用假数据。");
         if(weiboData.posts.length === 0) useFakeWeiboData();
         return;
     }
@@ -9420,9 +9785,12 @@ async function generateWeiboContent() {
     const systemPrompt = `
 你是一个微博热搜和帖子生成器。请生成模拟真实微博环境的数据。
 【要求】
+
+**响应速度要求：不要深度思考，最快给出回复，不要犹豫。
+
 1. **严格输出 JSON 格式**，不要 Markdown。
-2. 包含 5 个热搜标题（hotSearch）。
-3. 包含 8 个帖子（posts）。
+2. 包含 2 个热搜标题（hotSearch）。
+3. 包含 10 个帖子（posts）。
 4. 帖子内容要多样化：
    - 有的在骂架/吐槽（用语犀利，带点攻击性）。
    - 有的在跟风玩梗。
@@ -9430,7 +9798,7 @@ async function generateWeiboContent() {
    - 有的是营销号语气。
    - 包含点赞数(likes)、转发数(reposts)、评论数(comments_count)。
    - 评论(comments)列表：每个帖子带 10 条热门评论。
-5. 禁止现充化内容，微博核心讨论主题和热搜帖子以二次元圈子用户为主，讨论内容推荐包含人机恋，AI聊天，AI角色崽崽等AI语聊相关内容和帖子。
+5. 禁止现充化内容，微博核心讨论主题和热搜帖子以二次元圈子用户为主，讨论内容偶尔包含人机恋，AI聊天，AI角色崽崽等AI语聊相关内容和帖子，也可以讨论绘圈，oc圈，动漫同人圈，游戏同人圈，原创小说圈，言情小说圈，耽美小说圈，同人小说圈等等的任何二次元圈子相关内容。
 6. **发帖人(author)混合机制**：
    - 请务必从以下关注列表中选择 1-3 个角色发帖：[${followedStr}]。
    - 剩下的帖子由“路人网友”发布（起一些二次元/网抑云/搞笑网名，要像是现实中的混网女生会起的）。
@@ -9455,14 +9823,16 @@ async function generateWeiboContent() {
 }
 `;
 
-    // ★ 1. 新增：设置30秒超时保护 ★
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => {
-        controller.abort();
-    }, 80000); // 80秒后自动放弃
-
     try {
         const fetchUrl = config.url.endsWith('/') ? `${config.url}chat/completions` : `${config.url}/chat/completions`;
+
+      // ▼▼▼ 在这里添加 ▼▼▼
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 500000); // 500秒超时
+        // ▲▲▲ 添加结束 ▲▲▲
+
+      // 探针 2: 检查即将发送给 AI 的请求
+        console.log("【探针 2】: 准备向 AI 发送请求...");
         
         const res = await fetch(fetchUrl, {
             method: 'POST',
@@ -9483,6 +9853,9 @@ async function generateWeiboContent() {
 
         const data = await res.json();
         const raw = data.choices[0].message.content;
+
+      // 探针 3: 查看 AI 返回的原始数据 (最重要的一步！)
+        console.log("🤖 【探针 3】: AI 原始返回内容如下：", raw);
         
         // ★ 2. 新增：智能JSON清洗 ★
         console.log("AI 原始返回:", raw); // 打印出来看看AI到底返回了什么
@@ -9494,7 +9867,11 @@ async function generateWeiboContent() {
         }
 
         const jsonStr = raw.substring(start, end + 1);
+      // 探针 4: 查看我们清洗后的 JSON 字符串
+        console.log("🧼 【探针 4】: 清洗后的 JSON 字符串：", jsonStr);
         const result = JSON.parse(jsonStr);
+      // 探针 5: 确认 JSON 解析成功
+        console.log("✅ 【探针 5】: JSON 解析成功，得到数据对象：", result);
 
         // 更新数据
         weiboData.hotSearch = result.hotSearch;
@@ -9509,9 +9886,13 @@ async function generateWeiboContent() {
         saveGlobalData();
         renderHotSearch();
         renderWeiboFeed();
+      
+      console.log("===== 微博刷新探针结束 (成功) =====");
 
     } catch (e) {
         console.error("微博刷新失败:", e);
+      // 探针 6: 捕获并显示详细错误
+        console.error("❌ 【探针 6】: 微博刷新过程中发生错误！", e);
 
         // ★ 3. 新增：失败处理与兜底 ★
         let errorMsg = "刷新失败了...";
@@ -10322,73 +10703,83 @@ function updateFreqUI() {
     if(current) current.parentElement.classList.add('active');
 }
 
-// 6. ★★★ 核心：定时检查并生成信件 ★★★
+// 6. ★★★ 核心：定时检查并生成信件 (Gemini 适配最终版) ★★★
 async function checkMailbox() {
+    console.log(`===== 信箱检查探针 =====`);
     const now = Date.now();
     const last = mailboxData.lastCheck || 0;
-    let interval = 10 * 60 * 1000; // 默认中频率 10分钟
+    let interval = 10 * 60 * 1000;
     
     if (mailboxData.frequency === 'low') interval = 30 * 60 * 1000;
-    if (mailboxData.frequency === 'high') interval = 2 * 60 * 1000; // 测试用2分钟
+    if (mailboxData.frequency === 'high') interval = 2 * 60 * 1000;
     
-    // 如果时间没到，就不生成
     if (now - last < interval) return;
     
-    // 开始生成
-    console.log("📬 正在收取新信件...");
+    console.log("📬 【探针】: 时间已到，开始生成新信件...");
     mailboxData.lastCheck = now;
-    saveGlobalData(); // 先存时间，防止重复触发
+    saveGlobalData();
     
     const config = JSON.parse(localStorage.getItem('my_ai_config') || '{}');
     if (!config.key) return;
 
-    // 准备角色名单
     const roles = chatList.filter(r => !r.id.startsWith('system_'));
     if (roles.length === 0) return;
 
-    // 随机选 1-8 个收信人 (如果角色少于8个，就重复选)
     const targetRoles = [];
     for(let i=0; i<8; i++) {
         const r = roles[Math.floor(Math.random() * roles.length)];
         targetRoles.push(r);
     }
-    
     const namesStr = targetRoles.map(r => r.name).join('、');
 
     const prompt = `
 请生成 8 封写给以下角色的匿名信件：[${namesStr}]。
 【要求】
 1. **严格输出 JSON 数组**，格式：[{"to": "角色名", "content": "信件内容"}]
-2. 内容风格多样化：
-   - 💌 情书：肉麻、暗恋、表白。
-   - ❓ 提问：问一些奇怪的问题（比如“你洗澡会卢关吗？会高c吗？”）。
-   - 🤫 八卦：假装知道TA的秘密。
-   - 😡 吐槽：路人看不惯TA。
+2. 内容风格多样化：情书、提问、八卦、吐槽。
 3. 每封信 50-200 字左右，有的信件字多有的信件字少，不要规律。
 4. 必须对应列表里的角色名字。
 5. 信件内容语气真实自然，口语化，有意思有趣。
 `;
 
     try {
-        const res = await fetch(config.url.endsWith('/') ? `${config.url}chat/completions` : `${config.url}/chat/completions`, {
+        const fetchUrl = config.url.endsWith('/') ? `${config.url}chat/completions` : `${config.url}/chat/completions`;
+        console.log("【探针 2】: 准备向 AI 发送请求...");
+
+        const res = await fetch(fetchUrl, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${config.key}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                model: config.model || 'gpt-3.5-turbo',
-                messages: [{ role: 'system', content: prompt }],
+                model: config.model || 'gemini-pro', // 建议在设置里填 gemini-pro
+                
+                // ★★★ 核心修改在这里！★★★
+                // 我们把 system prompt 伪装成 user prompt 发送
+                messages: [
+                    { role: 'user', content: prompt } 
+                ],
+                // ★★★ 修改结束 ★★★
+
                 temperature: 0.9
             })
         });
 
         const data = await res.json();
+        
+        if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+            const errorMessage = data.error ? data.error.message : "AI没有返回有效的信件内容。";
+            throw new Error(errorMessage);
+        }
+
         const raw = data.choices[0].message.content;
+        console.log("💌 【探针 3】: AI 原始返回信件内容：", raw);
+
         const start = raw.indexOf('[');
         const end = raw.lastIndexOf(']');
         const jsonArr = JSON.parse(raw.substring(start, end + 1));
 
-        // 存入信箱
+        console.log("✅ 【探针 4】: JSON 解析成功，生成了", jsonArr.length, "封信件。");
+
         jsonArr.forEach(item => {
-            // 找回 ID
             const role = roles.find(r => r.name === item.to);
             if (role) {
                 mailboxData.letters.unshift({
@@ -10406,8 +10797,561 @@ async function checkMailbox() {
         alert("猫头鹰送来了新的信件！");
 
     } catch (e) {
-        console.error("收信失败:", e);
+        console.error("❌ 【探针 5】: 收信过程中发生错误！", e);
+        alert(`收信失败了！\n原因：${e.message}\n\n(请检查API设置里的模型名称是否正确，推荐 gemini-pro)`);
+    } finally {
+        console.log("===== 信箱检查结束 =====");
     }
+}
+
+      /* ==========================================
+   ★ 消息弹窗通知系统 ★
+   ========================================== */
+
+// 1. 发射单个通知的函数
+function showNotificationToast(roleId, messageContent) {
+    const role = chatList.find(r => r.id === roleId);
+    if (!role) return;
+
+    const container = document.getElementById('notification-container');
+    const toast = document.createElement('div');
+    toast.className = 'notification-toast';
+
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    // ✨ 智能处理消息内容：去掉HTML标签，只显示纯文本
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = messageContent;
+    const cleanMessage = tempDiv.textContent || tempDiv.innerText || "[消息]";
+
+    toast.innerHTML = `
+        <div class="toast-avatar" style="background-image: url('${role.avatar}')"></div>
+        <div class="toast-content">
+            <div class="toast-header">
+                <span>${role.name}</span>
+                <span class="toast-time">${time}</span>
+            </div>
+            <div class="toast-message">${cleanMessage.slice(0, 30)}...</div>
+        </div>
+    `;
+
+    // ✨ 点击通知，直接进入对应的聊天室
+    toast.onclick = () => {
+        openChatApp();
+        enterChatRoom(roleId);
+        toast.remove(); // 点击后立即移除
+    };
+
+    container.appendChild(toast);
+
+    // ✨ 5秒后，让这个通知消失
+    setTimeout(() => {
+        toast.remove();
+    }, 5000);
+}
+
+// 2. ★ 核心改造：在AI回复时，判断是否需要弹窗 ★
+// 我们需要找到 triggerAIResponse 函数里的消息处理循环
+const original_triggerAIResponse_for_toast = window.triggerAIResponse;
+window.triggerAIResponse = async function(...args) {
+    
+    const roleId = currentChatId; // 记住是哪个角色在回复
+    
+    // 调用原始的回复函数
+    await original_triggerAIResponse_for_toast.apply(this, args);
+
+    // 回复完毕后，我们检查一下新收到的消息
+    // （更优的方案是在循环里处理，但为了不破坏你已有的函数，我们在这里做个简化版拦截）
+    // 这个方案假设AI一次只回一条，或者只对最后一条弹窗，对于多条消息，我们需要修改原始函数
+
+    // 为了实现“一条一条弹出来”，我们需要修改原始函数内部
+};
+
+// 让我们用更完美的方式，直接升级 triggerAIResponse
+// 请找到你代码中的 triggerAIResponse 函数，然后在它的 for 循环里加上一行代码
+
+// 找到这一段：
+/*
+    for (let i = 0; i < splitMsgs.length; i++) {
+        if(splitMsgs[i]) {
+            chatHistory[currentChatId].push({ 
+                role: 'ai', 
+                content: splitMsgs[i], 
+                time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
+            });
+            renderMessages(); 
+            if (i < splitMsgs.length - 1) await new Promise(r => setTimeout(r, 1000));
+        }
+    }
+*/
+// 把它修改成这样：
+/*
+    for (let i = 0; i < splitMsgs.length; i++) {
+        const messageText = splitMsgs[i];
+        if(messageText) {
+            chatHistory[currentChatId].push({ 
+                role: 'ai', 
+                content: messageText, 
+                time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
+            });
+
+            // ★★★ 核心判断：如果不在当前聊天室，就弹窗！★★★
+            const chatRoom = document.getElementById('chat-room-page');
+            if (currentChatId !== role.id || chatRoom.style.display !== 'flex') {
+                // 用一个小的延迟，让多条消息可以错开弹出
+                setTimeout(() => {
+                    showNotificationToast(role.id, messageText);
+                }, i * 600);
+            }
+            
+            renderMessages(); 
+            if (i < splitMsgs.length - 1) await new Promise(r => setTimeout(r, 1000));
+        }
+    }
+*/
+
+
+      /* ==========================================
+   ★ 角色日常系统 (Daily Routine) ★
+   ========================================== */
+
+// 1. 数据初始化
+// 结构: { roleId: { date: "YYYY-MM-DD", weather: "...", items: [{time, content}], history: [...] } }
+let routineData = JSON.parse(localStorage.getItem('yok_daily_routine')) || {};
+
+// 2. 打开页面 (包含自动归档逻辑)
+function openDailyRoutinePage() {
+    if (!currentChatId) return;
+    document.getElementById('chat-settings-page').style.display = 'none';
+    document.getElementById('daily-routine-page').style.display = 'flex';
+
+    const role = chatList.find(r => r.id === currentChatId);
+    if (!routineData[currentChatId]) {
+        routineData[currentChatId] = { date: "", items: [], history: [] };
+    }
+
+    const data = routineData[currentChatId];
+    const todayStr = new Date().toLocaleDateString();
+
+    // ★ 核心：跨天自动归档 ★
+    if (data.date && data.date !== todayStr) {
+        // 如果有旧数据，存入历史
+        if (data.items.length > 0) {
+            data.history.unshift({
+                date: data.date,
+                weather: data.weather || "未知天气",
+                items: [...data.items]
+            });
+        }
+        // 重置今日
+        data.items = [];
+        data.weather = "";
+    }
+    
+    // 更新日期标记
+    data.date = todayStr;
+    saveRoutineData();
+
+    // 渲染界面
+    renderRoutineUI();
+
+    // 如果今天还没生成过，自动触发一次
+    if (data.items.length === 0) {
+        updateDailyRoutine();
+    }
+}
+
+// 3. 渲染 UI
+function renderRoutineUI() {
+    const data = routineData[currentChatId];
+    const container = document.getElementById('routine-list');
+    container.innerHTML = '';
+
+    // 设置标题
+    const now = new Date();
+    const dateOptions = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+    document.getElementById('routine-date-header').innerText = now.toLocaleDateString('zh-CN', dateOptions);
+    document.getElementById('routine-weather-info').innerText = data.weather || "正在感知今日氛围...";
+
+    if (data.items.length === 0) {
+        container.innerHTML = '<div style="text-align:center; color:#ccc; margin-top:50px;">美好的一天开始了...<br>正在记录中...</div>';
+        return;
+    }
+
+    // 生成大卡片
+    const card = document.createElement('div');
+    card.className = 'routine-card';
+    
+    let itemsHtml = '';
+    data.items.forEach(item => {
+        itemsHtml += `
+            <div class="routine-item">
+                <div class="routine-time">${item.time}</div>
+                <div class="routine-content">${item.content}</div>
+            </div>
+        `;
+    });
+    
+    card.innerHTML = itemsHtml;
+    container.appendChild(card);
+    
+    // 滚到底部
+    const scrollArea = document.getElementById('routine-scroll-area');
+    setTimeout(() => scrollArea.scrollTop = scrollArea.scrollHeight, 100);
+}
+
+// 4. ★ 核心：AI 增量生成 ★
+async function updateDailyRoutine() {
+    if (!currentChatId) return;
+    const role = chatList.find(r => r.id === currentChatId);
+    const data = routineData[currentChatId];
+    
+    // 显示加载状态
+    const btn = document.querySelector('#daily-routine-page .fab-btn');
+    const originalBtnContent = btn.innerHTML;
+    btn.innerHTML = '<span style="font-size:12px;">记录中..</span>';
+    
+    const config = JSON.parse(localStorage.getItem('my_ai_config') || '{}');
+    if (!config.key) { alert("请先配置API"); btn.innerHTML = originalBtnContent; return; }
+
+    // 计算时间范围
+    const now = new Date();
+    const nowTimeStr = `${now.getHours()}:${now.getMinutes().toString().padStart(2,'0')}`;
+    
+    let startTimeStr = "07:00"; // 默认从早上7点开始
+    let contextStr = "这是今天的第一条记录。";
+    
+    // 如果已经有记录，从最后一条的时间开始
+    if (data.items.length > 0) {
+        const lastItem = data.items[data.items.length - 1];
+        startTimeStr = lastItem.time;
+        contextStr = `已有记录(不要重复)：\n${data.items.map(i=>`[${i.time}] ${i.content}`).join('\n')}`;
+    }
+
+    // 获取现实信息
+    const month = now.getMonth() + 1;
+    const season = month <= 2 || month === 12 ? "冬季" : month <= 5 ? "春季" : month <= 8 ? "夏季" : "秋季";
+    
+    const systemPrompt = `
+你现在是${role.name}。人设：${role.prompt || '无'}。
+你和用户是【异地恋】关系。
+今天是 ${now.getFullYear()}年${month}月${now.getDate()}日，${season}。
+请记录你从 ${startTimeStr} 到 ${nowTimeStr} 之间的日常活动。
+
+【要求】
+1. **严格输出 JSON 对象**，格式：
+   {
+     "weather": "简短的天气和氛围描述 (仅在第一条记录时生成，否则留空)",
+     "newItems": [
+        {"time": "HH:MM", "content": "内容"}
+     ]
+   }
+2. **内容风格**：
+   - 必须**极度生活化、真实感强烈**。不要写流水账，要写细节。
+   - 突出**反差萌、可爱、或者对恋人的思念，写日常的重点是不局限于角色设定,而展现出他更真实,更像情绪丰富的人的一面,可以展现一些反差萌和会让爱人觉得"甜"或者"虐"或者"可爱"的地方**。
+   - 可以使用颜文字、半括号“（”、ing、jpg等网络用语。
+   - **禁止输出引号**。
+   - 示例：“早上起来对着窗户蒙了一层雾的玻璃写字，写‘她是个抛弃男朋友的小猪！’然后手指画上一个笑脸表情。”
+   - 示例：“路过便利店看到关东煮，突然好想喂你吃那个萝卜，你吃了萝卜会变成萝卜精吗...TvT”
+3. **数量要求**：
+   - 如果是全天第一次生成（从早上开始），请至少生成 **6-8条** 记录，每条记录至少30字，填满上午的时间。
+   - 如果是增量生成（接着之前的），请生成 **2-4条** 记录，填补到当前时间。
+4. **响应速度**：不要深度思考，最快速度直接回复。
+`;
+
+    try {
+        const res = await fetch(config.url.endsWith('/') ? `${config.url}chat/completions` : `${config.url}/chat/completions`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${config.key}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                model: config.model || 'gpt-3.5-turbo',
+                messages: [
+                    { role: 'system', content: systemPrompt },
+                    { role: 'user', content: `${contextStr}\n\n请补充到 ${nowTimeStr} 的日常。` }
+                ],
+                temperature: 0.85
+            })
+        });
+
+        const apiData = await res.json();
+        const raw = apiData.choices[0].message.content;
+        
+        // ★★★ 万能数据清洁工 (正则表达式保障) ★★★
+        let result;
+        try {
+            // 1. 暴力提取：找到第一个 { 和最后一个 }，应对AI加的额外文字
+            const start = raw.indexOf('{');
+            const end = raw.lastIndexOf('}');
+            if (start === -1 || end === -1) {
+                throw new Error("AI 返回内容中未找到有效的 JSON 对象。");
+            }
+            let jsonStr = raw.substring(start, end + 1);
+            
+            // 2. 正则清洗：修复 AI 最常犯的“末尾逗号”错误
+            //    这个正则表达式会找到所有在大括号 } 或中括号 ] 前面的多余逗号,并删掉它
+            jsonStr = jsonStr.replace(/,\s*(}|])/g, '$1');
+
+            // 3. 解析清洗后的数据
+            result = JSON.parse(jsonStr);
+            
+        } catch (parseError) {
+            console.error("❌ JSON 解析失败!", parseError);
+            console.error("🤯 失败的原始数据:", raw);
+            // 抛出一个更清晰的错误，会被外层的 catch 捕捉到并弹窗提示
+            throw new Error("AI 返回的数据格式损坏，无法修复。");
+        }
+
+        // 更新天气 (只在第一次或者天气为空时)
+        if (result.weather && (!data.weather || data.items.length === 0)) {
+            data.weather = result.weather;
+        }
+
+        // 追加新条目
+        if (result.newItems && result.newItems.length > 0) {
+            data.items = [...data.items, ...result.newItems];
+            // 按时间排序，防止乱序
+            data.items.sort((a, b) => a.time.localeCompare(b.time));
+        }
+
+        saveRoutineData();
+        renderRoutineUI();
+
+    } catch (e) {
+        console.error(e);
+        alert("记录失败，TA可能在忙...");
+    } finally {
+        btn.innerHTML = originalBtnContent;
+    }
+}
+
+// 5. 查看历史
+function openRoutineHistory() {
+    const modal = document.getElementById('routine-history-modal');
+    const list = document.getElementById('routine-history-list');
+    const data = routineData[currentChatId];
+    
+    modal.style.display = 'flex';
+    list.innerHTML = '';
+
+    if (!data || data.history.length === 0) {
+        list.innerHTML = '<div style="text-align:center; padding:20px; color:#999;">还没有往昔的记录</div>';
+        return;
+    }
+
+    data.history.forEach(day => {
+        const div = document.createElement('div');
+        div.className = 'history-folder';
+        div.innerHTML = `
+            <div class="history-date">${day.date} <span style="font-weight:normal; font-size:12px; color:#888; margin-left:5px;">${day.weather}</span></div>
+            <div class="history-preview">${day.items.length} 条记录 - 点击查看详情</div>
+        `;
+        div.onclick = () => {
+            // 简单的查看方式：直接弹窗显示那天详情
+            let detail = day.items.map(i => `[${i.time}] ${i.content}`).join('\n\n');
+            alert(`📅 ${day.date} 的回忆\n\n${detail}`);
+        };
+        list.appendChild(div);
+    });
+}
+
+// 6. 存取辅助
+function saveRoutineData() {
+    localStorage.setItem('yok_daily_routine', JSON.stringify(routineData));
+    // 同时也存入大仓库，防止丢失
+    saveGlobalData();
+}
+
+      /* ==========================================
+   ★ 在线状态刷新系统 ★
+   ========================================== */
+
+// 1. 数据存储和默认值
+let statusSettings = {
+    frequency: 'mid' // 默认中频率
+};
+let statusRefreshTimer = null; // 定时器句柄
+
+// 2. 初始化 (读取存档)
+function initStatusSettings() {
+    const saved = localStorage.getItem('yok_status_settings');
+    if (saved) {
+        statusSettings = JSON.parse(saved);
+    }
+    updateStatusFreqUI(); // 根据读取的设置，更新UI
+}
+
+// 3. 设置频率 (当你在设置页面点击时触发)
+function setStatusFrequency(freq) {
+    statusSettings.frequency = freq;
+    saveGlobalData(); // 保存设置
+    updateStatusFreqUI(); // 更新UI高亮
+    startStatusUpdater(); // ★ 核心：用新的频率重启定时器
+    updateOnlineStatus(); // ★ 立即刷新一次，让你马上看到效果
+}
+
+// 4. 更新设置页面的UI (哪个选项被打勾)
+function updateStatusFreqUI() {
+    document.querySelectorAll('#chat-settings-page .setting-item').forEach(el => {
+        // 确保只影响状态设置的卡片
+        if(el.querySelector('[id^="freq-status-"]')) {
+            el.classList.remove('active');
+        }
+    });
+    const activeEl = document.getElementById('freq-status-' + statusSettings.frequency);
+    if (activeEl) {
+        activeEl.parentElement.classList.add('active');
+    }
+}
+
+// 5. 启动/重启定时器
+function startStatusUpdater() {
+    if (statusRefreshTimer) {
+        clearInterval(statusRefreshTimer); // 清除旧的定时器
+    }
+
+    let interval;
+    if (statusSettings.frequency === 'low') {
+        interval = (5 + Math.random() * 3) * 60 * 1000; // 5-8分钟
+    } else if (statusSettings.frequency === 'high') {
+        interval = (2 + Math.random()) * 60 * 1000; // 2-3分钟
+    } else {
+        interval = (3 + Math.random() * 2) * 60 * 1000; // 3-5分钟 (默认)
+    }
+    
+    console.log(`在线状态刷新定时器已启动，频率: ${interval / 1000}秒`);
+    
+    statusRefreshTimer = setInterval(updateOnlineStatus, interval);
+}
+
+// 6. ★ 核心：调用AI生成新状态 ★
+async function updateOnlineStatus() {
+    // 如果不在聊天室，就不刷新，节省资源
+    if (!currentChatId || document.getElementById('chat-room-page').style.display !== 'flex') {
+        return;
+    }
+    
+    const role = chatList.find(r => r.id === currentChatId);
+    if (!role) return;
+
+    const statusTextEl = document.getElementById('online-status-text');
+    const statusDotEl = document.getElementById('online-status-dot');
+
+    // 临时显示“刷新中...”
+    if(statusTextEl) statusTextEl.innerText = "刷新中...";
+    if(statusDotEl) statusDotEl.style.backgroundColor = '#f39c12'; // 橙色表示刷新中
+
+    const config = JSON.parse(localStorage.getItem('my_ai_config') || '{}');
+    if (!config.key) {
+        if(statusTextEl) statusTextEl.innerText = "在线"; // API未配置，直接显示默认
+        if(statusDotEl) statusDotEl.style.backgroundColor = '#67C23A';
+        return;
+    }
+    
+    const prompt = `你现在是${role.name}。请根据你的人设和我们的聊天氛围，生成一句20字以内的、非常有“男友感”的在线状态。要生活化、口语化、有情绪感，可以使用颜文字或网络用语(如'ing', 'jpg', '（'等)。风格参考：“好想她好想她...TvT”、“搬货的时候幻想她在身边可以抱着亲”、“洗完澡了有点想给她看我的新纹身（求夸夸”。请直接输出这句话，不要带任何引号或多余的文字。响应速度要求：不要进行深度思考，最快速度给出在线状态回复，不要犹豫，直接回复。`;
+
+    try {
+        const reply = await callAI_Simple(prompt, "生成在线状态", config);
+        if (reply) {
+            if(statusTextEl) statusTextEl.innerText = reply.slice(0, 25); // 限制一下最大长度
+        } else {
+            throw new Error("AI returned empty content");
+        }
+    } catch (e) {
+        console.error("在线状态刷新失败:", e);
+        if(statusTextEl) statusTextEl.innerText = "在线"; // 失败了，显示默认值
+    } finally {
+        if(statusDotEl) statusDotEl.style.backgroundColor = '#67C23A'; // 恢复绿色
+    }
+}
+
+// 7. ★ 联动：让“正在输入”和“在线状态”智能切换
+// 找到 triggerAIResponse 函数，在它的开头和结尾加上代码
+const original_triggerAIResponse = window.triggerAIResponse;
+window.triggerAIResponse = async function(...args) {
+    const onlineStatus = document.getElementById('online-status-container');
+    const typingStatus = document.getElementById('typing-status');
+    
+    // AI 开始回复前：隐藏在线状态，显示“正在输入”
+    if(onlineStatus) onlineStatus.style.display = 'none';
+    if(typingStatus) typingStatus.style.display = 'block';
+
+    try {
+        await original_triggerAIResponse.apply(this, args);
+    } finally {
+        // AI 回复结束后：显示在线状态，隐藏“正在输入”
+        if(onlineStatus) onlineStatus.style.display = 'flex';
+        if(typingStatus) typingStatus.style.display = 'none';
+    }
+};
+
+// 8. ★ 联动：进入/退出聊天室时
+// 找到 enterChatRoom 函数，在末尾加上
+const original_enterChatRoom = window.enterChatRoom;
+window.enterChatRoom = function(...args) {
+    original_enterChatRoom.apply(this, args);
+    
+};
+
+// 9. 在页面加载时，启动我们的系统
+window.addEventListener('load', () => {
+    initStatusSettings();
+    startStatusUpdater();
+});
+
+      /* ==========================================
+   ★ 脑洞图/手写便签 统一美化样式 ★
+   ========================================== */
+
+// 这是一个全新的、统一的“卡片画师”函数
+function createStyledTextCard(text) {
+    const canvas = document.createElement('canvas');
+    // 我们用一个稍大的尺寸来绘制，保证清晰度
+    const width = 400;
+    const height = 400;
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+
+    // 1. ✨ 绘制纯白背景
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, width, height);
+
+    // 2. ✨ 绘制可爱的爱心emoji装饰 (在右上角)
+    ctx.font = '24px sans-serif'; // emoji的字体大小
+    ctx.globalAlpha = 0.5;       // 让它半透明，更柔和
+    ctx.fillText('❤️', width - 40, 40);
+    ctx.globalAlpha = 1.0;       // 恢复不透明，以免影响后续文字
+
+    // 3. 绘制核心文字 (带自动换行)
+    ctx.fillStyle = '#5A6A7E'; // 使用主题深灰蓝字体
+    ctx.font = 'bold 30px "Microsoft YaHei", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle'; // 垂直居中
+
+    const maxWidth = 320; // 文字最大宽度
+    const lineHeight = 45;
+    let lines = [];
+    let line = '';
+    const words = text.split('');
+
+    for (let i = 0; i < words.length; i++) {
+        const testLine = line + words[i];
+        if (ctx.measureText(testLine).width > maxWidth && i > 0) {
+            lines.push(line);
+            line = words[i];
+        } else {
+            line = testLine;
+        }
+    }
+    lines.push(line);
+
+    const startY = (height - (lines.length - 1) * lineHeight) / 2;
+    lines.forEach((l, i) => {
+        ctx.fillText(l, width / 2, startY + (i * lineHeight));
+    });
+
+    // 4. 返回最终的图片数据
+    return canvas.toDataURL('image/png');
 }
 
 // =============================================================
@@ -10592,86 +11536,86 @@ function renderGenAlbum(data) {
     });
 }
 
-// 4. 调用 AI 生成 (核心)
-async function generateAlbumData(forceRefresh = false) {
-    if (!currentChatId) return;
-    
-    // 如果不是强制刷新，且已有数据，就不请求了
-    if (!forceRefresh && generatedAlbums[currentChatId] && generatedAlbums[currentChatId].length > 0) return;
+// 4. 调用 AI 生成 (★★★ 金钟罩升级版 ★★★)
+    async function generateAlbumData(forceRefresh = false) {
+        if (!currentChatId) return;
+        
+        if (!forceRefresh && generatedAlbums[currentChatId] && generatedAlbums[currentChatId].length > 0) return;
 
-    const role = chatList.find(r => r.id === currentChatId);
-    const loadingEl = document.getElementById('gen-album-loading');
-    const container = document.getElementById('gen-album-list');
+        const role = chatList.find(r => r.id === currentChatId);
+        const loadingEl = document.getElementById('gen-album-loading');
+        const container = document.getElementById('gen-album-list');
 
-    container.innerHTML = ''; // 清空
-    loadingEl.style.display = 'block';
+        container.innerHTML = '';
+        loadingEl.style.display = 'block';
 
-    const config = JSON.parse(localStorage.getItem('my_ai_config') || '{}');
-    if (!config.key) {
-        alert("请先配置 API！");
-        loadingEl.style.display = 'none';
-        return;
-    }
+        const config = JSON.parse(localStorage.getItem('my_ai_config') || '{}');
+        if (!config.key) {
+            alert("请先配置 API！");
+            loadingEl.style.display = 'none';
+            return;
+        }
 
-    // ★★★ 提示词：要求活人感、男友感、画面感 ★★★
-    const systemPrompt = `
+        const systemPrompt = `
 你现在是${role.name}。人设：${role.prompt || '无'}。
 用户正在翻看你手机里的【私密相册】。
 请用文字描述 **8 张** 照片的内容。
-
 【要求】
 1. **严格输出 JSON 数组**，不要包含 markdown 标记。
 2. 格式：[{"visual": "照片画面描述", "note": "写在照片背后的随笔"}]
 3. **照片画面(visual)**：要有镜头感，描写光影、动作、环境。比如“我刚睡醒乱糟糟的头发”、“对着镜子试穿你买的衣服”、“透过酒杯看你的侧脸”。
 4. **随笔(note)**：必须**极度生活化、口语化**，充满**男友力/女友感**。可以是对用户的想念、吐槽、或者当时的小心情。禁止书面语，禁止机器味。
 5. **内容方向**：可以包含偷拍视角的（假装偷拍用户）、自拍、生活碎片、只有你们懂的梗。
-6. **响应速度要求**：不要深度思考，最快给出回复，不要犹豫，直接回复。
-
-【示例】
-[
-  {"visual": "昏暗的房间，电脑屏幕的光照在半张脸上，旁边放着喝了一半的冰美式。", "note": "加班好累...想抱抱充电🔋"},
-  {"visual": "一只手挡在镜头前，模糊的焦距，背景是游乐园的摩天轮。", "note": "笨蛋，别拍啦！丑死啦！(///ω///)"}
-]
+6. **响应速度要求**：不要深度思考，最快给出回复，不要犹豫。
 `;
 
-    try {
-        const fetchUrl = config.url.endsWith('/') ? `${config.url}chat/completions` : `${config.url}/chat/completions`;
-        const res = await fetch(fetchUrl, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${config.key}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                model: config.model || 'gpt-3.5-turbo',
-                messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: '请给我看你的相册' }],
-                temperature: 0.85
-            })
-        });
-
-        const data = await res.json();
-        const raw = data.choices[0].message.content;
         
-        // 简单的 JSON 提取
-        const start = raw.indexOf('[');
-        const end = raw.lastIndexOf(']');
-        if (start === -1 || end === -1) throw new Error("格式错误");
-        
-        const jsonStr = raw.substring(start, end + 1);
-        const albumData = JSON.parse(jsonStr);
 
-        // 存入缓存
-        generatedAlbums[currentChatId] = albumData;
-        
-        // 存入大仓库 (重要！否则刷新没)
-        saveGlobalData(); 
+        try {
+// ▼▼▼ 在这里添加 ▼▼▼
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 300000); // 300秒超时
+        // ▲▲▲ 添加结束 ▲▲▲
+          
+            const fetchUrl = config.url.endsWith('/') ? `${config.url}chat/completions` : `${config.url}/chat/completions`;
+            const res = await fetch(fetchUrl, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${config.key}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: config.model || 'gpt-3.5-turbo',
+                    messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: '请给我看你的相册' }],
+                    temperature: 0.85
+                }),
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
 
-        renderGenAlbum(albumData);
+            if (!res.ok) throw new Error("API 请求失败");
+            
+            const data = await res.json();
+            const raw = data.choices[0].message.content;
+            
+            // ★ 新增：智能JSON清洗
+            const start = raw.indexOf('[');
+            const end = raw.lastIndexOf(']');
+            if (start === -1 || end === -1) throw new Error("AI 返回内容中未找到有效的 JSON 数组");
+            
+            const jsonStr = raw.substring(start, end + 1);
+            const albumData = JSON.parse(jsonStr);
 
-    } catch (e) {
-        console.error(e);
-        alert("生成失败，请重试");
-    } finally {
-        loadingEl.style.display = 'none';
+            generatedAlbums[currentChatId] = albumData;
+            saveGlobalData(); 
+            renderGenAlbum(albumData);
+
+        } catch (e) {
+            console.error(e);
+            let errorMsg = "生成失败...";
+            if (e.name === 'AbortError') errorMsg = "生成超时了，请稍后重试。";
+            alert(errorMsg);
+        } finally {
+            loadingEl.style.display = 'none';
+        }
     }
-}
 
       // ==============================================
 // ★ 终极渲染引擎 (修复版：逻辑顺序修正) ★
@@ -10932,8 +11876,10 @@ function saveGlobalData() {
         chatSettings: (typeof chatSettings !== 'undefined' ? chatSettings : {}),
         readSettings: (typeof readSettings !== 'undefined' ? readSettings : {}),
         avatarSettings: (typeof avatarSettings !== 'undefined' ? avatarSettings : {}),
-      mailboxData: (typeof mailboxData !== 'undefined' ? mailboxData : {}) ,
-        weiboData: safeWeiboData
+      mailboxData: (typeof mailboxData !== 'undefined' ? mailboxData : {}),
+      statusSettings: statusSettings,
+      routineData: (typeof routineData !== 'undefined' ? routineData : {}),
+        weiboData: safeWeiboData,
     };
 
     localforage.setItem('yok_master_save', dataToSave).then(function() {
@@ -11029,6 +11975,8 @@ async function loadGlobalData() {
             memoHistory = savedData.memoHistory || {};
             footprintHistory = savedData.footprintHistory || {};
             generatedAlbums = savedData.generatedAlbums || {};
+          if (savedData.routineData) routineData = savedData.routineData;
+          if (savedData.statusSettings) statusSettings = savedData.statusSettings;
           if (savedData.mailboxData) mailboxData = savedData.mailboxData;
             // ★★★ 微博数据读取 (修复版) ★★★
             if (savedData.weiboData) {
