@@ -22,6 +22,11 @@
     --avatar-size: 40px;       /* 默认大小 */
     --avatar-radius: 8px;      /* 默认圆角 (方形) */
     --avatar-gap: 8px;         /* 默认边距 */
+          /* ★★★ 新增：聊天室深度美化变量 ★★★ */
+    --chat-header-bg: rgba(255, 255, 255, 0.97); /* 默认毛玻璃白 */
+    --chat-footer-bg: white;                    /* 默认纯白 */
+    --btn-send-icon: none;                      /* 默认无自定义图 */
+    --btn-receive-icon: none;                   /* 默认无自定义图 */
 }
     
         body {
@@ -639,7 +644,7 @@
             padding-top: 30px; /* 避开状态栏 */
             padding-left: 15px; padding-right: 15px;
             display: flex; align-items: center; justify-content: space-between;
-            background: rgba(255,255,255,0.9); /* 毛玻璃表头 */
+            background: var(--chat-header-bg) !important; /* ★ 改成使用变量 */
             backdrop-filter: blur(10px);
             border-bottom: 1px solid rgba(0,0,0,0.05);
             z-index: 10;
@@ -684,7 +689,8 @@
         /* --- ▼▼▼ 请替换成这段新的代码 ▼▼▼ --- */
 
 .room-footer {
-    background: white;
+    background: var(--chat-footer-bg) !important; /* ★ 改成使用变量 */
+  position: relative; /* <-- ★★★ 就加这一行！★★★ */
     padding: 8px 12px;          /* ✅ 左右边距不变 */
     padding-bottom: 25px;       /* ✅ 底部安全区稍微缩小一点点 */
     display: flex;
@@ -719,9 +725,25 @@
         .action-btn:active { transform: scale(0.9); }
         
         /* 接收按钮 (左侧) */
-        .btn-receive { background: #F0F2F5; color: #5A6A7E; }
+        .btn-receive { 
+          background-image: var(--btn-receive-icon) !important; /* ★ 支持背景图 */
+    background-size: cover !important;
+    background-position: center !important;
+}
         /* 发送按钮 (右侧) */
-        .btn-send { background: var(--accent); color: var(--btn-text); }
+        .btn-send { 
+          background: var(--accent); 
+          color: var(--btn-text); 
+          background-image: var(--btn-send-icon) !important; /* ★ 支持背景图 */
+    background-size: cover !important;
+    background-position: center !important;
+    /* 如果有自定义图，就把原来的 SVG 隐藏掉，防止重叠 */
+}
+/* 配合 JS 逻辑：如果有背景图，我们会给它加一个 .has-custom-icon 类来隐藏 SVG */
+.action-btn.has-custom-icon svg {
+    display: none !important;
+}
+        
       
 
 
@@ -2565,7 +2587,254 @@ input[type="range"]::-moz-range-thumb:active {
 }
 .history-date { font-weight: bold; color: #333; }
 .history-preview { font-size: 12px; color: #999; margin-top: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      
+
+      /* ==============================================
+   ★ 全新：聊天室气泡悬浮菜单 UI ★
+   ============================================== */
+
+/* 1. 强制隐藏掉旧的、从底部升起的面板 */
+#chat-action-panel {
+    display: none !important;
+}
+
+/* 2. “飞碟”本体：纯白、淡影的气泡卡片 */
+#chat-bubble-panel {
+    position: absolute; /* 相对于输入框定位 */
+    bottom: calc(100% + 10px); /* 在输入框正上方，并留出10px间距 */
+    left: 10px; /* 从左侧加号按钮附近开始 */
+    
+    background: white;
+    border-radius: 16px; /* 圆润的边角 */
+    padding: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08); /* 你要的淡淡灰色阴影 */
+    
+    display: flex; /* 让里面的按钮横向排列 */
+    gap: 12px; /* 按钮之间的间距 */
+    
+    /* 默认隐藏，并为动画做准备 */
+    opacity: 0;
+    transform: translateY(10px) scale(0.95);
+    transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+    pointer-events: none; /* 隐藏时不能被点击 */
+    z-index: 110; /* 确保在输入框之上 */
+}
+
+/* 激活状态：优雅地浮现 */
+#chat-bubble-panel.active {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto; /* 显示时可以点击 */
+}
+
+/* 3. 气泡上的小巧按钮 */
+.bubble-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px; /* 图标和文字的间距 */
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+.bubble-btn:active {
+    transform: scale(0.9); /* 点击动效 */
+}
+
+/* 4. 按钮的核心：淡黄色圆角方块 */
+.bubble-icon-circle {
+    width: 48px;  /* 小巧！ */
+    height: 48px; /* 小巧！ */
+    background-color: #FFFBEB; /* 淡黄色 */
+    border-radius: 14px;      /* 圆角方形 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #F8C471; /* 图标颜色用暖橙色搭配 */
+    box-shadow: none !important; /* 强制去掉任何可能的阴影 */
+}
+
+/* 5. 按钮下方的文字 */
+.bubble-label {
+    font-size: 10px;
+    color: #888;
+}
+
+    /* ==============================================
+   ★ 全新气泡皮肤系列 (V5.0 短萌小耳朵版) ★
+   ============================================== */
+
+/* --- 1. 小面包 (bubble-bread) --- */
+/* 特点：向上翘起、短小精悍的圆润小耳朵 */
+.msg-bubble.bubble-bread {
+    border-radius: 18px;
+    position: relative;
+    overflow: visible !important;
+}
+
+/* --- 左边 (对方) 的短萌耳朵 --- */
+.msg-row.left .msg-bubble.bubble-bread {
+    border-top-left-radius: 4px; 
+    margin-left: 5px; /* 间距减小，因为耳朵变短了 */
+    margin-top: 6px;  /* 上方留白减小 */
+}
+.msg-row.left .msg-bubble.bubble-bread::before {
+    content: "";
+    position: absolute;
+    /* 调整位置，贴得更紧 */
+    top: -5px; 
+    left: -4px;
+    /* 尺寸缩小！变短变胖 */
+    width: 12px; 
+    height: 14px;
+    background-color: inherit;
+    /* ★ 核心魔法：重画路径，缩短行程 */
+    clip-path: path('M 12 14 L 0 0 C 0 0 5 -1 12 5 Z');
+    transform: rotate(-8deg); /* 角度稍微收一点 */
+}
+
+/* --- 右边 (我) 的短萌耳朵 --- */
+.msg-row.right .msg-bubble.bubble-bread {
+    border-top-right-radius: 4px;
+    margin-right: 5px;
+    margin-top: 6px;
+}
+.msg-row.right .msg-bubble.bubble-bread::before {
+    content: "";
+    position: absolute;
+    top: -5px; 
+    right: -4px;
+    width: 12px; 
+    height: 14px;
+    background-color: inherit;
+    /* 镜像路径 */
+    clip-path: path('M 0 14 L 12 0 C 12 0 7 -1 0 5 Z');
+    transform: rotate(8deg);
+}
+
+
+/* --- 2. 萌萌哒 (bubble-cute) --- */
+/* 特点：立体阴影 + 短萌耳朵 */
+.msg-bubble.bubble-cute {
+    border-radius: 18px;
+    position: relative;
+    overflow: visible !important;
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,0.08));
+}
+/* 继承短萌参数 */
+.msg-row.left .msg-bubble.bubble-cute {
+    border-top-left-radius: 4px; margin-left: 5px; margin-top: 6px;
+}
+.msg-row.left .msg-bubble.bubble-cute::before {
+    content: ""; position: absolute; top: -5px; left: -4px; width: 12px; height: 14px;
+    background-color: inherit;
+    clip-path: path('M 12 14 L 0 0 C 0 0 5 -1 12 5 Z');
+    transform: rotate(-8deg);
+}
+.msg-row.right .msg-bubble.bubble-cute {
+    border-top-right-radius: 4px; margin-right: 5px; margin-top: 6px;
+}
+.msg-row.right .msg-bubble.bubble-cute::before {
+    content: ""; position: absolute; top: -5px; right: -4px; width: 12px; height: 14px;
+    background-color: inherit;
+    clip-path: path('M 0 14 L 12 0 C 12 0 7 -1 0 5 Z');
+    transform: rotate(8deg);
+}
+
+
+/* --- 3. 半透明毛玻璃 (bubble-glass) --- */
+/* 保持不变 */
+.msg-bubble.bubble-glass {
+    border-radius: 20px !important;
+    background-color: rgba(255, 255, 255, 0.65) !important; 
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    color: #333 !important;
+}
+
+
+/* --- 4. 描边小面包 (bubble-bread-border) --- */
+/* 特点：带边框 + 短萌耳朵 */
+.msg-bubble.bubble-bread-border {
+    border-radius: 18px;
+    position: relative;
+    overflow: visible !important;
+    filter: drop-shadow(0 0 0.5px rgba(0,0,0,0.15));
+}
+/* 继承短萌参数 */
+.msg-row.left .msg-bubble.bubble-bread-border {
+    border-top-left-radius: 4px; margin-left: 5px; margin-top: 6px;
+}
+.msg-row.left .msg-bubble.bubble-bread-border::before {
+    content: ""; position: absolute; top: -5px; left: -4px; width: 12px; height: 14px;
+    background-color: inherit;
+    clip-path: path('M 12 14 L 0 0 C 0 0 5 -1 12 5 Z');
+    transform: rotate(-8deg);
+}
+.msg-row.right .msg-bubble.bubble-bread-border {
+    border-top-right-radius: 4px; margin-right: 5px; margin-top: 6px;
+}
+.msg-row.right .msg-bubble.bubble-bread-border::before {
+    content: ""; position: absolute; top: -5px; right: -4px; width: 12px; height: 14px;
+    background-color: inherit;
+    clip-path: path('M 0 14 L 12 0 C 12 0 7 -1 0 5 Z');
+    transform: rotate(8deg);
+}
+      /* 装饰品容器 (通用) */
+.msg-decor {
+    position: absolute;
+    z-index: 10;
+    font-size: 10px;
+    line-height: 1;
+    pointer-events: none;
+    white-space: nowrap; /* 防止文字装饰换行 */
+}
+
+/* --- 位置定义 (升级版：更大的活动空间) --- */
+
+/* 1. 内侧 (inner)：默认放在右下角，但我们会通过 JS 给气泡加 padding 来配合它 */
+.decor-pos-inner { 
+    bottom: 6px; 
+    right: 10px; 
+    /* 稍微半透明一点，避免太抢眼 */
+    opacity: 0.9; 
+}
+
+/* 2. 外侧 - 左上角 */
+.decor-pos-top-left { 
+    top: -12px;  /* 往上飞！ */
+    left: -10px; /* 往左飞！ */
+    transform: rotate(-10deg); /* 稍微歪一点更可爱 */
+}
+
+/* 3. 外侧 - 右上角 */
+.decor-pos-top-right { 
+    top: -12px; 
+    right: -10px; 
+    transform: rotate(10deg);
+}
+
+/* 4. 外侧 - 左下角 */
+.decor-pos-bottom-left { 
+    bottom: -10px; 
+    left: -10px; 
+    transform: rotate(5deg);
+}
+
+/* 5. 外侧 - 右下角 */
+.decor-pos-bottom-right { 
+    bottom: -10px; 
+    right: -10px; 
+    transform: rotate(-5deg);
+}
+
+/* --- 样式修饰 --- */
+.msg-decor.with-bg {
+    background: white;
+    padding: 3px 6px; /* 稍微大一点的底片 */
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1); /* 更柔和的投影 */
+    color: #555;
+    border: 1px solid rgba(0,0,0,0.05);
+}
     </style>
 </head>
   
@@ -2644,7 +2913,7 @@ input[type="range"]::-moz-range-thumb:active {
     </div>
 
       <!-- 微博图标 -->
-        <div class="app-icon" id="icon-weibo" onclick="openApp('weibo-app')">
+        <div class="app-icon" id="icon-weibo" onclick="openWeibo()">
             <div id="preview-icon-weibo" style="width:30px; height:30px; border-radius:8px; background-size:cover; display:flex; justify-content:center; align-items:center;">
                 <!-- 默认图标：一只眼睛或者波浪，代表发现 -->
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="#7FA6C8" stroke="none"><path d="M10.191 2.9a2.84 2.84 0 0 1 3.618 0l5.866 4.818a2.96 2.96 0 0 1 1.075 2.29v8.802c0 1.605-1.273 2.94-2.883 2.94H6.133c-1.61 0-2.883-1.335-2.883-2.94v-8.802c0-.886.392-1.73 1.075-2.29zm.059 8.1a.75.75 0 1 0-1.5 0v.5a.75.75 0 0 0 1.5 0zm5 0a.75.75 0 1 0-1.5 0v.5a.75.75 0 0 0 1.5 0zm-5.803 4.398a.75.75 0 1 0-.894 1.204A5.77 5.77 0 0 0 12 17.75a5.77 5.77 0 0 0 3.447-1.148a.75.75 0 0 0-.894-1.204A4.27 4.27 0 0 1 12 16.25a4.27 4.27 0 0 1-2.553-.852"></path></svg>
@@ -3157,6 +3426,18 @@ input[type="range"]::-moz-range-thumb:active {
             </div>
         </div>
 
+      <!-- ★★★ 修复版：穿上白色圆角卡片“制服” ★★★ -->
+<div class="me-section"> <!-- 关键！加上这个外壳 -->
+    <div class="me-item" onclick="openChatThemePage()">
+        <div class="me-item-title">
+            <!-- 调色盘图标 -->
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>
+            <span>聊天室深度装修</span>
+        </div>
+        <div class="arrow">&gt;</div>
+    </div>
+</div>
+
     <!-- 找到 id="tab-me" 里面的最后一部分，修改成这样 -->
 
     <div class="me-section">
@@ -3341,6 +3622,130 @@ input[type="range"]::-moz-range-thumb:active {
             </div>
         </div>
     </div>
+
+      <!-- === 聊天室深度装修页面 === -->
+<div id="chat-theme-page" class="me-page">
+    <div class="api-header">
+        <div class="api-back-btn" onclick="document.getElementById('chat-theme-page').style.display='none'">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+        </div>
+        <h2>聊天室装修</h2>
+    </div>
+    
+    <div class="me-page-content">
+        
+        <!-- 1. 顶栏背景 -->
+        <div class="settings-card">
+            <div class="setting-label">1. 聊天室顶栏背景</div>
+            <div class="helper-text">建议使用长条形图片，不要太花哨以免挡住文字。</div>
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <button class="btn-secondary" onclick="document.getElementById('header-bg-upload').click()">上传图片</button>
+                <button class="btn-secondary" onclick="resetChatTheme('header')" style="color:#F56C6C;">恢复默认</button>
+            </div>
+            <input type="file" id="header-bg-upload" class="hidden-input" accept="image/*" onchange="handleChatThemeUpload(this, 'header')">
+        </div>
+
+        <!-- 2. 底栏背景 -->
+        <div class="settings-card">
+            <div class="setting-label">2. 聊天室底栏背景</div>
+            <div class="helper-text">输入框下方的区域背景。</div>
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <button class="btn-secondary" onclick="document.getElementById('footer-bg-upload').click()">上传图片</button>
+                <button class="btn-secondary" onclick="resetChatTheme('footer')" style="color:#F56C6C;">恢复默认</button>
+            </div>
+            <input type="file" id="footer-bg-upload" class="hidden-input" accept="image/*" onchange="handleChatThemeUpload(this, 'footer')">
+        </div>
+
+        <!-- 3. 接收按钮图标 -->
+        <div class="settings-card">
+            <div class="setting-label">3. 接收消息按钮图标</div>
+            <div class="helper-text">替换左下角的气泡图标。建议正方形小图。</div>
+            <div style="display:flex; gap:10px; margin-top:10px; align-items:center;">
+                <div id="preview-btn-receive" class="action-btn" style="border:1px solid #eee;"></div>
+                <button class="btn-secondary" onclick="document.getElementById('btn-receive-upload').click()">更换</button>
+                <button class="btn-secondary" onclick="resetChatTheme('btn-receive')" style="color:#F56C6C;">清除</button>
+            </div>
+            <input type="file" id="btn-receive-upload" class="hidden-input" accept="image/*" onchange="handleChatThemeUpload(this, 'btn-receive')">
+        </div>
+
+        <!-- 4. 发送按钮图标 -->
+        <div class="settings-card">
+            <div class="setting-label">4. 发送消息按钮图标</div>
+            <div class="helper-text">替换右下角的纸飞机图标。建议正方形小图。</div>
+            <div style="display:flex; gap:10px; margin-top:10px; align-items:center;">
+                <div id="preview-btn-send" class="action-btn" style="border:1px solid #eee;"></div>
+                <button class="btn-secondary" onclick="document.getElementById('btn-send-upload').click()">更换</button>
+                <button class="btn-secondary" onclick="resetChatTheme('btn-send')" style="color:#F56C6C;">清除</button>
+            </div>
+            <input type="file" id="btn-send-upload" class="hidden-input" accept="image/*" onchange="handleChatThemeUpload(this, 'btn-send')">
+        </div>
+
+      <!-- === 气泡装饰车间 === -->
+<div class="settings-card" style="margin-top: 20px; border: 2px dashed #E0E0E0;">
+    <div class="setting-label">气泡装饰</div>
+    <div class="helper-text">给气泡贴上各种可爱的标签、图片或“已读”状态！</div>
+
+    <!-- 选项卡：选对方还是我方 -->
+    <div style="display:flex; gap:10px; margin:15px 0;">
+        <button class="btn-secondary" id="tab-decor-ai" onclick="switchDecorTab('ai')" style="background:#7FA6C8; color:white;">装饰对方气泡</button>
+        <button class="btn-secondary" id="tab-decor-mine" onclick="switchDecorTab('mine')">装饰我的气泡</button>
+    </div>
+
+    <!-- 添加控制台 -->
+    <div style="background:#F9F9F9; padding:15px; border-radius:12px;">
+        <div class="input-row">
+            <label>内容类型</label>
+            <select id="decor-type" class="cute-input" onchange="toggleDecorInput()">
+                <option value="text">文字 (如: 已读)</option>
+                <option value="image">图片 (上传小图标)</option>
+            </select>
+        </div>
+
+        <!-- 文字输入 -->
+        <div id="decor-input-text-box">
+            <div class="input-row">
+                <input type="text" id="decor-text" class="cute-input" placeholder="输入文字，例如：已读">
+            </div>
+            <div class="input-row" style="display:flex; align-items:center; gap:10px;">
+                <label style="margin:0; font-size:12px;">加白色底片?</label>
+                <input type="checkbox" id="decor-bg-check">
+                <select id="decor-bg-style" class="cute-input" style="width:80px; padding:5px;">
+                    <option value="4px">方角</option>
+                    <option value="10px">圆角</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- 图片上传 -->
+        <div id="decor-input-img-box" style="display:none;">
+            <button class="btn-secondary" onclick="document.getElementById('decor-img-upload').click()">上传图片</button>
+            <input type="file" id="decor-img-upload" class="hidden-input" accept="image/*" onchange="handleDecorImgSelect(this)">
+            <div id="decor-img-preview" style="margin-top:5px; font-size:12px; color:#999;">未选择</div>
+        </div>
+
+        <!-- 位置选择 -->
+        <div class="input-row">
+            <label>位置</label>
+            <select id="decor-pos" class="cute-input">
+                <option value="inner">气泡内侧 (尾部)</option>
+                <option value="top-left">左上角 (外侧)</option>
+                <option value="top-right">右上角 (外侧)</option>
+                <option value="bottom-left">左下角 (外侧)</option>
+                <option value="bottom-right">右下角 (外侧)</option>
+            </select>
+        </div>
+
+        <button class="btn" onclick="addDecoration()">+ 添加装饰</button>
+    </div>
+
+    <!-- 已添加的装饰列表 -->
+    <div id="decor-list" style="margin-top:15px;">
+        <!-- JS 生成 -->
+    </div>
+</div>
+
+    </div>
+</div>
     
     <!-- === 海龟汤：组局大厅 === -->
     <div id="soup-lobby-page" class="me-page">
@@ -3681,31 +4086,62 @@ input[type="range"]::-moz-range-thumb:active {
         <!-- ▲▲▲▲▲ 面板结束 ▲▲▲▲▲ -->
         <!-- ▲▲▲▲▲ 插入结束 ▲▲▲▲▲ -->
 
-        <div class="room-footer">
-            <!-- ▼▼▼ 新增：加号按钮 ▼▼▼ -->
-            <div class="action-btn" style="color: #5A6A7E; background: transparent; border: 1px solid #E0E0E0; margin-right: 5px;" onclick="toggleChatActionPanel()">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        <!-- 找到 <div class="room-footer">，用下面这段代码把它整个换掉 -->
+<div class="room-footer">
+    <!-- ★★★ 1. 全新的气泡悬浮菜单 (默认隐藏) ★★★ -->
+    <div id="chat-bubble-panel">
+        <!-- 相册 -->
+        <div class="bubble-btn" onclick="document.getElementById('chat-image-upload').click()">
+            <div class="bubble-icon-circle">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
             </div>
-
-            <!-- 接收按钮 (气泡图标) -->
-            <div class="action-btn btn-receive" onclick="triggerAIResponse()" title="让对方回复">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                </svg>
+            <span class="bubble-label">相册</span>
+        </div>
+        <!-- 脑洞图 -->
+        <div class="bubble-btn" onclick="sendTextDescriptionImg()">
+            <div class="bubble-icon-circle">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
             </div>
-            
-            <textarea id="msg-input" class="chat-input-box" rows="1" placeholder="输入消息..."></textarea>
-            
-            <!-- 发送按钮 -->
-            <div class="action-btn btn-send" onclick="sendUserMessage()">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="22" y1="2" x2="11" y2="13"></line>
-                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                </svg>
+            <span class="bubble-label">脑洞图</span>
+        </div>
+        <!-- 转账 -->
+        <div class="bubble-btn" onclick="openTransferInput()">
+            <div class="bubble-icon-circle">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
             </div>
+            <span class="bubble-label">转账</span>
+        </div>
+        <!-- 读心 -->
+        <div class="bubble-btn" onclick="checkRoleStatus()">
+            <div class="bubble-icon-circle">
+                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+            </div>
+            <span class="bubble-label">读心</span>
+        </div>
+        <!-- 一起听 -->
+        <div class="bubble-btn" onclick="openMusicPlayer()">
+            <div class="bubble-icon-circle">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+            </div>
+            <span class="bubble-label">一起听</span>
         </div>
     </div>
 
+    <!-- ★★★ 2. 修改加号按钮的 onclick 事件 ★★★ -->
+    <div class="action-btn" id="plus-btn" style="color: #5A6A7E; background: transparent; border: 1px solid #E0E0E0; margin-right: 5px;" onclick="toggleBubblePanel(event)">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+    </div>
+
+    <!-- 后面是你原来的接收按钮、输入框、发送按钮，保持不变 -->
+    <div class="action-btn btn-receive" onclick="triggerAIResponse()" title="让对方回复">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+    </div>
+    <textarea id="msg-input" class="chat-input-box" rows="1" placeholder="输入消息..."></textarea>
+    <div class="action-btn btn-send" onclick="sendUserMessage()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+    </div>
+</div>
+      
       <!-- === 备忘录独立页面 === -->
     <div id="memo-page">
         <div class="api-header" style="background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
@@ -3927,14 +4363,22 @@ input[type="range"]::-moz-range-thumb:active {
             <!-- 外观设置 -->
             <div style="margin: 20px 20px 10px 20px; font-size: 12px; color: #999; font-weight: bold;">外观样式</div>
             <div class="setting-section">
-                <div class="setting-item">
-                    <span class="setting-title">气泡形状</span>
-                    <div class="shape-selector">
-                        <div class="shape-opt bubble-round" onclick="setBubbleShape('bubble-round', this)" title="圆滚滚"></div>
-                        <div class="shape-opt bubble-default active" onclick="setBubbleShape('bubble-default', this)" title="默认"></div>
-                        <div class="shape-opt bubble-sharp" onclick="setBubbleShape('bubble-sharp', this)" title="小尖角"></div>
-                    </div>
-                </div>
+                <!-- 找到“气泡形状”的 setting-item，替换成下面这样 -->
+<div class="setting-item" style="flex-direction: column; align-items: flex-start;">
+    <span class="setting-title" style="margin-bottom: 10px;">气泡形状</span>
+    <div class="shape-selector" style="flex-wrap: wrap; gap: 15px;">
+        <!-- 原有的 -->
+        <div class="shape-opt bubble-default active" onclick="setBubbleShape('bubble-default', this)" title="默认"></div>
+        <div class="shape-opt bubble-round" onclick="setBubbleShape('bubble-round', this)" title="圆滚滚"></div>
+        <div class="shape-opt bubble-sharp" onclick="setBubbleShape('bubble-sharp', this)" title="小尖角"></div>
+        
+        <!-- ★★★ 新增的 ★★★ -->
+        <div class="shape-opt bubble-bread" onclick="setBubbleShape('bubble-bread', this)" title="小面包"></div>
+        <div class="shape-opt bubble-cute" onclick="setBubbleShape('bubble-cute', this)" title="萌萌哒"></div>
+        <div class="shape-opt bubble-glass" onclick="setBubbleShape('bubble-glass', this)" title="毛玻璃"></div>
+        <div class="shape-opt bubble-bread-border" onclick="setBubbleShape('bubble-bread-border', this)" title="描边面包"></div>
+    </div>
+</div>
               <!-- ▼▼▼ 新增：已读状态设置 ▼▼▼ -->
 <div style="margin: 20px 20px 10px 20px; font-size: 12px; color: #999; font-weight: bold;">已读状态 (仅我发出的消息)</div>
 <div class="setting-section">
@@ -6539,43 +6983,61 @@ async function migrateFromOldStorage() {
         }
     }
 
-    // 2. 删除当前联系人 (彻底删除)
-    function deleteCurrentContact() {
-        if (!currentChatId) return;
-        
-        // 防止误删系统号 (如果你有系统号的话)
-        if (currentChatId.startsWith('system_')) {
-            alert('系统角色无法删除哦~');
-            return;
-        }
+    // ==========================================
+// ★ 删除联系人功能 (联动修复版) ★
+// ==========================================
+// 找到 deleteCurrentContact 函数，用下面这段代码把它整个换掉
 
-        if (confirm('【高能预警】\n确定要删除这个联系人吗？\n\n删除后，TA的聊天记录、备忘录、足迹将全部消失，无法找回！')) {
-            // 1. 从列表中移除
-            const index = chatList.findIndex(r => r.id === currentChatId);
-            if (index > -1) {
-                chatList.splice(index, 1);
-            }
-
-            // 2. 删除所有相关数据
-            delete chatHistory[currentChatId];
-            if (typeof memoHistory !== 'undefined') delete memoHistory[currentChatId];
-            if (typeof footprintHistory !== 'undefined') delete footprintHistory[currentChatId];
-            
-            // 3. 保存数据
-            saveGlobalData();
-
-            // 4. 关闭所有层级，回到主页
-            closeChatSettings(); // 关设置
-            closeChatRoom();     // 关聊天室
-            
-            // 5. 刷新列表显示
-            renderChatList();
-            renderContactList();
-          saveGlobalData();
-            
-            alert('联系人已删除，江湖不见 👋');
-        }
+function deleteCurrentContact() {
+    if (!currentChatId) return;
+    
+    // 防止误删系统号
+    if (currentChatId.startsWith('system_')) {
+        alert('系统角色无法删除哦~');
+        return;
     }
+
+    if (confirm('【高能预警】\n确定要删除这个联系人吗？\n\n删除后，TA的所有相关数据（聊天、备忘录、朋友圈互动等）都将消失，无法找回！')) {
+        
+        // 1. 从主联系人列表中移除
+        const index = chatList.findIndex(r => r.id === currentChatId);
+        if (index > -1) {
+            chatList.splice(index, 1);
+        }
+
+        // 2. 删除所有相关的聊天、记忆数据
+        delete chatHistory[currentChatId];
+        if (typeof memoHistory !== 'undefined') delete memoHistory[currentChatId];
+        if (typeof footprintHistory !== 'undefined') delete footprintHistory[currentChatId];
+        
+        // ★★★ 核心修复：在这里添加微博自动取关逻辑 ★★★
+        console.log(`正在检查微博关注列表，清理ID: ${currentChatId}`);
+        
+        // 安全检查：确保 weiboData 和 following 列表都存在
+        if (weiboData && weiboData.user && Array.isArray(weiboData.user.following)) {
+            const followIndex = weiboData.user.following.indexOf(currentChatId);
+            
+            if (followIndex > -1) {
+                weiboData.user.following.splice(followIndex, 1);
+                console.log(`✅ 已自动从微博取关 ${currentChatId}`);
+            }
+        }
+        // ★★★ 修复结束 ★★★
+
+        // 3. 保存所有更改
+        saveGlobalData();
+
+        // 4. 关闭所有层级，回到主页
+        closeChatSettings();
+        closeChatRoom();
+        
+        // 5. 刷新列表显示
+        renderChatList();
+        renderContactList();
+        
+        alert('联系人已彻底删除，江湖不见 👋');
+    }
+}
 
       /* ==========================================
        ★ 新增功能：沉浸式备忘录 (存档版) ★
@@ -7210,7 +7672,7 @@ function showActionMenu(momentId) {
     
     let promptText = "请选择操作：\n1. 点赞\n2. 评论";
     // 只有我发的，或者为了方便管理，允许删除所有（这里设定为允许删除所有，方便你清理AI乱发的）
-    promptText += "\n3. 删除此动态 🗑️";
+    promptText += "\n3. 删除此动态";
 
     const action = prompt(promptText);
 
@@ -7285,39 +7747,39 @@ function showBigImg(url) {
         triggerAiInteraction(newMoment);
     }
 
-    // 回复某人的评论
-    function replyComment(momentId, toUser, cIdx) {
-        // 如果点的是自己，不用回复
-        let myName = activePersonaId ? myPersonas.find(p=>p.id===activePersonaId).name : '我';
-        if (toUser === myName) return; 
+    // 找到 replyComment 函数，用下面这段代码把它整个换掉
+function replyComment(momentId, toUser, cIdx) {
+    const myName = weiboData.user.name || '我';
+    if (toUser === myName) return; 
 
-        const text = prompt(`回复 ${toUser}:`);
-        if (text) {
-            addComment(momentId, text, toUser);
-        }
-    }
-
-    function addComment(momentId, text, toUser) {
+    const text = prompt(`回复 ${toUser}:`);
+    if (text) {
         const m = momentsData.find(x => x.id === momentId);
-        let myName = activePersonaId ? myPersonas.find(p=>p.id===activePersonaId).name : '我';
+        if (!m) return;
 
+        // 1. 添加我们自己的回复
         m.comments.push({
             user: myName,
             text: text,
-            toUser: toUser // 如果是回复某人，这里有值
+            toUser: toUser 
         });
-        saveMoments();
-        renderMoments();
+        
+        saveGlobalData();
+        renderWeiboFeed();
 
-        // ★ 如果回复的是 AI (非 'me' 发的帖，或者 toUser 是 AI)，触发 AI 回复
-        if (m.roleId !== 'me' || (toUser && toUser !== myName)) {
-            // 找到那个 AI 角色
-            let aiRole = chatList.find(r => r.name === (toUser || chatList.find(x=>x.id===m.roleId).name));
-            if (aiRole) {
-                triggerAiReplyComment(m, aiRole, text);
-            }
+        // 2. ★★★ 新增：再次召唤水军，让他们对我们的“回复”进行回复 ★★★
+        // 50%的概率触发，防止评论区太拥挤
+        if (Math.random() > 0.5) {
+            triggerNetizenReplies(m, text, toUser);
+        }
+
+        // 3. 如果我们回复的是AI角色，也触发AI角色的回复
+        const aiRole = chatList.find(r => r.name === toUser);
+        if (aiRole) {
+            triggerAiReplyComment(m, aiRole, text);
         }
     }
+}
 
     // 5. AI 互动逻辑 (核心中的核心)
 
@@ -7889,66 +8351,34 @@ function forceAiPostMoment(roleId, customContent = null) {
 }
 
 // 2. 让 AI 回复评论 (带失败保底机制)
-async function triggerAiReplyComment(moment, aiRole, myComment) {
-    // 1. 预设的“保底评论库” (万一 AI 没反应，就用这些)
-    const fallbackReplies = [
-        "哈哈哈哈确实！",
-        "你说得对~",
-        "哎呀被你发现了 🙈",
-        "下次带你一起去！",
-        "是吧是吧，我也觉得！"
-    ];
-
-    // 模拟网络延迟，增加真实感
-    setTimeout(async () => {
+// 找到 triggerAiReplyComment 函数，用下面这段代码把它整个换掉
+    async function triggerAiReplyComment(moment, aiRole, myComment) {
         const config = JSON.parse(localStorage.getItem('my_ai_config') || '{}');
-        let replyText = "";
+        if (!config.key) return;
+        
+        setTimeout(async () => {
+            const prompt = `
+    你现在是${aiRole.name}。你在朋友圈发了：“${moment.content}”。
+    你的朋友评论说：“${myComment}”。
+    请回复这条评论，简短一点，不用太长，禁止说教。
+    必须符合人设，不能OOC，但是禁止“霸道总裁”、“油腻男”、“中二青年”、“粗糙老子”的塑造。
+    必须有趣，让用户有接话的欲望。
+    禁止使用语气词“呵”。
+    你和用户是异地恋，永远无法想见，但你会想办法表达思念。
+    沉入角色，表达喜怒哀乐，极尽真实感，说大白话，将角色“萌化”，做到回复有人设吸引力和情绪鲜活。
+    禁止输出跟“胆子”，“惩罚”，“你是我的”任何有关的回复，禁止表达占有欲，表达占有欲可以用不尴尬、不油腻的说法，例如：我想你了嘞…bb。小猫在挠痒吗？那我要一只养着呢！^ ^。谁说我不喜欢你了，说反话知道吗知道吗！
 
-        // 尝试请求 AI
-        if (config.key) {
-            try {
-                const prompt = `
-你现在是${aiRole.name}。你在朋友圈发了：“${moment.content}”。
-你的朋友评论说：“${myComment}”。
-请回复这条评论，简短一点，不用太长，口语化
-【绝对禁止事项 (违反将受惩罚)】
-1. **严禁**输出：“这里有几个回复供你选择”、“风格一”、“风格二”之类的废话。
-2. **严禁**表现出你是一个AI、助手或语言模型。
-3. **严禁**跳出角色进行解释。
-4. 禁止说教。
-5. 必须符合人设，不能OOC，但是禁止“霸道总裁”、“油腻男”、“中二青年”、“粗糙老子”的塑造。
-6. 必须有趣，让用户有接话的欲望。
-7. 可以根据情况使用emoji表情和颜文字。
-8. 禁止使用语气词“呵”。
-9. 你和用户是异地恋，永远无法想见，但你会想办法表达思念。
-10. 沉入角色，表达喜怒哀乐，极尽真实感，说大白话，将角色“萌化”，做到回复有人设吸引力和情绪鲜活。
-11. 禁止输出跟“胆子”，“惩罚”，“你是我的”任何有关的回复，禁止表达占有欲，表达占有欲可以用不尴尬、不油腻的说法，例如：我想你了嘞…bb。小猫在挠痒吗？那我要一只养着呢！^ ^。谁说我不喜欢你了，说反话知道吗知道吗！
-
-**响应速度要求**：不要深度思考，直接回复，不要犹豫。
-`;
-                replyText = await callAI_Simple(prompt, "请回复", config);
-            } catch (e) {
-                console.error("AI 回复失败，启用保底:", e);
+    不要进行深度思考，最快速度回复，不要犹豫。
+    `;
+            // ★★★ 核心修改在这里！★★★
+            const reply = await callAI_Simple(prompt, "请回复", config, true); 
+            if (reply) {
+                moment.comments.push({ user: aiRole.name, text: reply, toUser: '我' });
+                saveMoments();
+                renderMoments();
             }
-        }
-
-        // 如果 AI 没回 (空或者失败)，使用保底
-        if (!replyText) {
-            replyText = fallbackReplies[Math.floor(Math.random() * fallbackReplies.length)];
-        }
-
-        // 写入数据
-        moment.comments.push({ 
-            user: aiRole.name, 
-            text: replyText, 
-            toUser: '我' // 回复给我
-        });
-        
-        saveMoments();
-        renderMoments(); // 刷新看到新评论
-        
-    }, 3000); // 3秒后回复
-}
+        }, 4000);
+    }
 
 // 3. 升级：当我发动态时，AI 必回 (带保底)
 async function triggerAiInteraction(moment) {
@@ -8112,13 +8542,13 @@ function applyTheme(colorName) {
     themeConfig.themeColor = colorName;
     const root = document.documentElement;
     if (colorName === 'pink') {
-        root.style.setProperty('--bg-color', '#FDE2E4');
-        root.style.setProperty('--accent', '#FFB7B2');
-        root.style.setProperty('--bubble-mine', '#FFB7B2');
+        root.style.setProperty('--bg-color', '#FDEBF0');
+        root.style.setProperty('--accent', '#FBD9E1');
+        root.style.setProperty('--bubble-mine', '#FAC0CC');
         root.style.setProperty('--text-main', '#8E5555');
     } else if (colorName === 'green') {
-        root.style.setProperty('--bg-color', '#E2F0CB');
-        root.style.setProperty('--accent', '#88D8B0');
+        root.style.setProperty('--bg-color', '#D0E4BC');
+        root.style.setProperty('--accent', '#97CE9F');
         root.style.setProperty('--bubble-mine', '#88D8B0');
         root.style.setProperty('--text-main', '#4A6B45');
     } else {
@@ -8537,7 +8967,7 @@ window.showActionMenu = function(momentId) {
 
     // 4. 弹出菜单
     let promptText = "【操作菜单】\n1. 点赞\n2. 评论";
-    promptText += "\n3. 🗑️ 删除此动态"; 
+    promptText += "\n3. 删除此动态"; 
 
     const action = prompt(promptText);
 
@@ -9348,7 +9778,7 @@ ${contextInfo ? `[系统事件]: ${contextInfo}` : ''}
 
     section.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <span class="setting-title" style="font-weight:bold;">🎨 自定义 CSS 代码</span>
+            <span class="setting-title" style="font-weight:bold;">自定义 CSS 代码</span>
             <div style="display:flex; align-items:center; gap:5px;">
                 <span style="font-size:12px; color:#999;">启用</span>
                 <input type="checkbox" id="enable-custom-css" style="width:18px; height:18px; accent-color:var(--accent);">
@@ -9938,30 +10368,25 @@ function useFakeWeiboData() {
     renderWeiboFeed();
 }
 
-      // 渲染信息流 (完整版)
+     // 找到 renderWeiboFeed 函数，用下面这段代码把它整个换掉
 function renderWeiboFeed() {
     const container = document.getElementById('wb-feed-container');
     container.innerHTML = '';
     
     weiboData.posts.forEach(post => {
         let avatarStyle = '';
-        // 1. 如果是我
         if (post.author === 'me') {
             avatarStyle = `background-image: url('${weiboData.user.avatar}');`;
-        } 
-        // 2. 如果是聊天列表里的角色 (无论是关注的还是没关注的，只要名字对得上)
-        else {
+        } else {
             const role = chatList.find(r => r.name === post.author);
             if (role) {
                 avatarStyle = `background-image: url('${role.avatar}');`;
             } else {
-                // 3. 纯路人
-                const randomColor = '#' + Math.floor(Math.random()*16777215).toString(16);
+                const randomColor = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
                 avatarStyle = `background-color: ${randomColor};`; 
             }
         }
 
-        // 处理评论 HTML
         let commentsHtml = '';
         if (post.comments && post.comments.length > 0) {
             commentsHtml = `<div class="wb-top-comment">`;
@@ -9971,7 +10396,6 @@ function renderWeiboFeed() {
             commentsHtml += `</div>`;
         }
 
-        // 点赞按钮样式
         const likeColor = post.isLiked ? '#E6162D' : '#666';
         const likeIcon = post.isLiked ? '♥' : '♡';
 
@@ -9982,7 +10406,7 @@ function renderWeiboFeed() {
                 <div class="wb-avatar" style="${avatarStyle}"></div>
                 <div>
                     <div class="wb-user-name">${post.author === 'me' ? weiboData.user.name : post.author}</div>
-                    <div class="wb-post-time">${formatTimeAgo(post.time)} ${post.author !== 'me' ? '来自 iPhone 15 Pro' : ''}</div>
+                    <div class="wb-post-time">${formatTimeAgo(post.time)}</div>
                 </div>
             </div>
             <div class="wb-post-content">${post.content}</div>
@@ -9993,6 +10417,27 @@ function renderWeiboFeed() {
                 <div onclick="likeWeibo('${post.id}')" style="color:${likeColor}; cursor:pointer;">${likeIcon} ${post.likes || 0}</div>
             </div>
         `;
+
+        // ★★★ 新增：在这里为每个卡片安装长按信号！ ★★★
+        let pressTimer;
+        div.addEventListener('touchstart', (e) => {
+            pressTimer = setTimeout(() => {
+                window.showWeiboActionMenu(post.id);
+            }, 800); // 长按0.8秒触发
+        });
+        div.addEventListener('touchend', () => clearTimeout(pressTimer));
+        div.addEventListener('touchmove', () => clearTimeout(pressTimer));
+        // --- 电脑端鼠标适配 ---
+        div.addEventListener('mousedown', (e) => {
+             // 排除鼠标右键
+            if (e.button !== 0) return;
+            pressTimer = setTimeout(() => {
+                window.showWeiboActionMenu(post.id);
+            }, 800);
+        });
+        div.addEventListener('mouseup', () => clearTimeout(pressTimer));
+        div.addEventListener('mouseleave', () => clearTimeout(pressTimer));
+
         container.appendChild(div);
     });
 }
@@ -10018,7 +10463,50 @@ function likeWeibo(postId) {
     renderWeiboFeed();
 }
 
+      // ==========================================
+// ★ 微博动态专属：删除功能模块 ★
+// ==========================================
+
+/**
+ * 微博动态专属的长按操作菜单
+ * @param {string} postId - 目标帖子的ID
+ */
+window.showWeiboActionMenu = function(postId) {
+    console.log(`触发微博菜单，ID: ${postId}`); // 调试日志
+    // 使用最简单、安全的 confirm 对话框
+    if (confirm("确定要删除这条微博吗？\n这个操作无法撤销哦！")) {
+        // 如果确定，就呼叫“专属拆迁工”
+        window.deleteWeiboPost(postId);
+    }
+};
+
+// 把下面这段全新的代码，复制粘贴到你的脚本区域
+/**
+ * 微博动态专属删除函数
+ * @param {string} postId - 要删除的微博帖子的ID
+ */
+window.deleteWeiboPost = function(postId) {
+    // 1. 从微博的“帖子数据库”（weiboData.posts）里找到它
+    const index = weiboData.posts.findIndex(p => p.id === postId);
+
+    // 2. 如果找到了，就从数组中移除
+    if (index > -1) {
+        weiboData.posts.splice(index, 1);
+        console.log(`微博动态 ${postId} 已被删除。`);
+
+        // 3. 保存最新的数据状态
+        saveGlobalData();
+        
+        // 4. 重新渲染微博列表，让界面刷新
+        renderWeiboFeed();
+
+    } else {
+        console.warn(`删除失败：未找到ID为 ${postId} 的微博动态。`);
+    }
+};
+
 // 评论微博
+// 找到 commentWeibo 函数，用下面这段代码把它整个换掉
 function commentWeibo(postId) {
     const post = weiboData.posts.find(p => p.id === postId);
     if (!post) return;
@@ -10026,63 +10514,85 @@ function commentWeibo(postId) {
     const text = prompt("请输入评论：");
     if (text) {
         if (!post.comments) post.comments = [];
-        post.comments.push({ user: weiboData.user.name, text: text });
         
-        // 记录
+        // 1. 添加我们自己的评论
+        const myName = weiboData.user.name || '我';
+        post.comments.push({ user: myName, text: text });
+        
+        // 记录活动
         weiboData.myActivity.push(`我评论了微博：“${post.content.substring(0, 10)}...” 说：“${text}”`);
-        
-        // 如果是回复路人，AI 可能会加入骂战
-        // triggerWeiboReaction(post, text); 
         
         saveGlobalData();
         renderWeiboFeed();
+
+        // 2. ★★★ 新增：召唤AI水军来回复我们的这条评论 ★★★
+        triggerNetizenReplies(post, text, myName); 
     }
 }
 
-// ★ AI 视奸微博逻辑 ★
-// 当你点赞或发帖时，聊天列表里的角色有概率发消息给你
-async function triggerWeiboReaction(post) {
-    // 30% 概率触发，别太烦人
-    if (Math.random() > 0.6) return;
-    
-    if (!currentChatId) return; // 必须在某个聊天室或者有默认聊天对象
-    const role = chatList.find(r => r.id === currentChatId);
-    if (!role) return;
+// 找到 triggerWeiboReaction 函数，用下面这段代码把它整个换掉
+    async function triggerWeiboReaction(post) {
+        if (Math.random() > 0.6) return;
+        
+        // ★ 修复：不再依赖 currentChatId，而是随机找一个角色来互动
+        const friends = chatList.filter(r => !r.id.startsWith('system_'));
+        if (friends.length === 0) return;
+        const role = friends[Math.floor(Math.random() * friends.length)];
 
-    const config = JSON.parse(localStorage.getItem('my_ai_config') || '{}');
-    if (!config.key) return;
+        const config = JSON.parse(localStorage.getItem('my_ai_config') || '{}');
+        if (!config.key) return;
 
-    setTimeout(async () => {
-        const prompt = `
-你现在是${role.name}。你正在刷微博，突然发现你的关注对象（用户）刚刚点赞了一条微博。
-【微博内容】：${post.content}
-【用户行为】：点赞
+        setTimeout(async () => {
+            const prompt = `
+    你现在是${role.name}。你正在刷微博，突然发现你的关注对象（用户）刚刚点赞了一条微博。
+    【微博内容】：${post.content}
+    【用户行为】：点赞
 
-请根据微博内容和你的性格，给用户发一条微信消息。
-- 如果是搞笑的，可以一起哈哈哈。
-- 如果是骂架的，可以劝架或者一起骂。
-- 如果是美女/帅哥照片，可以吃醋。
-- 简短口语化，不要带引号，不要像霸道总裁，油腻男一样发消息，如果吃醋了禁止表示“惩罚”，“你胆子倒是大得很”这一类消息内容，萌化自己，语言表达像真人发消息一样自然，回复中强调语气的变化，情绪波动的展现。
-`;
-        try {
-            const reply = await callAI_Simple(prompt, "请发消息", config);
-            if (reply) {
-                // 插入聊天记录
-                const timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                chatHistory[currentChatId].push({ role: 'ai', content: reply, time: timeStr });
+    请根据微博内容和你的性格，给用户发一条微信消息。
+    - 如果是搞笑的，可以一起哈哈哈。
+    - 如果是骂架的，可以劝架或者一起骂。
+    - 如果是美女/帅哥照片，可以吃醋。
+    - 简短口语化，不要带引号，不要像霸道总裁，油腻男一样发消息，如果吃醋了禁止表示“惩罚”，“你胆子倒是大得很”这一类消息内容，萌化自己，语言表达像真人发消息一样自然，回复中强调语气的变化，情绪波动的展现。
+    `;
+            try {
+                // ★★★ 核心修改在这里！★★★
+                // 把 system prompt 伪装成 user prompt
+                const reply = await callAI_Simple(prompt, "请发消息", config, true); 
                 
-                // 如果当前在聊天室，刷新界面
-                if (document.getElementById('chat-room-page').style.display === 'flex') {
-                    renderMessages();
-                } else {
-                    // 否则显示红点或弹窗（这里简单弹个窗模拟通知）
-                    // alert(`${role.name} 给你发了条消息！`);
+                if (reply) {
+                    // 如果该角色的聊天记录不存在，则创建
+                    if (!chatHistory[role.id]) {
+                        chatHistory[role.id] = [];
+                    }
+                    const timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    chatHistory[role.id].push({ role: 'ai', content: reply, time: timeStr });
+                    
+                    showNotificationToast(role.id, reply); // 弹出通知
+                    saveGlobalData();
                 }
-                saveGlobalData();
-            }
-        } catch(e) { console.error(e); }
-    }, 5000); // 延迟5秒，模拟TA刷到了
-} 
+            } catch(e) { console.error(e); }
+        }, 5000); 
+    }
+
+    // ★ 辅助函数 callAI_Simple 升级，增加一个参数来决定角色
+    async function callAI_Simple(sys, user, config, useUserRoleForSystem = false) {
+        try {
+            const roleForSystem = useUserRoleForSystem ? 'user' : 'system';
+            const res = await fetch(config.url.endsWith('/') ? `${config.url}chat/completions` : `${config.url}/chat/completions`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${config.key}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: config.model || 'gemini-pro',
+                    messages: [
+                        {role: roleForSystem, content: sys}, 
+                        {role: 'user', content: user}
+                    ]
+                })
+            });
+            const d = await res.json();
+            return d.choices[0].message.content.trim();
+        } catch(e) { return null; }
+    }
 
       function openWeibo() {
     openApp('weibo-app');
@@ -10512,26 +11022,22 @@ function renderHotSearch() {
     });
 }
 
-      // ==========================================
-// ★ 微博互动模拟器 (8人评论 + 数据刷新) ★
-// ==========================================
+      // 找到 simulateWeiboInteraction 函数，用下面这段代码把它整个换掉
 async function simulateWeiboInteraction(post) {
     console.log("🤖 正在召唤水军和好友...");
     
     const config = JSON.parse(localStorage.getItem('my_ai_config') || '{}');
     if (!config.key) return;
 
-    // 1. 随机刷新点赞和转发 (模拟热度)
-    // 延迟 2 秒执行，假装是刚发出去就有人看
+    // 1. 随机刷新点赞和转发
     setTimeout(() => {
-        post.likes += Math.floor(Math.random() * 50) + 5; // +5~55 赞
-        post.reposts += Math.floor(Math.random() * 10);   // +0~10 转发
+        post.likes += Math.floor(Math.random() * 50) + 5;
+        post.reposts += Math.floor(Math.random() * 10);
         saveGlobalData();
-        renderWeiboFeed(); // 刷新界面看数字变化
+        renderWeiboFeed();
     }, 2000);
 
-    // 2. 召唤 8 条评论 (混合角色和路人)
-    // 准备角色名单
+    // 2. 准备角色名单
     const roles = chatList.filter(r => !r.id.startsWith('system_')).map(r => r.name);
     const roleNamesStr = roles.join('、');
 
@@ -10548,12 +11054,15 @@ async function simulateWeiboInteraction(post) {
 `;
 
     try {
-        const res = await fetch(config.url.endsWith('/') ? `${config.url}chat/completions` : `${config.url}/chat/completions`, {
+        const fetchUrl = config.url.endsWith('/') ? `${config.url}chat/completions` : `${config.url}/chat/completions`;
+        const res = await fetch(fetchUrl, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${config.key}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                model: config.model || 'gpt-3.5-turbo',
-                messages: [{ role: 'system', content: prompt }],
+                model: config.model || 'gemini-pro',
+                // ★★★ 核心修改在这里！★★★
+                // 我们把 system 角色换成了 user 角色，来适配 Gemini
+                messages: [{ role: 'user', content: prompt }], 
                 temperature: 0.85
             })
         });
@@ -10561,35 +11070,92 @@ async function simulateWeiboInteraction(post) {
         const data = await res.json();
         const raw = data.choices[0].message.content;
         
-        // 清洗 JSON
         const start = raw.indexOf('[');
         const end = raw.lastIndexOf(']');
         const jsonArr = JSON.parse(raw.substring(start, end + 1));
 
-        // 逐条插入评论 (每隔 1.5 秒插入一条，模拟真实感)
         if (!post.comments) post.comments = [];
         
-        let delay = 3000; // 从第 3 秒开始
+        let delay = 3000;
         jsonArr.forEach(comment => {
             setTimeout(() => {
                 post.comments.push(comment);
-                // 顺便给这条评论也随机加点赞
-                // (这里简化，只存文本)
-                
                 saveGlobalData();
-                renderWeiboFeed(); // 刷新界面看到新评论
-                
-                // 如果是在“我”的主页，也刷新一下那里
+                renderWeiboFeed();
                 if(document.getElementById('wb-profile-page').style.display === 'block') {
                     renderMyProfile();
                 }
             }, delay);
-            delay += 1500; // 间隔 1.5s
+            delay += 1500;
         });
 
     } catch (e) {
         console.error("评论生成失败:", e);
     }
+}
+
+      // 把下面这段全新的代码，完整地复制粘贴到你的脚本区域
+async function triggerNetizenReplies(post, targetCommentText, targetCommentUser) {
+    console.log(`💬 正在为评论“${targetCommentText}”召唤水军...`);
+
+    const config = JSON.parse(localStorage.getItem('my_ai_config') || '{}');
+    if (!config.key) return;
+
+    // 延迟 3-5 秒，模拟网友打字时间
+    setTimeout(async () => {
+        const prompt = `
+你是一个微博评论生成器。现在有一个场景：
+【原微博内容】: "${post.content}"
+【一条评论】: "${targetCommentUser}" 说: "${targetCommentText}"
+
+请你扮演 2-3 个不同的“路人网友”，对【这条评论】进行回复。
+【要求】
+1. **严格输出 JSON 数组**，格式：[{"user": "路人网名", "text": "回复内容"}]
+2. **网名**：要非常真实，像微博上的真人用户，风格多样（可以是xxbot，可以是颜文字，也可以是正常名字）。
+3. **回复风格**：
+   - 必须多样化！可以有“杠精”、“吃瓜群众”、“理中客”、“无脑夸”等。
+   - 回复必须是针对【那条评论】的，而不是原微博。
+   - 口语化，接地气，可以使用网络用语和emoji。
+4. **禁止**：不要输出任何JSON以外的文字，如“好的，这是生成的评论...”。
+`;
+
+        try {
+            const fetchUrl = config.url.endsWith('/') ? `${config.url}chat/completions` : `${config.url}/chat/completions`;
+            const res = await fetch(fetchUrl, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${config.key}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: config.model || 'gemini-pro',
+                    messages: [{ role: 'user', content: prompt }], // 使用 user 角色适配 Gemini
+                    temperature: 0.95 // 提高创意度
+                })
+            });
+
+            const data = await res.json();
+            const raw = data.choices[0].message.content;
+            
+            const start = raw.indexOf('[');
+            const end = raw.lastIndexOf(']');
+            const jsonArr = JSON.parse(raw.substring(start, end + 1));
+
+            if (!post.comments) post.comments = [];
+            
+            // 把AI生成的评论加进去
+            jsonArr.forEach(reply => {
+                post.comments.push({
+                    user: reply.user,
+                    text: reply.text,
+                    toUser: targetCommentUser // 明确指出是回复给谁的
+                });
+            });
+
+            saveGlobalData();
+            renderWeiboFeed();
+
+        } catch (e) {
+            console.error("召唤水军失败:", e);
+        }
+    }, Math.random() * 2000 + 3000); // 随机延迟
 }
 
       // 手动刷新微博
@@ -10710,17 +11276,25 @@ function updateFreqUI() {
     if(current) current.parentElement.classList.add('active');
 }
 
-// 6. ★★★ 核心：定时检查并生成信件 (Gemini 适配最终版) ★★★
+// ==========================================
+// ★ 信箱系统核心：人设增强+Gemini适配最终版 ★
+// ==========================================
+// 找到 checkMailbox 函数，用下面这段全新的代码把它整个换掉
+
 async function checkMailbox() {
     console.log(`===== 信箱检查探针 =====`);
     const now = Date.now();
     const last = mailboxData.lastCheck || 0;
-    let interval = 10 * 60 * 1000;
+    let interval = 10 * 60 * 1000; // 默认10分钟
     
-    if (mailboxData.frequency === 'low') interval = 30 * 60 * 1000;
-    if (mailboxData.frequency === 'high') interval = 2 * 60 * 1000;
+    if (mailboxData.frequency === 'low') interval = (15 + Math.random() * 15) * 60 * 1000; // 15-30分钟
+    if (mailboxData.frequency === 'high') interval = (2 + Math.random() * 3) * 60 * 1000;  // 2-5分钟
     
-    if (now - last < interval) return;
+    // 如果还没到时间，就悄悄退出
+    if (now - last < interval) {
+        console.log("【探针】: 还未到收信时间，跳过。");
+        return;
+    }
     
     console.log("📬 【探针】: 时间已到，开始生成新信件...");
     mailboxData.lastCheck = now;
@@ -10732,64 +11306,75 @@ async function checkMailbox() {
     const roles = chatList.filter(r => !r.id.startsWith('system_'));
     if (roles.length === 0) return;
 
+    // ★★★ 核心修改 1：随机选择1到3个角色 ★★★
+    const numberOfLetters = Math.floor(Math.random() * 3) + 1; // 生成1, 2, 或 3
     const targetRoles = [];
-    for(let i=0; i<8; i++) {
-        const r = roles[Math.floor(Math.random() * roles.length)];
-        targetRoles.push(r);
+    // 为了防止重复选择，我们先打乱数组
+    const shuffledRoles = [...roles].sort(() => 0.5 - Math.random());
+    for(let i = 0; i < Math.min(numberOfLetters, shuffledRoles.length); i++) {
+        targetRoles.push(shuffledRoles[i]);
     }
-    const namesStr = targetRoles.map(r => r.name).join('、');
 
+    if (targetRoles.length === 0) return;
+
+    // ★★★ 核心修改 2：构建带有“人设菜谱”的介绍文本 ★★★
+    let characterProfiles = "请为以下角色创作匿名信：\n\n";
+    targetRoles.forEach(role => {
+        characterProfiles += `---
+- **角色名**: ${role.name}
+- **角色人设**: ${role.prompt || '一个普通人，请自由发挥'}
+---\n`;
+    });
+    
+    console.log("【探针】: 本次写信的目标角色及人设：\n", characterProfiles);
+
+    // ★★★ 核心修改 3：升级Prompt，注入人设信息 ★★★
     const prompt = `
-请生成 8 封写给以下角色的匿名信件：[${namesStr}]。
-【要求】
-1. **严格输出 JSON 数组**，格式：[{"to": "角色名", "content": "信件内容"}]
-2. 内容风格多样化：情书、提问、八卦、吐槽。
-3. 每封信 50-200 字左右，有的信件字多有的信件字少，不要规律。
-4. 必须对应列表里的角色名字。
-5. 信件内容语气真实自然，口语化，有意思有趣。
-6. 必须根据角色的设定和世界观写。
+${characterProfiles}
+
+【任务要求】
+1.  **严格输出 JSON 数组**，格式必须为：[{"to": "角色名", "content": "信件内容"}]
+2.  **严格遵循人设**：信件内容必须和收信人的【角色人设】高度相关，体现出写信人对角色的了解或误解。
+3.  **内容风格**：匿名信风格多样，可以是暗恋、崇拜、挑衅、八卦、吐槽、关心,问卷提问等。内容要真实、口语化、有真情实感。
+4.  **禁止**：绝对不要在JSON之外输出任何解释性文字或Markdown标记。
 `;
 
     try {
         const fetchUrl = config.url.endsWith('/') ? `${config.url}chat/completions` : `${config.url}/chat/completions`;
-        console.log("【探针 2】: 准备向 AI 发送请求...");
+        console.log("【探针】: 准备向 AI 发送请求...");
 
         const res = await fetch(fetchUrl, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${config.key}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                model: config.model || 'gemini-pro', // 建议在设置里填 gemini-pro
-                
-                // ★★★ 核心修改在这里！★★★
-                // 我们把 system prompt 伪装成 user prompt 发送
+                model: config.model || 'gemini-pro',
                 messages: [
+                    // 使用 user 角色来发送包含所有指令的Prompt，完美适配Gemini
                     { role: 'user', content: prompt } 
                 ],
-                // ★★★ 修改结束 ★★★
-
-                temperature: 0.9
+                temperature: 0.95 // 提高创意
             })
         });
 
-        const data = await res.json();
-        
-        if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-            const errorMessage = data.error ? data.error.message : "AI没有返回有效的信件内容。";
-            throw new Error(errorMessage);
+        if (!res.ok) {
+            const errText = await res.text();
+            throw new Error(`API 请求失败 (${res.status}): ${errText}`);
         }
 
+        const data = await res.json();
         const raw = data.choices[0].message.content;
-        console.log("💌 【探针 3】: AI 原始返回信件内容：", raw);
+        console.log("💌 【探针】: AI 原始返回信件内容：", raw);
 
         const start = raw.indexOf('[');
         const end = raw.lastIndexOf(']');
         const jsonArr = JSON.parse(raw.substring(start, end + 1));
 
-        console.log("✅ 【探针 4】: JSON 解析成功，生成了", jsonArr.length, "封信件。");
+        console.log("✅ 【探针】: JSON 解析成功，生成了", jsonArr.length, "封信件。");
 
         jsonArr.forEach(item => {
             const role = roles.find(r => r.name === item.to);
             if (role) {
+                if (!mailboxData.letters) mailboxData.letters = [];
                 mailboxData.letters.unshift({
                     id: 'mail_' + Date.now() + Math.random(),
                     toId: role.id,
@@ -10802,16 +11387,17 @@ async function checkMailbox() {
 
         saveGlobalData();
         renderMailList();
-        alert("猫头鹰送来了新的信件！");
+        showNotificationToast({id: 'system_mailbox', name: '猫头鹰邮局', avatar: 'https://cdn-icons-png.flaticon.com/512/1999/1999331.png'}, `有 ${jsonArr.length} 封新信件送达！`);
+
 
     } catch (e) {
-        console.error("❌ 【探针 5】: 收信过程中发生错误！", e);
-        alert(`收信失败了！\n原因：${e.message}\n\n(请检查API设置里的模型名称是否正确，推荐 gemini-pro)`);
+        console.error("❌ 【探针】: 收信过程中发生错误！", e);
+        // 不再用alert打扰，只在控制台显示错误
     } finally {
         console.log("===== 信箱检查结束 =====");
     }
 }
-
+      
       /* ==========================================
    ★ 消息弹窗通知系统 ★
    ========================================== */
@@ -11167,6 +11753,313 @@ function saveRoutineData() {
     localStorage.setItem('yok_daily_routine', JSON.stringify(routineData));
     // 同时也存入大仓库，防止丢失
     saveGlobalData();
+}
+
+      // ==============================================
+// ★ 悬浮气泡菜单的智能控制逻辑 ★
+// ==============================================
+
+/**
+ * 切换气泡菜单的显示/隐藏
+ */
+function toggleBubblePanel(event) {
+    event.stopPropagation(); // 阻止事件冒泡，防止触发下面的全局点击事件
+    const panel = document.getElementById('chat-bubble-panel');
+    const isActive = panel.classList.contains('active');
+
+    if (isActive) {
+        closeBubblePanel();
+    } else {
+        panel.classList.add('active');
+        // 当菜单打开时，监听全局点击事件，以便“点击外部关闭”
+        setTimeout(() => { // 延迟一点点，防止本次点击就触发关闭
+            document.addEventListener('click', closeBubblePanelOnClickOutside);
+        }, 100);
+    }
+}
+
+/**
+ * 关闭气泡菜单
+ */
+function closeBubblePanel() {
+    const panel = document.getElementById('chat-bubble-panel');
+    panel.classList.remove('active');
+    // 菜单关闭后，移除全局监听，节省资源
+    document.removeEventListener('click', closeBubblePanelOnClickOutside);
+}
+
+/**
+ * 全局点击事件的处理函数：判断点击是否在菜单外部
+ */
+function closeBubblePanelOnClickOutside(event) {
+    const panel = document.getElementById('chat-bubble-panel');
+    const plusBtn = document.getElementById('plus-btn');
+    
+    // 如果点击的目标不是菜单本身，也不是加号按钮，就关闭菜单
+    if (panel && !panel.contains(event.target) && event.target !== plusBtn) {
+        closeBubblePanel();
+    }
+}
+
+/**
+ * 新增：为转账功能创建一个独立的触发函数
+ * 因为原来的面板隐藏了，我们需要一个新方法来处理
+ */
+function openTransferInput() {
+    closeBubblePanel(); // 先关闭气泡
+    const amount = prompt("请输入转账金额 (¥):", "5.20");
+    if (amount && !isNaN(amount) && parseFloat(amount) > 0) {
+        // 模拟用户在隐藏的输入框中输入并点击
+        const input = document.createElement('input');
+        input.value = parseFloat(amount);
+        
+        // 伪造一个 doTransfer 函数需要的环境
+        // 这里的逻辑需要你确保你有一个全局的 doTransfer 函数
+        if (typeof doTransfer === 'function') {
+            // 简单弹窗让用户选择是转出还是收款
+            if (confirm(`确定要给TA转账 ¥${amount} 吗？`)) {
+                // 伪造一个输入框给 doTransfer 读取
+                const transferAmountInput = document.getElementById('transfer-amount') || document.createElement('input');
+                transferAmountInput.value = amount;
+                window.doTransfer('to_ai');
+            }
+        } else {
+            alert("错误：找不到 doTransfer 函数。");
+        }
+    } else if (amount) {
+        alert("请输入有效的数字！");
+    }
+}
+
+      // ==========================================
+// ★ 聊天室深度装修逻辑 ★
+// ==========================================
+
+// 1. 打开页面
+function openChatThemePage() {
+    document.getElementById('chat-theme-page').style.display = 'flex';
+    // 刷新一下预览图
+    updateThemePreviews();
+}
+
+// 2. 处理上传
+function handleChatThemeUpload(input, type) {
+    const file = input.files[0];
+    if (!file) return;
+
+    // 复用压缩工具
+    if (typeof compressImage === 'function') {
+        compressImage(file, function(base64) {
+            applyChatThemeItem(type, base64);
+            saveChatThemeConfig(type, base64);
+        });
+    } else {
+        alert("压缩组件未加载");
+    }
+}
+
+// 3. 应用样式 (核心)
+function applyChatThemeItem(type, value) {
+    const root = document.documentElement;
+    
+    if (type === 'header') {
+        // 设置顶栏背景
+        root.style.setProperty('--chat-header-bg', value ? `url(${value})` : 'rgba(255, 255, 255, 0.9)');
+    } 
+    else if (type === 'footer') {
+        // 设置底栏背景
+        root.style.setProperty('--chat-footer-bg', value ? `url(${value})` : 'white');
+    } 
+    else if (type === 'btn-receive') {
+        // 设置接收按钮
+        root.style.setProperty('--btn-receive-icon', value ? `url(${value})` : 'none');
+        // 控制SVG显示/隐藏
+        const btns = document.querySelectorAll('.btn-receive');
+        btns.forEach(btn => {
+            if(value) btn.classList.add('has-custom-icon');
+            else btn.classList.remove('has-custom-icon');
+        });
+        // 更新预览
+        const preview = document.getElementById('preview-btn-receive');
+        if(preview) {
+            preview.style.backgroundImage = value ? `url(${value})` : '';
+            preview.style.backgroundSize = 'cover';
+        }
+    } 
+    else if (type === 'btn-send') {
+        // 设置发送按钮
+        root.style.setProperty('--btn-send-icon', value ? `url(${value})` : 'none');
+        // 控制SVG显示/隐藏
+        const btns = document.querySelectorAll('.btn-send');
+        btns.forEach(btn => {
+            if(value) btn.classList.add('has-custom-icon');
+            else btn.classList.remove('has-custom-icon');
+        });
+        // 更新预览
+        const preview = document.getElementById('preview-btn-send');
+        if(preview) {
+            preview.style.backgroundImage = value ? `url(${value})` : '';
+            preview.style.backgroundSize = 'cover';
+        }
+    }
+}
+
+// 4. 恢复默认
+function resetChatTheme(type) {
+    applyChatThemeItem(type, ''); // 传空字符串表示恢复
+    saveChatThemeConfig(type, '');
+}
+
+// 5. 保存配置 (存入 themeConfig 并持久化)
+function saveChatThemeConfig(type, value) {
+    // 确保 themeConfig 里的 chatDeepTheme 对象存在
+    if (!themeConfig.chatDeepTheme) themeConfig.chatDeepTheme = {};
+    
+    themeConfig.chatDeepTheme[type] = value;
+    saveGlobalData(); // 存入大仓库
+}
+
+// 6. 初始化 (在 loadGlobalData 后调用)
+// ★★★ 请在 restoreUI 函数里加上这一行：initChatDeepTheme(); ★★★
+function initChatDeepTheme() {
+    if (themeConfig && themeConfig.chatDeepTheme) {
+        const cfg = themeConfig.chatDeepTheme;
+        if (cfg.header) applyChatThemeItem('header', cfg.header);
+        if (cfg.footer) applyChatThemeItem('footer', cfg.footer);
+        if (cfg['btn-receive']) applyChatThemeItem('btn-receive', cfg['btn-receive']);
+        if (cfg['btn-send']) applyChatThemeItem('btn-send', cfg['btn-send']);
+    }
+}
+
+// 辅助：更新预览图
+function updateThemePreviews() {
+    if (themeConfig && themeConfig.chatDeepTheme) {
+        const cfg = themeConfig.chatDeepTheme;
+        const p1 = document.getElementById('preview-btn-receive');
+        const p2 = document.getElementById('preview-btn-send');
+        if(p1 && cfg['btn-receive']) {
+            p1.style.backgroundImage = `url(${cfg['btn-receive']})`;
+            p1.style.backgroundSize = 'cover';
+        }
+        if(p2 && cfg['btn-send']) {
+            p2.style.backgroundImage = `url(${cfg['btn-send']})`;
+            p2.style.backgroundSize = 'cover';
+        }
+    }
+}
+
+      // ==========================================
+// ★ 气泡装饰系统逻辑 ★
+// ==========================================
+
+let currentDecorTarget = 'ai'; // 当前正在编辑谁的装饰 (ai / mine)
+let tempDecorImg = null; // 临时存上传的图片
+
+// 1. 切换选项卡
+function switchDecorTab(target) {
+    currentDecorTarget = target;
+    // 更新按钮样式
+    document.getElementById('tab-decor-ai').style.background = target==='ai' ? '#7FA6C8' : '#EAF2F8';
+    document.getElementById('tab-decor-ai').style.color = target==='ai' ? 'white' : '#5A6A7E';
+    document.getElementById('tab-decor-mine').style.background = target==='mine' ? '#7FA6C8' : '#EAF2F8';
+    document.getElementById('tab-decor-mine').style.color = target==='mine' ? 'white' : '#5A6A7E';
+    
+    renderDecorList();
+}
+
+// 2. 切换输入类型 (文字/图片)
+function toggleDecorInput() {
+    const type = document.getElementById('decor-type').value;
+    document.getElementById('decor-input-text-box').style.display = type === 'text' ? 'block' : 'none';
+    document.getElementById('decor-input-img-box').style.display = type === 'image' ? 'block' : 'none';
+}
+
+// 3. 处理图片选择
+function handleDecorImgSelect(input) {
+    const file = input.files[0];
+    if(file) {
+        compressImage(file, (base64) => {
+            tempDecorImg = base64;
+            document.getElementById('decor-img-preview').innerText = "已选择图片";
+        });
+    }
+}
+
+// 4. 添加装饰 (核心)
+function addDecoration() {
+    const type = document.getElementById('decor-type').value;
+    const pos = document.getElementById('decor-pos').value;
+    
+    let newItem = {
+        id: Date.now(),
+        type: type,
+        pos: pos
+    };
+
+    if (type === 'text') {
+        const text = document.getElementById('decor-text').value;
+        if(!text) return alert("请输入文字");
+        newItem.content = text;
+        newItem.hasBg = document.getElementById('decor-bg-check').checked;
+        newItem.radius = document.getElementById('decor-bg-style').value;
+    } else {
+        if(!tempDecorImg) return alert("请上传图片");
+        newItem.content = tempDecorImg;
+    }
+
+    // 存入 themeConfig
+    if (!themeConfig.decorations) themeConfig.decorations = { ai: [], mine: [] };
+    themeConfig.decorations[currentDecorTarget].push(newItem);
+    
+    saveGlobalData();
+    renderDecorList();
+    
+    // 重置表单
+    document.getElementById('decor-text').value = '';
+    tempDecorImg = null;
+    document.getElementById('decor-img-preview').innerText = "未选择";
+    alert("添加成功！");
+}
+
+// 5. 渲染列表
+function renderDecorList() {
+    const list = document.getElementById('decor-list');
+    list.innerHTML = '';
+    
+    const items = (themeConfig.decorations && themeConfig.decorations[currentDecorTarget]) || [];
+    
+    if (items.length === 0) {
+        list.innerHTML = '<div style="color:#ccc; font-size:12px; text-align:center;">暂无装饰</div>';
+        return;
+    }
+
+    items.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.style.cssText = "background:white; padding:10px; border-radius:8px; margin-bottom:5px; display:flex; justify-content:space-between; align-items:center; border:1px solid #eee;";
+        
+        let preview = '';
+        if (item.type === 'text') {
+            preview = `${item.content} ${item.hasBg ? '(底片)' : ''}`;
+        } else {
+            preview = `[图片]`;
+        }
+        
+        div.innerHTML = `
+            <div style="font-size:12px;">
+                <div>${preview}</div>
+                <div style="color:#999; font-size:10px;">位置: ${item.pos}</div>
+            </div>
+            <div style="color:#ff4d4f; cursor:pointer;" onclick="deleteDecor(${index})">×</div>
+        `;
+        list.appendChild(div);
+    });
+}
+
+// 6. 删除装饰
+function deleteDecor(index) {
+    themeConfig.decorations[currentDecorTarget].splice(index, 1);
+    saveGlobalData();
+    renderDecorList();
 }
 
       /* ==========================================
@@ -11717,12 +12610,50 @@ window.renderMessages = function(keepScroll) {
             }
         }
 
-        // 组装气泡 HTML (记得加上 style="${bubbleStyle}")
-        const bubbleHtml = `
-            <div class="msg-bubble ${roleClass} ${shapeClass} ${specialClass} ${hasTickClass}" style="${bubbleStyle}">
-                ${msg.content}
-                ${tickHtml} 
-            </div>`;
+        // ★★★ 新增：生成装饰品 HTML ★★★
+// ★★★ 新增：生成装饰品 HTML (增强版：支持撑开气泡) ★★★
+let decorHtml = '';
+let extraPaddingStyle = ''; // 用来存额外的 padding
+
+const decors = (themeConfig.decorations && themeConfig.decorations[msg.role === 'user' ? 'mine' : 'ai']) || [];
+
+decors.forEach(d => {
+    let style = '';
+    let content = '';
+    let className = `msg-decor decor-pos-${d.pos}`;
+    
+    // ★ 核心逻辑：如果是内侧装饰，给气泡底部增加内边距 ★
+    if (d.pos === 'inner') {
+        // 增加 15px 的底部内边距，把文字“顶”上去，给装饰品留位置
+        // 如果有多个内侧装饰，这行代码会执行多次，但 padding-bottom 只需要设一次够大就行
+        // 这里我们设定一个足够安全的值
+        extraPaddingStyle = 'padding-bottom: 24px !important; padding-right: 15px !important;';
+    }
+    
+    if (d.type === 'text') {
+        content = d.content;
+        if (d.hasBg) {
+            className += ' with-bg';
+            style += `border-radius: ${d.radius};`;
+        } else {
+            style += 'color: #888; font-weight:bold; text-shadow: 0 1px 0 rgba(255,255,255,0.8);';
+        }
+    } else {
+        // 图片放大一点点，20px
+        content = `<img src="${d.content}" style="width:20px; height:20px; display:block;">`;
+    }
+    
+    decorHtml += `<div class="${className}" style="${style}">${content}</div>`;
+});
+
+// 将装饰品加入气泡，并将 extraPaddingStyle 加到 style 属性里
+const bubbleHtml = `
+    <div class="msg-bubble ${roleClass} ${shapeClass} ${specialClass} ${hasTickClass}" 
+         style="${bubbleStyle} ${extraPaddingStyle}"> <!-- ★ 注意这里加了 extraPaddingStyle -->
+        ${msg.content}
+        ${tickHtml} 
+        ${decorHtml}
+    </div>`;
 
         // --- E. 左右排列 ---
         if (msg.role === 'user') {
@@ -12034,6 +12965,9 @@ function restoreUI() {
     
     // 更新钱包UI
     if (typeof updateWalletUI === 'function') updateWalletUI();
+
+      // ★★★ 新增这一行 ★★★
+    if(typeof initChatDeepTheme === 'function') initChatDeepTheme();
 
 // ★★★ 加上这几句，确保所有设置被应用 ★★★
     initChatSettings(); 
